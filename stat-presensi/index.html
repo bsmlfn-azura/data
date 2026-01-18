@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard E-Presensi OPD</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-light: #7f8c8d;
+            --border-color: #e0e0e0;
+            
+            /* Status Colors */
+            --status-sangat-baik: #3498db; /* Biru */
+            --status-baik: #2ecc71;        /* Hijau */
+            --status-cukup: #f39c12;       /* Oranye */
+            --status-kurang: #e74c3c;      /* Merah */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            padding: 2px;
+        }
+
+        .header-title h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .header-title p {
+            font-size: 0.85rem;
+            color: #bdc3c7;
+            margin-top: 2px;
+        }
+
+        .header-date {
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 12px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--accent-color);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        .charts-header {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .charts-header h2 {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .bar-chart-container {
+            display: flex;
+            height: 30px;
+            width: 100%;
+            background-color: #ecf0f1;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .bar-segment {
+            height: 100%;
+            transition: width 1s ease-in-out;
+        }
+
+        /* Table Section */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .table-controls {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 10px 15px 10px 35px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            width: 250px;
+            font-size: 0.9rem;
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background-color: #f8f9fa;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+
+        th:hover {
+            background-color: #e9ecef;
+        }
+
+        /* Sort Icon Styling */
+        th::after {
+            content: '↕';
+            font-size: 0.7em;
+            margin-left: 5px;
+            opacity: 0.3;
+            color: var(--text-light);
+        }
+
+        th.sort-asc::after {
+            content: '↑';
+            opacity: 1;
+        }
+
+        th.sort-desc::after {
+            content: '↓';
+            opacity: 1;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background-color: #fafafa;
+        }
+
+        /* Status Badges */
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        .status-sangat-baik { background-color: var(--status-sangat-baik); }
+        .status-baik { background-color: var(--status-baik); }
+        .status-cukup { background-color: var(--status-cukup); }
+        .status-kurang { background-color: var(--status-kurang); }
+
+        /* Progress Bar in Table */
+        .progress-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-bg {
+            flex-grow: 1;
+            height: 8px;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            width: 100px; 
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .percentage-text {
+            font-weight: 600;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        .num-users {
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .header-left { width: 100%; }
+            .table-controls { flex-direction: column; align-items: stretch; }
+            .search-box input { width: 100%; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <img src="https://z-cdn-media.chatglm.cn/files/632cd476-6d14-44ee-a4fd-b195b7fc23c5.png?auth_key=1868734028-1ec845eeb56f4122a24c844bd5a24308-0-e324123dcebdd6ae20f49d07afd6fe31" 
+                     alt="Logo OPD" 
+                     class="header-logo"
+                     onerror="this.src='https://via.placeholder.com/50?text=Logo'">
+                
+                <div class="header-title">
+                    <h1>Statistik E-Presensi OPD</h1>
+                    <p>Monitoring Kehadiran dan Penggunaan Aplikasi E-Presensi Desember 2025</p>
+                </div>
+            </div>
+            <div class="header-date" id="currentDate">Memuat tanggal...</div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Stats Cards -->
+        <section class="stats-grid">
+            <div class="stat-card" style="border-left-color: var(--accent-color);">
+                <h3>Total Unit Kerja</h3>
+                <div class="value" id="totalUnit">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--status-sangat-baik);">
+                <h3>Rata-rata Jam Kerja (%)</h3>
+                <div class="value" id="avgPresensi">0%</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--status-baik);">
+                <h3>Total Status TK</h3>
+                <div class="value" id="totalUsers">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--status-cukup);">
+                <h3>Rata-rata Kehadiran (%)</h3>
+                <div class="value" id="avgAppUsage">0%</div>
+            </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section class="charts-section">
+            <div class="charts-header">
+                <h2>Sebaran Kategori Penggunaan E-Presensi</h2>
+                <div class="legend">
+                    <div class="legend-item"><span class="dot" style="background: var(--status-sangat-baik);"></span> Sangat Baik</div>
+                    <div class="legend-item"><span class="dot" style="background: var(--status-baik);"></span> Baik</div>
+                    <div class="legend-item"><span class="dot" style="background: var(--status-cukup);"></span> Cukup</div>
+                    <div class="legend-item"><span class="dot" style="background: var(--status-kurang);"></span> Kurang</div>
+                </div>
+            </div>
+            <div class="bar-chart-container" id="distributionChart"></div>
+            <p style="margin-top: 10px; font-size: 0.85rem; color: var(--text-light); text-align: right;" id="chartLabels"></p>
+        </section>
+
+        <!-- Data Table -->
+        <section class="table-container">
+            <div class="table-controls">
+                <h2>Detail Data Per OPD</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Cari nama dinas/kecamatan..." onkeyup="filterTable()">
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <!-- 
+                                Urutan Header Visual:
+                                0: Nama
+                                1: Status
+                                2: Pegawai
+                                3: Presensi
+                                4: App Usage
+                            -->
+                            <th style="width: 30%;" onclick="sortTable(0)" title="Klik untuk mengurutkan Nama">Nama OPD</th>
+                            <th style="width: 15%;" onclick="sortTable(1)" title="Klik untuk mengurutkan Status">Kategori</th>
+                            <th style="width: 15%;" onclick="sortTable(2)" title="Klik untuk mengurutkan Jumlah Pegawai">Jumlah Status TK</th>
+                            <th style="width: 20%;" onclick="sortTable(3)" title="Klik untuk mengurutkan % Presensi">% Jam Kerja Presensi</th>
+                            <th style="width: 20%;" onclick="sortTable(4)" title="Klik untuk mengurutkan % Penggunaan">% Kehadiran</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 BKPSDM | Statistik E-Presensi Pemerintah Kabupaten Bangkalan.</p>
+    </footer>
+
+    <script>
+        // Data mentah
+        // Array Structure Index: [Nama (0), Presensi (1), Status (2), Pegawai (3), AppUsage (4)]
+        const rawData = [
+            ["Dinas Perpustakan", 89.56, "BAIK", 12, 86.21],
+            ["BPBD", 91.47, "SANGAT BAIK", 13, 85.28],
+            ["Dinas KB", 88.50, "BAIK", 30, 83.69],
+            ["BPKAD", 89.47, "BAIK", 13, 85.43],
+            ["Dinas Perhubungan", 87.91, "BAIK", 78, 85.44],
+            ["Dinas Sosial", 86.85, "BAIK", 40, 82.19],
+            ["Disbudpar", 87.92, "BAIK", 19, 84.42],
+            ["Diskominfo", 85.59, "BAIK", 73, 84.41],
+            ["BKPSDM", 88.76, "BAIK", 27, 88.31],
+            ["Satuan Polisi Pamong Praja", 80.98, "BAIK", 269, 76.19],
+            ["Dinas PU / PUPR", 87.73, "BAIK", 71, 85.07],
+            ["Bakesbangpol", 86.10, "BAIK", 42, 82.29],
+            ["Dinas Perumahan RKP", 89.22, "BAIK", 28, 85.94],
+            ["DPMPTSP", 89.54, "BAIK", 13, 87.78],
+            ["DPMD", 90.54, "SANGAT BAIK", 13, 84.21],
+            ["Dinas Pemuda dan Olahraga", 86.95, "BAIK", 20, 85.50],
+            ["Dinas Perindustrian dan Tenaga Kerja", 88.53, "BAIK", 53, 82.76],
+            ["Dinas Peternakan dan Keswan", 86.04, "BAIK", 74, 81.91],
+            ["Inspektorat", 81.40, "BAIK", 163, 74.30],
+            ["Bapperida", 90.14, "SANGAT BAIK", 12, 82.93],
+            ["Sekretariat Daerah", 88.70, "BAIK", 112, 84.44],
+            ["Diskopumdag", 87.11, "BAIK", 302, 84.36],
+            ["Dispendukcapil", 88.61, "BAIK", 11, 88.95],
+            ["Dinas pertanian PKP", 86.18, "BAIK", 123, 82.60],
+            ["Dinas Lingkungan Hidup", 85.82, "BAIK", 172, 84.89],
+            ["Sekretariat DPRD", 82.39, "BAIK", 65, 73.47],
+            ["Bapenda", 86.78, "BAIK", 39, 81.92],
+            ["Dinas Kesehatan", 89.27, "BAIK", 6, 86.76],
+            ["RSUD", 52.77, "KURANG", 3348, 52.62],
+            ["Dinas Pendidikan", 82.51, "BAIK", 228, 84.00],
+            ["Bagian Umum", 88.12, "BAIK", 25, 83.82],
+            ["Bagian Hukum", 86.27, "BAIK", 11, 80.32],
+            ["Bagian Kesejahteraan Rakyat", 88.40, "BAIK", 5, 88.40],
+            ["Bagian Perekonomian dan SDA", 85.17, "BAIK", 19, 82.01],
+            ["Bagian Organisasi", 87.72, "BAIK", 10, 81.32],
+            ["Bagian Protokol dan Komunikasi Pimpinan", 92.27, "SANGAT BAIK", 1, 84.54],
+            ["Bagian Perencana Keuangan", 88.32, "BAIK", 28, 84.89],
+            ["Bagian Administrasi Pembangunan", 91.01, "SANGAT BAIK", 1, 90.43],
+            ["Bagian Pemerintahan", 90.61, "SANGAT BAIK", 1, 84.43],
+            ["Bagian Pengadaan Barang Jasa", 88.79, "BAIK", 11, 86.78],
+            ["Kecamatan Kamal", 90.02, "SANGAT BAIK", 4, 87.81],
+            ["Kecamatan Arosbaya", 89.92, "BAIK", 14, 85.94],
+            ["Kecamatan Konang", 87.50, "BAIK", 53, 82.50],
+            ["Kecamatan Blega", 87.25, "BAIK", 28, 86.03],
+            ["Kecamatan Kwanyar", 87.00, "BAIK", 57, 81.36],
+            ["Kecamatan Modung", 86.78, "BAIK", 94, 77.32],
+            ["Kecamatan Bangkalan", 86.73, "BAIK", 104, 86.29],
+            ["Kecamatan Labang", 86.36, "BAIK", 34, 85.87],
+            ["Kecamatan Sepulu", 83.82, "BAIK", 84, 80.87],
+            ["Kecamatan Kokop", 83.69, "BAIK", 47, 75.82],
+            ["Kecamatan Tragah", 82.43, "BAIK", 61, 80.50],
+            ["Kecamatan Burneh", 81.84, "BAIK", 110, 81.25],
+            ["Kecamatan Tanah Merah", 80.60, "BAIK", 62, 81.29],
+            ["Kecamatan Klampis", 77.71, "CUKUP", 55, 75.69],
+            ["Kecamatan Socah", 77.12, "CUKUP", 25, 69.30],
+            ["Kecamatan Galis", 70.21, "CUKUP", 160, 72.53],
+            ["Kecamatan Tanjungbumi", 67.93, "KURANG", 143, 67.73],
+            ["Kecamatan Geger", 64.45, "KURANG", 47, 63.60]
+        ];
+
+        let currentData = [...rawData];
+        let sortDirection = {};
+        let lastSortedColumn = -1;
+
+        const statusColors = {
+            "SANGAT BAIK": "status-sangat-baik",
+            "BAIK": "status-baik",
+            "CUKUP": "status-cukup",
+            "KURANG": "status-kurang"
+        };
+
+        const hexColors = {
+            "SANGAT BAIK": "#3498db",
+            "BAIK": "#2ecc71",
+            "CUKUP": "#f39c12",
+            "KURANG": "#e74c3c"
+        };
+
+        // Pemetaan Status ke Angka untuk Urutan Kustom
+        const statusRank = {
+            "SANGAT BAIK": 4,
+            "BAIK": 3,
+            "CUKUP": 2,
+            "KURANG": 1
+        };
+
+        function initDashboard() {
+            renderTable(currentData);
+            calculateStats(currentData);
+            updateDate();
+        }
+
+        function updateDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            document.getElementById('currentDate').textContent = today.toLocaleDateString('id-ID', options);
+        }
+
+        function calculateStats(data) {
+            let totalPresensi = 0;
+            let totalAppUsage = 0;
+            let totalUsers = 0;
+            let statusCounts = { "SANGAT BAIK": 0, "BAIK": 0, "CUKUP": 0, "KURANG": 0 };
+
+            data.forEach(row => {
+                totalPresensi += row[1];
+                totalAppUsage += row[4];
+                totalUsers += row[3];
+                statusCounts[row[2]]++;
+            });
+
+            const count = data.length;
+            
+            document.getElementById('totalUnit').textContent = count;
+            document.getElementById('totalUsers').textContent = totalUsers.toLocaleString('id-ID');
+            document.getElementById('avgPresensi').textContent = (count > 0 ? (totalPresensi / count).toFixed(2) : 0) + '%';
+            document.getElementById('avgAppUsage').textContent = (count > 0 ? (totalAppUsage / count).toFixed(2) : 0) + '%';
+
+            renderChart(statusCounts, count);
+        }
+
+        function renderChart(counts, total) {
+            const container = document.getElementById('distributionChart');
+            const labelContainer = document.getElementById('chartLabels');
+            container.innerHTML = '';
+            
+            const categories = ["SANGAT BAIK", "BAIK", "CUKUP", "KURANG"];
+            let htmlLegend = '';
+
+            categories.forEach(cat => {
+                const count = counts[cat];
+                const percentage = (count / total) * 100;
+                if (count > 0) {
+                    const segment = document.createElement('div');
+                    segment.className = 'bar-segment';
+                    segment.style.width = percentage + '%';
+                    segment.style.backgroundColor = hexColors[cat];
+                    segment.title = `${cat}: ${count} (${percentage.toFixed(1)}%)`;
+                    container.appendChild(segment);
+                    htmlLegend += `<span style="color:${hexColors[cat]}; font-weight:bold; margin-right:10px;">${cat}: ${count}</span>`;
+                }
+            });
+            labelContainer.innerHTML = htmlLegend;
+        }
+
+        function renderTable(data) {
+            const tbody = document.querySelector('#dataTable tbody');
+            tbody.innerHTML = '';
+            data.forEach(row => {
+                const [name, presensi, status, users, appUsage] = row;
+                let presColor = hexColors[status];
+                if(presensi < 70) presColor = hexColors["KURANG"];
+                else if(presensi < 80) presColor = hexColors["CUKUP"];
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:500;">${name}</td>
+                    <td><span class="badge ${statusColors[status]}">${status}</span></td>
+                    <td><span class="num-users">${users.toLocaleString()}</span></td>
+                    <td>
+                        <div class="progress-wrapper">
+                            <div class="progress-bg"><div class="progress-fill" style="width: ${presensi}%; background-color: ${presColor};"></div></div>
+                            <span class="percentage-text">${presensi}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="progress-wrapper">
+                            <div class="progress-bg"><div class="progress-fill" style="width: ${appUsage}%; background-color: #3498db;"></div></div>
+                            <span class="percentage-text">${appUsage}%</span>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- PERBAIKAN LOGIKA SORTING (SINKRONISASI INDEKS) ---
+        function sortTable(columnIndex) {
+            const headers = document.querySelectorAll('th');
+            
+            // Toggle arah sort
+            if (sortDirection[columnIndex] === 'asc') {
+                sortDirection[columnIndex] = 'desc';
+            } else {
+                sortDirection[columnIndex] = 'asc';
+            }
+
+            // Update visual icon
+            headers.forEach((th, index) => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (index === columnIndex) {
+                    th.classList.add(sortDirection[columnIndex] === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+
+            // Mapping Indeks Header ke Indeks Data Array
+            // Header Index: 0(Nama), 1(Status), 2(Pegawai), 3(Presensi), 4(App)
+            // Data Index:   0(Nama), 1(Presensi), 2(Status), 3(Pegawai), 4(App)
+            
+            let dataIdx = -1;
+
+            if (columnIndex === 0) dataIdx = 0;      // Nama
+            else if (columnIndex === 1) dataIdx = 2; // Status -> Data Index 2
+            else if (columnIndex === 2) dataIdx = 3; // Pegawai -> Data Index 3
+            else if (columnIndex === 3) dataIdx = 1; // Presensi -> Data Index 1
+            else if (columnIndex === 4) dataIdx = 4; // App -> Data Index 4
+
+            // Logika Sorting berdasarkan dataIdx yang sudah disesuaikan
+            currentData.sort((rowA, rowB) => {
+                let valA = rowA[dataIdx];
+                let valB = rowB[dataIdx];
+                let comparison = 0;
+
+                // Kolom Nama (Index 0)
+                if (columnIndex === 0) {
+                    valA = valA.toString().toLowerCase();
+                    valB = valB.toString().toLowerCase();
+                    comparison = valA.localeCompare(valB);
+                }
+                // Kolom Status (Header Index 1 -> Data Index 2)
+                else if (columnIndex === 1) {
+                    const rankA = statusRank[valA] || 0;
+                    const rankB = statusRank[valB] || 0;
+                    comparison = rankA - rankB;
+                }
+                // Kolom Pegawai (Header Index 2 -> Data Index 3)
+                else if (columnIndex === 2) {
+                    comparison = Number(valA) - Number(valB);
+                }
+                // Kolom Presensi (Header Index 3 -> Data Index 1)
+                else if (columnIndex === 3) {
+                    comparison = valA - valB;
+                }
+                // Kolom App (Header Index 4 -> Data Index 4)
+                else {
+                    comparison = valA - valB;
+                }
+
+                // Balik hasil berdasarkan arah (ASC/DESC)
+                return sortDirection[columnIndex] === 'asc' ? comparison : -comparison;
+            });
+
+            renderTable(currentData);
+        }
+
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            
+            const filteredData = rawData.filter(row => {
+                return row[0].toLowerCase().includes(filter);
+            });
+
+            currentData = filteredData;
+            
+            document.querySelectorAll('th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+            
+            renderTable(currentData);
+            calculateStats(currentData); 
+        }
+
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+Dinas Perpustakan	89.56%	BAIK	12	86.21%
+BPBD	91.47%	SANGAT BAIK	13	85.28%
+Dinas KB	88.50%	BAIK	30	83.69%
+BPKAD	89.47%	BAIK	13	85.43%
+Dinas Perhubungan	87.91%	BAIK	78	85.44%
+Dinas Sosial	86.85%	BAIK	40	82.19%
+Disbudpar	87.92%	BAIK	19	84.42%
+Diskominfo	85.59%	BAIK	73	84.41%
+BKPSDM	88.76%	BAIK	27	88.31%
+Satuan Polisi Pamong Praja	80.98%	BAIK	269	76.19%
+Dinas PU / PUPR	87.73%	BAIK	71	85.07%
+Bakesbangpol	86.10%	BAIK	42	82.29%
+Dinas Perumahan RKP	89.22%	BAIK	28	85.94%
+DPMPTSP	89.54%	BAIK	13	87.78%
+DPMD	90.54%	SANGAT BAIK	13	84.21%
+Dinas Pemuda dan Olahraga	86.95%	BAIK	20	85.50%
+Dinas Perindustrian dan Tenaga Kerja	88.53%	BAIK	53	82.76%
+Dinas Peternakan dan Keswan	86.04%	BAIK	74	81.91%
+Inspektorat	81.40%	BAIK	163	74.30%
+Bapperida	90.14%	SANGAT BAIK	12	82.93%
+Sekretariat Daerah	88.70%	BAIK	112	84.44%
+Diskopumdag	87.11%	BAIK	302	84.36%
+Dispendukcapil	88.61%	BAIK	11	88.95%
+Dinas pertanian PKP	86.18%	BAIK	123	82.60%
+Dinas Lingkungan Hidup	85.82%	BAIK	172	84.89%
+Sekretariat DPRD	82.39%	BAIK	65	73.47%
+Bapenda	86.78%	BAIK	39	81.92%
+Dinas Kesehatan	89.27%	BAIK	6	86.76%
+RSUD	52.77%	KURANG	3348	52.62%
+Dinas Pendidikan	82.51%	BAIK	228	84.00%
+Bagian Umum	88.12%	BAIK	25	83.82%
+Bagian Hukum	86.27%	BAIK	11	80.32%
+Bagian Kesejahteraan Rakyat	88.40%	BAIK	5	88.40%
+Bagian Perekonomian dan SDA	85.17%	BAIK	19	82.01%
+Bagian Organisasi	87.72%	BAIK	10	81.32%
+Bagian Protokol dan Komunikasi Pimpinan	92.27%	SANGAT BAIK	1	84.54%
+Bagian Perencana Keuangan	88.32%	BAIK	28	84.89%
+Bagian Administrasi Pembangunan	91.01%	SANGAT BAIK	1	90.43%
+Bagian Pemerintahan	90.61%	SANGAT BAIK	1	84.43%
+Bagian Pengadaan Barang Jasa	88.79%	BAIK	11	86.78%
+Kecamatan Kamal	90.02%	SANGAT BAIK	4	87.81%
+Kecamatan Arosbaya	89.92%	BAIK	14	85.94%
+Kecamatan Konang	87.50%	BAIK	53	82.50%
+Kecamatan Blega	87.25%	BAIK	28	86.03%
+Kecamatan Kwanyar	87.00%	BAIK	57	81.36%
+Kecamatan Modung	86.78%	BAIK	94	77.32%
+Kecamatan Bangkalan	86.73%	BAIK	104	86.29%
+Kecamatan Labang	86.36%	BAIK	34	85.87%
+Kecamatan Sepulu	83.82%	BAIK	84	80.87%
+Kecamatan Kokop	83.69%	BAIK	47	75.82%
+Kecamatan Tragah	82.43%	BAIK	61	80.50%
+Kecamatan Burneh	81.84%	BAIK	110	81.25%
+Kecamatan Tanah Merah	80.60%	BAIK	62	81.29%
+Kecamatan Klampis	77.71%	CUKUP	55	75.69%
+Kecamatan Socah	77.12%	CUKUP	25	69.30%
+Kecamatan Galis	70.21%	CUKUP	160	72.53%
+Kecamatan Tanjungbumi	67.93%	KURANG	143	67.73%
+Kecamatan Geger	64.45%	KURANG	47	63.60%
