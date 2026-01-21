@@ -102,10 +102,10 @@
             padding: 0 1rem;
         }
 
-        /* Stats Cards */
+        /* Stats Cards - Updated Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -124,7 +124,7 @@
         }
 
         .stat-card h3 {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-light);
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -132,7 +132,7 @@
         }
 
         .stat-card .value {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: var(--primary-color);
         }
@@ -353,7 +353,11 @@
             .header-left { width: 100%; }
             .table-controls { flex-direction: column; align-items: stretch; }
             .search-box input { width: 100%; }
-            .stats-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; } /* 2 kolom di HP */
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; } /* 1 kolom di HP kecil */
         }
     </style>
 </head>
@@ -369,7 +373,7 @@
                 
                 <div class="header-title">
                     <h1>Statistik E-Presensi OPD</h1>
-                    <p>Monitoring Kehadiran dan Penggunaan Aplikasi E-Presensi Desember 2025</p>
+                    <p>Monitoring Kehadiran dan Penggunaan Aplikasi</p>
                 </div>
             </div>
             <div class="header-date" id="currentDate">Memuat tanggal...</div>
@@ -384,25 +388,28 @@
                 <div class="value" id="totalUnit">0</div>
             </div>
             <div class="stat-card" style="border-left-color: var(--status-sangat-baik);">
-                <h3>Rata-rata Jam Kerja (%)</h3>
+                <h3>Rata-rata Jam Kerja Presensi (%)</h3>
                 <div class="value" id="avgPresensi">0%</div>
             </div>
-            
             <div class="stat-card" style="border-left-color: var(--status-baik);">
                 <h3>Total Status TK</h3>
                 <div class="value" id="totalUsers">0</div>
             </div>
-            
             <div class="stat-card" style="border-left-color: var(--status-cukup);">
                 <h3>Rata-rata Kehadiran (%)</h3>
                 <div class="value" id="avgAppUsage">0%</div>
+            </div>
+            <!-- Kartu Stat Baru -->
+            <div class="stat-card" style="border-left-color: var(--primary-color);">
+                <h3>Total Penggunaan Aplikasi</h3>
+                <div class="value" id="totalAppCount">0</div>
             </div>
         </section>
 
         <!-- Chart Section -->
         <section class="charts-section">
             <div class="charts-header">
-                <h2>Sebaran Kategori Penggunaan E-Presensi</h2>
+                <h2>Sebaran Kategori Pengunaan E-Presensi</h2>
                 <div class="legend">
                     <div class="legend-item"><span class="dot" style="background: var(--status-sangat-baik);"></span> Sangat Baik</div>
                     <div class="legend-item"><span class="dot" style="background: var(--status-baik);"></span> Baik</div>
@@ -426,19 +433,13 @@
                 <table id="dataTable">
                     <thead>
                         <tr>
-                            <!-- 
-                                Urutan Header Visual:
-                                0: Nama
-                                1: Status
-                                2: Pegawai
-                                3: Presensi
-                                4: App Usage
-                            -->
-                            <th style="width: 30%;" onclick="sortTable(0)" title="Klik untuk mengurutkan Nama">Nama OPD</th>
-                            <th style="width: 15%;" onclick="sortTable(1)" title="Klik untuk mengurutkan Status">Kategori</th>
-                            <th style="width: 15%;" onclick="sortTable(2)" title="Klik untuk mengurutkan Jumlah Pegawai">Jumlah Status TK</th>
-                            <th style="width: 20%;" onclick="sortTable(3)" title="Klik untuk mengurutkan % Presensi">% Jam Kerja Presensi</th>
-                            <th style="width: 20%;" onclick="sortTable(4)" title="Klik untuk mengurutkan % Penggunaan">% Kehadiran</th>
+                            <!-- Header Visual: 0=Nama, 1=Status, 2=Pegawai, 3=Presensi, 4=App, 5=Penggunaan -->
+                            <th style="width: 25%;" onclick="sortTable(0)" title="Klik untuk mengurutkan Nama">Nama OPD</th>
+                            <th style="width: 12%;" onclick="sortTable(1)" title="Klik untuk mengurutkan Status">Kategori</th>
+                            <th style="width: 12%;" onclick="sortTable(2)" title="Klik untuk mengurutkan Jumlah Pegawai">Status TK</th>
+                            <th style="width: 15%;" onclick="sortTable(3)" title="Klik untuk mengurutkan % Presensi">% Jam Kerja Presensi</th>
+                            <th style="width: 15%;" onclick="sortTable(4)" title="Klik untuk mengurutkan % App">% Kehadiran</th>
+                            <th style="width: 11%;" onclick="sortTable(5)" title="Klik untuk mengurutkan Jml Penggunaan">Jml User</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -454,67 +455,66 @@
     </footer>
 
     <script>
-        // Data mentah
-        // Array Structure Index: [Nama (0), Presensi (1), Status (2), Pegawai (3), AppUsage (4)]
+        // Data Baru
         const rawData = [
-            ["Dinas Perpustakan", 89.56, "BAIK", 12, 86.21],
-            ["BPBD", 91.47, "SANGAT BAIK", 13, 85.28],
-            ["Dinas KB", 88.50, "BAIK", 30, 83.69],
-            ["BPKAD", 89.47, "BAIK", 13, 85.43],
-            ["Dinas Perhubungan", 87.91, "BAIK", 78, 85.44],
-            ["Dinas Sosial", 86.85, "BAIK", 40, 82.19],
-            ["Disbudpar", 87.92, "BAIK", 19, 84.42],
-            ["Diskominfo", 85.59, "BAIK", 73, 84.41],
-            ["BKPSDM", 93.16, "SANGAT BAIK", 8, 91.31],
-            ["Satuan Polisi Pamong Praja", 80.98, "BAIK", 269, 76.19],
-            ["Dinas PU / PUPR", 87.73, "BAIK", 71, 85.07],
-            ["Bakesbangpol", 86.10, "BAIK", 42, 82.29],
-            ["Dinas Perumahan RKP", 89.22, "BAIK", 28, 85.94],
-            ["DPMPTSP", 89.54, "BAIK", 13, 87.78],
-            ["DPMD", 90.54, "SANGAT BAIK", 13, 84.21],
-            ["Dinas Pemuda dan Olahraga", 86.95, "BAIK", 20, 85.50],
-            ["Dinas Perindustrian dan Tenaga Kerja", 88.53, "BAIK", 53, 82.76],
-            ["Dinas Peternakan dan Keswan", 86.04, "BAIK", 74, 81.91],
-            ["Inspektorat", 81.40, "BAIK", 163, 74.30],
-            ["Bapperida", 90.14, "SANGAT BAIK", 12, 82.93],
-            ["Sekretariat Daerah", 88.70, "BAIK", 112, 84.44],
-            ["Diskopumdag", 87.11, "BAIK", 302, 84.36],
-            ["Dispendukcapil", 88.61, "BAIK", 11, 88.95],
-            ["Dinas pertanian PKP", 86.18, "BAIK", 123, 82.60],
-            ["Dinas Lingkungan Hidup", 85.82, "BAIK", 172, 84.89],
-            ["Sekretariat DPRD", 82.39, "BAIK", 65, 73.47],
-            ["Bapenda", 86.78, "BAIK", 39, 81.92],
-            ["Dinas Kesehatan", 89.27, "BAIK", 6, 86.76],
-            ["RSUD", 75.67, "CUKUP", 261, 75.12],
-            ["Dinas Pendidikan", 82.51, "BAIK", 228, 84.00],
-            ["Bagian Umum", 88.12, "BAIK", 25, 83.82],
-            ["Bagian Hukum", 86.27, "BAIK", 11, 80.32],
-            ["Bagian Kesejahteraan Rakyat", 88.40, "BAIK", 5, 88.40],
-            ["Bagian Perekonomian dan SDA", 85.17, "BAIK", 19, 82.01],
-            ["Bagian Organisasi", 87.72, "BAIK", 10, 81.32],
-            ["Bagian Protokol dan Komunikasi Pimpinan", 92.27, "SANGAT BAIK", 1, 84.54],
-            ["Bagian Perencana Keuangan", 88.32, "BAIK", 28, 84.89],
-            ["Bagian Administrasi Pembangunan", 91.01, "SANGAT BAIK", 1, 90.43],
-            ["Bagian Pemerintahan", 90.61, "SANGAT BAIK", 1, 84.43],
-            ["Bagian Pengadaan Barang Jasa", 88.79, "BAIK", 11, 86.78],
-            ["Kecamatan Kamal", 90.02, "SANGAT BAIK", 4, 87.81],
-            ["Kecamatan Arosbaya", 89.92, "BAIK", 14, 85.94],
-            ["Kecamatan Konang", 87.50, "BAIK", 53, 82.50],
-            ["Kecamatan Blega", 87.25, "BAIK", 28, 86.03],
-            ["Kecamatan Kwanyar", 87.00, "BAIK", 57, 81.36],
-            ["Kecamatan Modung", 86.78, "BAIK", 94, 77.32],
-            ["Kecamatan Bangkalan", 86.73, "BAIK", 104, 86.29],
-            ["Kecamatan Labang", 86.36, "BAIK", 34, 85.87],
-            ["Kecamatan Sepulu", 83.82, "BAIK", 84, 80.87],
-            ["Kecamatan Kokop", 83.69, "BAIK", 47, 75.82],
-            ["Kecamatan Tragah", 82.43, "BAIK", 61, 80.50],
-            ["Kecamatan Burneh", 81.84, "BAIK", 110, 81.25],
-            ["Kecamatan Tanah Merah", 80.60, "BAIK", 62, 81.29],
-            ["Kecamatan Klampis", 77.71, "CUKUP", 55, 75.69],
-            ["Kecamatan Socah", 77.12, "CUKUP", 25, 69.30],
-            ["Kecamatan Galis", 70.21, "CUKUP", 160, 72.53],
-            ["Kecamatan Tanjungbumi", 67.93, "KURANG", 143, 67.73],
-            ["Kecamatan Geger", 64.45, "KURANG", 47, 63.60]
+            ["Dinas Perpustakan", 89.56, "BAIK", 12, 86.21, 35],
+            ["BPBD", 91.47, "SANGAT BAIK", 13, 85.28, 26],
+            ["Dinas KB", 88.50, "BAIK", 30, 83.69, 56],
+            ["BPKAD", 89.47, "BAIK", 13, 85.43, 57],
+            ["Dinas Perhubungan", 87.91, "BAIK", 78, 85.44, 109],
+            ["Dinas Sosial", 86.85, "BAIK", 40, 82.19, 42],
+            ["Disbudpar", 87.92, "BAIK", 19, 84.42, 36],
+            ["Diskominfo", 85.59, "BAIK", 73, 84.41, 70],
+            ["BKPSDM", 93.16, "SANGAT BAIK", 8, 91.31, 77],
+            ["Satuan Polisi Pamong Praja", 80.98, "BAIK", 269, 76.19, 106],
+            ["Dinas PU / PUPR", 87.73, "BAIK", 71, 85.07, 111],
+            ["Bakesbangpol", 86.10, "BAIK", 42, 82.29, 41],
+            ["Dinas Perumahan RKP", 89.22, "BAIK", 28, 85.94, 69],
+            ["DPMPTSP", 89.54, "BAIK", 13, 87.78, 47],
+            ["DPMD", 90.54, "SANGAT BAIK", 13, 84.21, 46],
+            ["Dinas Pemuda dan Olahraga", 86.95, "BAIK", 20, 85.50, 39],
+            ["Dinas Perindustrian dan Tenaga Kerja", 88.53, "BAIK", 53, 82.76, 55],
+            ["Dinas Peternakan dan Keswan", 86.04, "BAIK", 74, 81.91, 81],
+            ["Inspektorat", 81.40, "BAIK", 163, 74.30, 90],
+            ["Bapperida", 90.14, "SANGAT BAIK", 12, 82.93, 79],
+            ["Sekretariat Daerah", 88.70, "BAIK", 112, 84.44, 216],
+            ["Diskopumdag", 87.11, "BAIK", 302, 84.36, 327],
+            ["Dispendukcapil", 88.61, "BAIK", 11, 88.95, 42],
+            ["Dinas pertanian PKP", 86.18, "BAIK", 123, 82.60, 187],
+            ["Dinas Lingkungan Hidup", 85.82, "BAIK", 172, 84.89, 173],
+            ["Sekretariat DPRD", 82.39, "BAIK", 65, 73.47, 40],
+            ["Bapenda", 86.78, "BAIK", 39, 81.92, 64],
+            ["Dinas Kesehatan", 89.27, "BAIK", 6, 86.76, 45],
+            ["RSUD", 75.67, "CUKUP", 261, 75.12, 91],
+            ["Dinas Pendidikan", 82.51, "BAIK", 228, 84.00, 182],
+            ["Bagian Umum", 88.12, "BAIK", 25, 83.82, 44],
+            ["Bagian Hukum", 86.27, "BAIK", 11, 80.32, 19],
+            ["Bagian Kesejahteraan Rakyat", 88.40, "BAIK", 5, 88.40, 12],
+            ["Bagian Perekonomian dan SDA", 85.17, "BAIK", 19, 82.01, 22],
+            ["Bagian Organisasi", 87.72, "BAIK", 10, 81.32, 17],
+            ["Bagian Protokol dan Komunikasi Pimpinan", 92.27, "SANGAT BAIK", 1, 84.54, 18],
+            ["Bagian Perencana Keuangan", 88.32, "BAIK", 28, 84.89, 19],
+            ["Bagian Administrasi Pembangunan", 91.01, "SANGAT BAIK", 1, 90.43, 15],
+            ["Bagian Pemerintahan", 90.61, "SANGAT BAIK", 1, 84.43, 19],
+            ["Bagian Pengadaan Barang Jasa", 88.79, "BAIK", 11, 86.78, 26],
+            ["Kecamatan Kamal", 90.02, "SANGAT BAIK", 4, 87.81, 34],
+            ["Kecamatan Arosbaya", 89.92, "BAIK", 14, 85.94, 22],
+            ["Kecamatan Konang", 87.50, "BAIK", 53, 82.50, 24],
+            ["Kecamatan Blega", 87.25, "BAIK", 28, 86.03, 29],
+            ["Kecamatan Kwanyar", 87.00, "BAIK", 57, 81.36, 23],
+            ["Kecamatan Modung", 86.78, "BAIK", 94, 77.32, 27],
+            ["Kecamatan Bangkalan", 86.73, "BAIK", 104, 86.29, 97],
+            ["Kecamatan Labang", 86.36, "BAIK", 34, 85.87, 22],
+            ["Kecamatan Sepulu", 83.82, "BAIK", 84, 80.87, 25],
+            ["Kecamatan Kokop", 83.69, "BAIK", 47, 75.82, 20],
+            ["Kecamatan Tragah", 82.43, "BAIK", 61, 80.50, 25],
+            ["Kecamatan Burneh", 81.84, "BAIK", 110, 81.25, 40],
+            ["Kecamatan Tanah Merah", 80.60, "BAIK", 62, 81.29, 26],
+            ["Kecamatan Klampis", 77.71, "CUKUP", 55, 75.69, 16],
+            ["Kecamatan Socah", 77.12, "CUKUP", 25, 69.30, 31],
+            ["Kecamatan Galis", 70.21, "CUKUP", 160, 72.53, 29],
+            ["Kecamatan Tanjungbumi", 67.93, "KURANG", 143, 67.73, 19],
+            ["Kecamatan Geger", 64.45, "KURANG", 47, 63.60, 23]
         ];
 
         let currentData = [...rawData];
@@ -535,7 +535,6 @@
             "KURANG": "#e74c3c"
         };
 
-        // Pemetaan Status ke Angka untuk Urutan Kustom
         const statusRank = {
             "SANGAT BAIK": 4,
             "BAIK": 3,
@@ -558,22 +557,28 @@
         function calculateStats(data) {
             let totalPresensi = 0;
             let totalAppUsage = 0;
-            let totalUsers = 0;
+            let totalPegawai = 0;
+            let totalUsageCount = 0; // Variabel baru untuk total penggunaan
             let statusCounts = { "SANGAT BAIK": 0, "BAIK": 0, "CUKUP": 0, "KURANG": 0 };
 
             data.forEach(row => {
+                // Index Data: 1=Presensi, 3=Pegawai, 4=AppUsage, 5=UsageCount
                 totalPresensi += row[1];
                 totalAppUsage += row[4];
-                totalUsers += row[3];
+                totalPegawai += row[3];
+                totalUsageCount += row[5]; // Hitung total penggunaan
                 statusCounts[row[2]]++;
             });
 
             const count = data.length;
             
             document.getElementById('totalUnit').textContent = count;
-            document.getElementById('totalUsers').textContent = totalUsers.toLocaleString('id-ID');
+            document.getElementById('totalUsers').textContent = totalPegawai.toLocaleString('id-ID');
             document.getElementById('avgPresensi').textContent = (count > 0 ? (totalPresensi / count).toFixed(2) : 0) + '%';
             document.getElementById('avgAppUsage').textContent = (count > 0 ? (totalAppUsage / count).toFixed(2) : 0) + '%';
+            
+            // Update Stat Card Baru
+            document.getElementById('totalAppCount').textContent = totalUsageCount.toLocaleString('id-ID');
 
             renderChart(statusCounts, count);
         }
@@ -606,7 +611,7 @@
             const tbody = document.querySelector('#dataTable tbody');
             tbody.innerHTML = '';
             data.forEach(row => {
-                const [name, presensi, status, users, appUsage] = row;
+                const [name, presensi, status, users, appUsage, usageCount] = row;
                 let presColor = hexColors[status];
                 if(presensi < 70) presColor = hexColors["KURANG"];
                 else if(presensi < 80) presColor = hexColors["CUKUP"];
@@ -628,23 +633,21 @@
                             <span class="percentage-text">${appUsage}%</span>
                         </div>
                     </td>
+                    <td><span class="num-users">${usageCount}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // --- PERBAIKAN LOGIKA SORTING (SINKRONISASI INDEKS) ---
         function sortTable(columnIndex) {
             const headers = document.querySelectorAll('th');
             
-            // Toggle arah sort
             if (sortDirection[columnIndex] === 'asc') {
                 sortDirection[columnIndex] = 'desc';
             } else {
                 sortDirection[columnIndex] = 'asc';
             }
 
-            // Update visual icon
             headers.forEach((th, index) => {
                 th.classList.remove('sort-asc', 'sort-desc');
                 if (index === columnIndex) {
@@ -652,50 +655,36 @@
                 }
             });
 
-            // Mapping Indeks Header ke Indeks Data Array
-            // Header Index: 0(Nama), 1(Status), 2(Pegawai), 3(Presensi), 4(App)
-            // Data Index:   0(Nama), 1(Presensi), 2(Status), 3(Pegawai), 4(App)
-            
             let dataIdx = -1;
+            if (columnIndex === 0) dataIdx = 0;
+            else if (columnIndex === 1) dataIdx = 2;
+            else if (columnIndex === 2) dataIdx = 3;
+            else if (columnIndex === 3) dataIdx = 1;
+            else if (columnIndex === 4) dataIdx = 4;
+            else if (columnIndex === 5) dataIdx = 5;
 
-            if (columnIndex === 0) dataIdx = 0;      // Nama
-            else if (columnIndex === 1) dataIdx = 2; // Status -> Data Index 2
-            else if (columnIndex === 2) dataIdx = 3; // Pegawai -> Data Index 3
-            else if (columnIndex === 3) dataIdx = 1; // Presensi -> Data Index 1
-            else if (columnIndex === 4) dataIdx = 4; // App -> Data Index 4
-
-            // Logika Sorting berdasarkan dataIdx yang sudah disesuaikan
             currentData.sort((rowA, rowB) => {
                 let valA = rowA[dataIdx];
                 let valB = rowB[dataIdx];
                 let comparison = 0;
 
-                // Kolom Nama (Index 0)
                 if (columnIndex === 0) {
                     valA = valA.toString().toLowerCase();
                     valB = valB.toString().toLowerCase();
                     comparison = valA.localeCompare(valB);
                 }
-                // Kolom Status (Header Index 1 -> Data Index 2)
                 else if (columnIndex === 1) {
                     const rankA = statusRank[valA] || 0;
                     const rankB = statusRank[valB] || 0;
                     comparison = rankA - rankB;
                 }
-                // Kolom Pegawai (Header Index 2 -> Data Index 3)
-                else if (columnIndex === 2) {
+                else if (columnIndex === 2 || columnIndex === 5) {
                     comparison = Number(valA) - Number(valB);
                 }
-                // Kolom Presensi (Header Index 3 -> Data Index 1)
-                else if (columnIndex === 3) {
-                    comparison = valA - valB;
-                }
-                // Kolom App (Header Index 4 -> Data Index 4)
                 else {
                     comparison = valA - valB;
                 }
 
-                // Balik hasil berdasarkan arah (ASC/DESC)
                 return sortDirection[columnIndex] === 'asc' ? comparison : -comparison;
             });
 
@@ -722,12 +711,4 @@
 
     </script>
 </body>
-
 </html>
-
-
-
-
-
-
-
