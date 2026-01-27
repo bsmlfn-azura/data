@@ -102,7 +102,7 @@
             padding: 0 1rem;
         }
 
-        /* Stats Cards - Updated Grid */
+        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -260,6 +260,14 @@
             transition: background-color 0.2s;
         }
 
+        /* Kolom Sumber Data tidak perlu ikon sort */
+        th.no-sort {
+            cursor: default;
+        }
+        th.no-sort::after {
+            content: none;
+        }
+
         th:hover {
             background-color: #e9ecef;
         }
@@ -291,6 +299,28 @@
 
         tbody tr:hover {
             background-color: #fafafa;
+        }
+
+        /* Hyperlink Styling */
+        .doc-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 0;
+            transition: color 0.2s;
+        }
+
+        .doc-link:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+
+        .doc-link svg {
+            width: 16px;
+            height: 16px;
         }
 
         /* Status Badges */
@@ -353,11 +383,11 @@
             .header-left { width: 100%; }
             .table-controls { flex-direction: column; align-items: stretch; }
             .search-box input { width: 100%; }
-            .stats-grid { grid-template-columns: 1fr 1fr; } /* 2 kolom di HP */
+            .stats-grid { grid-template-columns: 1fr 1fr; } 
         }
         
         @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr; } /* 1 kolom di HP kecil */
+            .stats-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -373,7 +403,7 @@
                 
                 <div class="header-title">
                     <h1>Statistik E-Presensi OPD</h1>
-                    <p>Monitoring Kehadiran dan Penggunaan Aplikasi E-Presensi Desember 2025</p>
+                    <p>Monitoring Kehadiran dan Penggunaan Aplikasi</p>
                 </div>
             </div>
             <div class="header-date" id="currentDate">Memuat tanggal...</div>
@@ -388,18 +418,17 @@
                 <div class="value" id="totalUnit">0</div>
             </div>
             <div class="stat-card" style="border-left-color: var(--status-sangat-baik);">
-                <h3>Rata-rata Jam Kerja Presensi (%)</h3>
+                <h3>Rata-rata Presensi</h3>
                 <div class="value" id="avgPresensi">0%</div>
             </div>
             <div class="stat-card" style="border-left-color: var(--status-baik);">
-                <h3>Total Status TK</h3>
+                <h3>Total Pegawai</h3>
                 <div class="value" id="totalUsers">0</div>
             </div>
             <div class="stat-card" style="border-left-color: var(--status-cukup);">
-                <h3>Rata-rata Kehadiran (%)</h3>
+                <h3>Rata-rata Penggunaan App</h3>
                 <div class="value" id="avgAppUsage">0%</div>
             </div>
-            <!-- Kartu Stat Baru -->
             <div class="stat-card" style="border-left-color: var(--primary-color);">
                 <h3>Total Penggunaan Aplikasi</h3>
                 <div class="value" id="totalAppCount">0</div>
@@ -409,7 +438,7 @@
         <!-- Chart Section -->
         <section class="charts-section">
             <div class="charts-header">
-                <h2>Sebaran Kategori Pengunaan E-Presensi</h2>
+                <h2>Sebaran Kategori Kinerja</h2>
                 <div class="legend">
                     <div class="legend-item"><span class="dot" style="background: var(--status-sangat-baik);"></span> Sangat Baik</div>
                     <div class="legend-item"><span class="dot" style="background: var(--status-baik);"></span> Baik</div>
@@ -424,7 +453,7 @@
         <!-- Data Table -->
         <section class="table-container">
             <div class="table-controls">
-                <h2>Detail Data Per OPD</h2>
+                <h2>Detail Data Per OPD / Kecamatan</h2>
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="Cari nama dinas/kecamatan..." onkeyup="filterTable()">
                 </div>
@@ -433,13 +462,13 @@
                 <table id="dataTable">
                     <thead>
                         <tr>
-                            <!-- Header Visual: 0=Nama, 1=Status, 2=Pegawai, 3=Presensi, 4=App, 5=Penggunaan -->
-                            <th style="width: 25%;" onclick="sortTable(0)" title="Klik untuk mengurutkan Nama">Nama OPD</th>
-                            <th style="width: 12%;" onclick="sortTable(1)" title="Klik untuk mengurutkan Status">Kategori (%Jam Kerja)</th>
-                            <th style="width: 12%;" onclick="sortTable(2)" title="Klik untuk mengurutkan Jumlah Pegawai">Status TK</th>
-                            <th style="width: 15%;" onclick="sortTable(3)" title="Klik untuk mengurutkan % Presensi">% Jam Kerja Presensi</th>
-                            <th style="width: 15%;" onclick="sortTable(4)" title="Klik untuk mengurutkan % App">% Kehadiran</th>
-                            <th style="width: 11%;" onclick="sortTable(5)" title="Klik untuk mengurutkan Jml Penggunaan">ASN</th>
+                            <th style="width: 20%;" onclick="sortTable(0)" title="Klik untuk mengurutkan Nama">Nama OPD / Kecamatan</th>
+                            <th style="width: 10%;" onclick="sortTable(1)" title="Klik untuk mengurutkan Status">Status</th>
+                            <th style="width: 10%;" onclick="sortTable(2)" title="Klik untuk mengurutkan Jumlah Pegawai">Pegawai</th>
+                            <th style="width: 14%;" onclick="sortTable(3)" title="Klik untuk mengurutkan % Presensi">% Presensi</th>
+                            <th style="width: 14%;" onclick="sortTable(4)" title="Klik untuk mengurutkan % App">% Penggunaan App</th>
+                            <th style="width: 10%;" onclick="sortTable(5)" title="Klik untuk mengurutkan Jml Penggunaan">Jml Penggunaan</th>
+                            <th class="no-sort" style="width: 12%;">Sumber Data</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -451,70 +480,73 @@
     </main>
 
     <footer>
-        <p>&copy; 2026 BKPSDM | Statistik E-Presensi Pemerintah Kabupaten Bangkalan.</p>
+        <p>&copy; 2023 Sistem Informasi E-Presensi Pemerintah. Generated by AI Assistant.</p>
     </footer>
 
     <script>
-        // Data Baru
+        // Data Baru dengan Link di kolom terakhir (Index 6)
+        // Format: [Nama (0), Presensi (1), Status (2), Pegawai (3), AppUsage (4), JmlPenggunaan (5), LinkDokumen (6)]
+        
         const rawData = [
-            ["Dinas Perpustakan", 89.56, "BAIK", 12, 86.21, 35],
-            ["BPBD", 91.47, "SANGAT BAIK", 13, 85.28, 26],
-            ["Dinas KB", 88.50, "BAIK", 30, 83.69, 56],
-            ["BPKAD", 89.47, "BAIK", 13, 85.43, 57],
-            ["Dinas Perhubungan", 87.91, "BAIK", 78, 85.44, 109],
-            ["Dinas Sosial", 86.85, "BAIK", 40, 82.19, 42],
-            ["Disbudpar", 87.92, "BAIK", 19, 84.42, 36],
-            ["Diskominfo", 85.59, "BAIK", 73, 84.41, 70],
-            ["BKPSDM", 93.16, "SANGAT BAIK", 8, 91.31, 77],
-            ["Satuan Polisi Pamong Praja", 80.98, "BAIK", 269, 76.19, 106],
-            ["Dinas PU / PUPR", 87.73, "BAIK", 71, 85.07, 111],
-            ["Bakesbangpol", 86.10, "BAIK", 42, 82.29, 41],
-            ["Dinas Perumahan RKP", 89.22, "BAIK", 28, 85.94, 69],
-            ["DPMPTSP", 89.54, "BAIK", 13, 87.78, 47],
-            ["DPMD", 90.54, "SANGAT BAIK", 13, 84.21, 46],
-            ["Dinas Pemuda dan Olahraga", 86.95, "BAIK", 20, 85.50, 39],
-            ["Dinas Perindustrian dan Tenaga Kerja", 88.53, "BAIK", 53, 82.76, 55],
-            ["Dinas Peternakan dan Keswan", 86.04, "BAIK", 74, 81.91, 81],
-            ["Inspektorat", 81.40, "BAIK", 163, 74.30, 90],
-            ["Bapperida", 90.14, "SANGAT BAIK", 12, 82.93, 79],
-            ["Sekretariat Daerah", 88.70, "BAIK", 112, 84.44, 216],
-            ["Diskopumdag", 87.11, "BAIK", 302, 84.36, 327],
-            ["Dispendukcapil", 88.61, "BAIK", 11, 88.95, 42],
-            ["Dinas pertanian PKP", 86.18, "BAIK", 123, 82.60, 187],
-            ["Dinas Lingkungan Hidup", 85.82, "BAIK", 172, 84.89, 173],
-            ["Sekretariat DPRD", 82.39, "BAIK", 65, 73.47, 40],
-            ["Bapenda", 86.78, "BAIK", 39, 81.92, 64],
-            ["Dinas Kesehatan", 89.27, "BAIK", 6, 86.76, 45],
-            ["RSUD", 75.67, "CUKUP", 261, 75.12, 91],
-            ["Dinas Pendidikan", 82.51, "BAIK", 228, 84.00, 182],
-            ["Bagian Umum", 88.12, "BAIK", 25, 83.82, 44],
-            ["Bagian Hukum", 86.27, "BAIK", 11, 80.32, 19],
-            ["Bagian Kesejahteraan Rakyat", 88.40, "BAIK", 5, 88.40, 12],
-            ["Bagian Perekonomian dan SDA", 85.17, "BAIK", 19, 82.01, 22],
-            ["Bagian Organisasi", 87.72, "BAIK", 10, 81.32, 17],
-            ["Bagian Protokol dan Komunikasi Pimpinan", 92.27, "SANGAT BAIK", 1, 84.54, 18],
-            ["Bagian Perencana Keuangan", 88.32, "BAIK", 28, 84.89, 19],
-            ["Bagian Administrasi Pembangunan", 91.01, "SANGAT BAIK", 1, 90.43, 15],
-            ["Bagian Pemerintahan", 90.61, "SANGAT BAIK", 1, 84.43, 19],
-            ["Bagian Pengadaan Barang Jasa", 88.79, "BAIK", 11, 86.78, 26],
-            ["Kecamatan Kamal", 90.02, "SANGAT BAIK", 4, 87.81, 34],
-            ["Kecamatan Arosbaya", 89.92, "BAIK", 14, 85.94, 22],
-            ["Kecamatan Konang", 87.50, "BAIK", 53, 82.50, 24],
-            ["Kecamatan Blega", 87.25, "BAIK", 28, 86.03, 29],
-            ["Kecamatan Kwanyar", 87.00, "BAIK", 57, 81.36, 23],
-            ["Kecamatan Modung", 86.78, "BAIK", 94, 77.32, 27],
-            ["Kecamatan Bangkalan", 86.73, "BAIK", 104, 86.29, 97],
-            ["Kecamatan Labang", 86.36, "BAIK", 34, 85.87, 22],
-            ["Kecamatan Sepulu", 83.82, "BAIK", 84, 80.87, 25],
-            ["Kecamatan Kokop", 83.69, "BAIK", 47, 75.82, 20],
-            ["Kecamatan Tragah", 82.43, "BAIK", 61, 80.50, 25],
-            ["Kecamatan Burneh", 81.84, "BAIK", 110, 81.25, 40],
-            ["Kecamatan Tanah Merah", 80.60, "BAIK", 62, 81.29, 26],
-            ["Kecamatan Klampis", 77.71, "CUKUP", 55, 75.69, 16],
-            ["Kecamatan Socah", 77.12, "CUKUP", 25, 69.30, 31],
-            ["Kecamatan Galis", 70.21, "CUKUP", 160, 72.53, 29],
-            ["Kecamatan Tanjungbumi", 67.93, "KURANG", 143, 67.73, 19],
-            ["Kecamatan Geger", 64.45, "KURANG", 47, 63.60, 23]
+            // CONTOH: Ganti URL di bawah ini dengan link asli dokumen masing-masing OPD
+            ["Dinas Perpustakan", 89.56, "BAIK", 12, 86.21, 35, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["BPBD", 91.47, "SANGAT BAIK", 13, 85.28, 26, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas KB", 88.50, "BAIK", 30, 83.69, 56, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["BPKAD", 89.47, "BAIK", 13, 85.43, 57, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas Perhubungan", 87.91, "BAIK", 78, 85.44, 109, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas Sosial", 86.85, "BAIK", 40, 82.19, 42, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Disbudpar", 87.92, "BAIK", 19, 84.42, 36, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Diskominfo", 85.59, "BAIK", 73, 84.41, 70, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["BKPSDM", 88.76, "BAIK", 27, 88.31, 77, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Satuan Polisi Pamong Praja", 80.98, "BAIK", 269, 76.19, 106, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas PU / PUPR", 87.73, "BAIK", 71, 85.07, 111, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bakesbangpol", 86.10, "BAIK", 42, 82.29, 41, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas Perumahan RKP", 89.22, "BAIK", 28, 85.94, 69, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["DPMPTSP", 89.54, "BAIK", 13, 87.78, 47, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["DPMD", 90.54, "SANGAT BAIK", 13, 84.21, 46, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas Pemuda dan Olahraga", 86.95, "BAIK", 20, 85.50, 39, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas Perindustrian dan Tenaga Kerja", 88.53, "BAIK", 53, 82.76, 55, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas Peternakan dan Keswan", 86.04, "BAIK", 74, 81.91, 81, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Inspektorat", 81.40, "BAIK", 163, 74.30, 90, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bapperida", 90.14, "SANGAT BAIK", 12, 82.93, 79, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Sekretariat Daerah", 88.70, "BAIK", 112, 84.44, 216, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Diskopumdag", 87.11, "BAIK", 302, 84.36, 327, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dispendukcapil", 88.61, "BAIK", 11, 88.95, 42, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas pertanian PKP", 86.18, "BAIK", 123, 82.60, 187, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas Lingkungan Hidup", 85.82, "BAIK", 172, 84.89, 173, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Sekretariat DPRD", 82.39, "BAIK", 65, 73.47, 40, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bapenda", 86.78, "BAIK", 39, 81.92, 64, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas Kesehatan", 89.27, "BAIK", 6, 86.76, 45, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["RSUD", 75.67, "CUKUP", 261, 75.12, 91, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Dinas Pendidikan", 82.51, "BAIK", 228, 84.00, 182, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bagian Umum", 88.12, "BAIK", 25, 83.82, 44, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bagian Hukum", 86.27, "BAIK", 11, 80.32, 19, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bagian Kesejahteraan Rakyat", 88.40, "BAIK", 5, 88.40, 12, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bagian Perekonomian dan SDA", 85.17, "BAIK", 19, 82.01, 22, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bagian Organisasi", 87.72, "BAIK", 10, 81.32, 17, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bagian Protokol dan Komunikasi Pimpinan", 92.27, "SANGAT BAIK", 1, 84.54, 18, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bagian Perencana Keuangan", 88.32, "BAIK", 28, 84.89, 19, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bagian Administrasi Pembangunan", 91.01, "SANGAT BAIK", 1, 90.43, 15, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bagian Pemerintahan", 90.61, "SANGAT BAIK", 1, 84.43, 19, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Bagian Pengadaan Barang Jasa", 88.79, "BAIK", 11, 86.78, 26, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Kamal", 90.02, "SANGAT BAIK", 4, 87.81, 34, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Arosbaya", 89.92, "BAIK", 14, 85.94, 22, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Konang", 87.50, "BAIK", 53, 82.50, 24, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Blega", 87.25, "BAIK", 28, 86.03, 29, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Kwanyar", 87.00, "BAIK", 57, 81.36, 23, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Modung", 86.78, "BAIK", 94, 77.32, 27, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Bangkalan", 86.73, "BAIK", 104, 86.29, 97, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Labang", 86.36, "BAIK", 34, 85.87, 22, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Sepulu", 83.82, "BAIK", 84, 80.87, 25, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Kokop", 83.69, "BAIK", 47, 75.82, 20, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Tragah", 82.43, "BAIK", 61, 80.50, 25, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Burneh", 81.84, "BAIK", 110, 81.25, 40, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Tanah Merah", 80.60, "BAIK", 62, 81.29, 26, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Klampis", 77.71, "CUKUP", 55, 75.69, 16, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Socah", 77.12, "CUKUP", 25, 69.30, 31, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Galis", 70.21, "CUKUP", 160, 72.53, 29, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Tanjungbumi", 67.93, "KURANG", 143, 67.73, 19, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"],
+            ["Kecamatan Geger", 64.45, "KURANG", 47, 63.60, 23, "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"]
         ];
 
         let currentData = [...rawData];
@@ -558,15 +590,15 @@
             let totalPresensi = 0;
             let totalAppUsage = 0;
             let totalPegawai = 0;
-            let totalUsageCount = 0; // Variabel baru untuk total penggunaan
+            let totalUsageCount = 0;
             let statusCounts = { "SANGAT BAIK": 0, "BAIK": 0, "CUKUP": 0, "KURANG": 0 };
 
             data.forEach(row => {
-                // Index Data: 1=Presensi, 3=Pegawai, 4=AppUsage, 5=UsageCount
+                // Ambil data sesuai index array baru
                 totalPresensi += row[1];
                 totalAppUsage += row[4];
                 totalPegawai += row[3];
-                totalUsageCount += row[5]; // Hitung total penggunaan
+                totalUsageCount += row[5];
                 statusCounts[row[2]]++;
             });
 
@@ -576,8 +608,6 @@
             document.getElementById('totalUsers').textContent = totalPegawai.toLocaleString('id-ID');
             document.getElementById('avgPresensi').textContent = (count > 0 ? (totalPresensi / count).toFixed(2) : 0) + '%';
             document.getElementById('avgAppUsage').textContent = (count > 0 ? (totalAppUsage / count).toFixed(2) : 0) + '%';
-            
-            // Update Stat Card Baru
             document.getElementById('totalAppCount').textContent = totalUsageCount.toLocaleString('id-ID');
 
             renderChart(statusCounts, count);
@@ -611,7 +641,9 @@
             const tbody = document.querySelector('#dataTable tbody');
             tbody.innerHTML = '';
             data.forEach(row => {
-                const [name, presensi, status, users, appUsage, usageCount] = row;
+                // Deklarasi ulang sesuai index baru (ada tambahan link di index 6)
+                const [name, presensi, status, users, appUsage, usageCount, docLink] = row;
+                
                 let presColor = hexColors[status];
                 if(presensi < 70) presColor = hexColors["KURANG"];
                 else if(presensi < 80) presColor = hexColors["CUKUP"];
@@ -634,6 +666,18 @@
                         </div>
                     </td>
                     <td><span class="num-users">${usageCount}</span></td>
+                    <td>
+                        <a href="${docLink}" target="_blank" class="doc-link" title="Klik untuk preview dokumen">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            Lihat Dokumen
+                        </a>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -642,6 +686,10 @@
         function sortTable(columnIndex) {
             const headers = document.querySelectorAll('th');
             
+            // Kolom terakhir (Sumber Data - Index 6 visual) tidak disortir
+            // Header index: 0,1,2,3,4,5,6
+            if (columnIndex === 6) return;
+
             if (sortDirection[columnIndex] === 'asc') {
                 sortDirection[columnIndex] = 'desc';
             } else {
@@ -656,6 +704,11 @@
             });
 
             let dataIdx = -1;
+
+            // Mapping Header Index ke Data Index
+            // Header: 0(Nama), 1(Status), 2(Pegawai), 3(Presensi), 4(App), 5(Jml), 6(Link)
+            // Data:   0(Nama), 1(Presensi), 2(Status), 3(Pegawai), 4(App), 5(Jml), 6(Link)
+            
             if (columnIndex === 0) dataIdx = 0;
             else if (columnIndex === 1) dataIdx = 2;
             else if (columnIndex === 2) dataIdx = 3;
@@ -712,6 +765,3 @@
     </script>
 </body>
 </html>
-
-
-
