@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistik Peremajaan Data - Dashboard Laporan</title>
+    <!-- Memuat Library Chart.js untuk Grafik -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Color Palette - Professional Gray Theme */
+            --primary-color: #333333; 
+            --secondary-color: #555555; 
+            --accent-color: #e63946;
+            --background-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-dark: #333333;
+            --text-light: #666666;
+            --border-color: #e1e4e8;
+            --table-header-bg: #f8f9fa;
+            
+            /* Spacing & Radius */
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --radius: 8px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- Header --- */
+        header {
+            background-color: var(--primary-color); 
+            color: white;
+            padding: var(--spacing-lg) var(--spacing-md);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center; 
+            gap: 20px;
+        }
+
+        .header-logo {
+            width: 70px;
+            height: 70px;
+            background-color: white; 
+            border-radius: 50%;
+            padding: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            object-fit: contain;
+        }
+
+        .header-text {
+            text-align: center;
+            flex: 1;
+        }
+
+        header h1 { font-size: 1.8rem; font-weight: 600; margin-bottom: var(--spacing-sm); }
+        header p { font-size: 0.95rem; opacity: 0.9; }
+
+        @media (min-width: 768px) {
+            .header-content { justify-content: flex-start; text-align: left; }
+            .header-text { text-align: left; }
+        }
+
+        /* --- Main Content --- */
+        main {
+            flex: 1;
+            padding: var(--spacing-lg) var(--spacing-md);
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* --- Summary Cards --- */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: var(--spacing-md);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--secondary-color);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover { transform: translateY(-2px); }
+
+        .card h3 {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .card .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1.2;
+        }
+
+        .card.winner { border-left-color: #2a9d8f; }
+        .card.min { border-left-color: #e76f51; }
+        .card.total { border-left-color: var(--primary-color); }
+
+        /* --- Chart Section --- */
+        .chart-section {
+            background: var(--card-bg);
+            padding: var(--spacing-md);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: var(--spacing-lg);
+        }
+        .chart-header { margin-bottom: var(--spacing-md); border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-sm); }
+        .chart-header h3 { color: var(--text-dark); font-size: 1.1rem; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+
+        /* --- Controls --- */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+
+        .control-left {
+            display: flex;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            padding-left: 40px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .search-box input:focus { outline: none; border-color: var(--secondary-color); }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 1.2rem; }
+
+        .month-selector { position: relative; }
+        .month-selector select {
+            appearance: none;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            padding: 12px 40px 12px 16px;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            cursor: pointer;
+            min-width: 150px;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 12px auto;
+        }
+        .month-selector select:focus { outline: none; border-color: var(--secondary-color); box-shadow: 0 0 0 3px rgba(0,0,0,0.1); }
+
+        /* Button Styles */
+        .btn-print {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s;
+        }
+        .btn-print:hover { background-color: var(--primary-color); }
+
+        /* --- Table --- */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            overflow-x: auto;
+            position: relative; /* Penting untuk pseudo-element background */
+        }
+
+        /* --- BACKGROUND GAMBAR POLA SIMETRIS --- */
+        .table-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            
+            /* GANTI URL DI BAWAH INI DENGAN URL GAMBAR POLA SIMETRIS ANDA */
+            background-image: url('https://commons.wikimedia.org/wiki/File:Lambang_Bangkalan.png'); 
+            
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 600px; /* Ukuran gambar background */
+            opacity: 0.05; /* Transparansi (0.05 = 5%) agar tidak mengganggu */
+            z-index: 0; /* Di bawah konten tabel */
+            pointer-events: none; /* Klik tembus ke tabel */
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 800px; 
+            font-size: 0.9rem; 
+            position: relative;
+            z-index: 1; /* Tabel di atas background */
+            background-color: rgba(255, 255, 255, 0.9); /* Sedikit transparansi putih di belakang teks */
+        }
+        
+        thead { background-color: var(--table-header-bg); position: sticky; top: 0; z-index: 10; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { font-weight: 600; color: var(--text-dark); white-space: nowrap; }
+        td { color: var(--text-light); }
+        th:not(:first-child), td:not(:first-child) { text-align: right; }
+        tbody tr:hover { background-color: #f8faff; }
+
+        tr.total-row {
+            background-color: #eef2f6;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        tr.total-row td { border-top: 2px solid var(--border-color); }
+
+        .empty-state { text-align: center; padding: 40px; color: var(--text-light); display: none; }
+
+        /* --- Footer --- */
+        footer {
+            background-color: white;
+            padding: var(--spacing-md);
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: auto;
+        }
+
+        @media print {
+            body { background: white; }
+            header { background: white; color: black; box-shadow: none; border-bottom: 2px solid #000; padding: 0; margin-bottom: 20px; text-align: left; justify-content: flex-start; }
+            .header-content { justify-content: flex-start; text-align: left; }
+            .header-logo { display: none; }
+            .controls { display: none; }
+            .chart-section { border: 1px solid #ddd; box-shadow: none; break-inside: avoid; }
+            .summary-grid { box-shadow: none; border: 1px solid #ddd; }
+            .card { border: none; border-bottom: 1px solid #ddd; border-radius: 0; box-shadow: none; }
+            .table-container { box-shadow: none; overflow: visible; }
+            /* Sembunyikan background saat print agar hemat tinta */
+            .table-container::before { display: none; }
+            table { min-width: 100%; font-size: 10pt; }
+            th { background-color: #eee !important; -webkit-print-color-adjust: exact; }
+            tr.total-row { background-color: #eee !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <img src="https://z-cdn-media.chatglm.cn/files/a38f30b5-ff1b-4a9e-9b0c-7ef276c2ef6d.png?auth_key=1870387495-f6232936ebe44770a5397e7ba95212cb-0-44d4385bb505203a9f648949953e61c2" alt="Logo" class="header-logo">
+            <div class="header-text">
+                <h1>Statistik Peremajaan Data</h1>
+                <p>Laporan Update Data OPD & Kecamatan (Tahun Berjalan)</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Summary Section -->
+        <section class="summary-grid" id="summary-section">
+            <!-- Cards injected via JS -->
+        </section>
+
+        <!-- Chart Section -->
+        <section class="chart-section">
+            <div class="chart-header">
+                <h3>Grafik Total Data Per Jenis Riwayat</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Controls -->
+        <section class="controls">
+            <div class="control-left">
+                <!-- Dropdown Bulan -->
+                <div class="month-selector">
+                    <select id="monthSelector">
+                        <!-- Opsi Bulan -->
+                    </select>
+                </div>
+
+                <!-- Search Box -->
+                <div class="search-box">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="text" id="searchInput" placeholder="Cari nama OPD atau Kecamatan...">
+                </div>
+            </div>
+
+            <button class="btn-print" onclick="window.print()">
+                <span>&#128196;</span> Cetak Laporan
+            </button>
+        </section>
+
+        <!-- Data Table -->
+        <section class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">NAMA OPD</th>
+                        <th>TOTAL</th>
+                        <th>AK</th>
+                        <th>CPNS/PNS</th>
+                        <th>R.KELUARGA</th>
+                        <th>DATA PRIBADI</th>
+                        <th>DIKLAT</th>
+                        <th>JABATAN</th>
+                        <th>PENDIDIKAN</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Rows injected via JS -->
+                </tbody>
+            </table>
+            <div id="emptyState" class="empty-state">
+                Data tidak ditemukan.
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Statistik Peremajaan Data. Laporan Dokumentasi.</p>
+    </footer>
+
+    <script>
+        // --- 1. DATA DASAR (JANUARI) ---
+        // Struktur: [Nama, Total, AK, CPNS/PNS, R.Keluarga, Data Pribadi, Diklat, Jabatan, Pendidikan]
+        const baseDataJanuary = [
+            ["BKPSDM", 572, 86, 4, 71, 49, 37, 226, 35],
+            ["BAKESBANGPOL", 34, 0, 0, 1, 0, 0, 33, 0],
+            ["BPBD", 23, 0, 0, 0, 0, 0, 23, 0],
+            ["BAPENDA", 72, 0, 0, 2, 0, 0, 70, 0],
+            ["BPKAD", 56, 0, 0, 3, 0, 0, 37, 0],
+            ["BAPPERIDA", 40, 0, 0, 3, 0, 0, 47, 6],
+            ["DINAS KB", 28, 1, 0, 3, 0, 0, 24, 0],
+            ["DISBUDPAR", 21, 0, 0, 2, 0, 1, 18, 0],
+            ["DISPENDUK", 16, 0, 0, 1, 0, 0, 13, 2],
+            ["DINKES", 173, 25, 1, 63, 2, 0, 68, 2],
+            ["DISKOMINFO", 76, 0, 0, 3, 5, 0, 65, 1],
+            ["DISKOPUMDAG", 319, 5, 0, 4, 5, 1, 299, 0],
+            ["DINAS LH", 157, 0, 0, 0, 0, 1, 156, 0],
+            ["DINAS PENDIDIKAN", 406, 60, 0, 162, 0, 13, 95, 0],
+            ["DINAS PU", 69, 0, 0, 12, 0, 1, 52, 0],
+            ["DPMD", 25, 0, 0, 1, 4, 0, 19, 0],
+            ["DISPORA", 28, 0, 0, 2, 1, 0, 25, 0],
+            ["DPMPTSP", 64, 2, 0, 9, 4, 0, 36, 0],
+            ["DISHUB", 126, 0, 0, 2, 0, 0, 124, 0],
+            ["DISPERINAKER", 44, 0, 0, 7, 1, 0, 34, 2],
+            ["DISPUSIP", 39, 0, 0, 0, 0, 0, 39, 0],
+            ["DINAS PERTANIAN PKP", 96, 0, 0, 0, 0, 0, 90, 0],
+            ["DINAS PERUMAHAN RKP", 67, 0, 0, 18, 0, 0, 49, 0],
+            ["DINAS PETERNAKAN DAN KESWAN", 65, 0, 0, 8, 0, 1, 55, 0],
+            ["DINSOS", 25, 0, 0, 0, 0, 0, 24, 0],
+            ["INSPEKTORAT", 31, 1, 0, 3, 0, 0, 27, 0],
+            ["SATPOL PP", 41, 0, 0, 3, 0, 0, 37, 0],
+            ["SEKRETARIAT DPRD", 19, 0, 0, 5, 0, 0, 14, 0],
+            ["UOBK RSUD", 68, 20, 0, 14, 1, 0, 32, 0],
+            ["SEKRETARIAT DAERAH", 143, 0, 0, 22, 7, 0, 110, 1],
+            ["KECAMATAN AROSBAYA", 1, 0, 0, 0, 0, 0, 0, 1],
+            ["KECAMATAN BANGKALAN", 50, 0, 0, 4, 4, 0, 42, 0],
+            ["KECAMATAN BLEGA", 42, 0, 0, 0, 0, 0, 40, 2],
+            ["KECAMATAN BURNEH", 27, 0, 0, 4, 0, 0, 22, 0],
+            ["KECAMATAN GALIS", 0, 0, 0, 0, 0, 0, 0, 0],
+            ["KECAMATAN GEGER", 19, 0, 0, 0, 0, 0, 16, 2],
+            ["KECAMATAN KAMAL", 36, 0, 0, 0, 0, 2, 34, 0],
+            ["KECAMATAN KLAMPIS", 1, 0, 0, 0, 0, 0, 0, 0],
+            ["KECAMATAN KOKOP", 17, 0, 0, 0, 0, 1, 12, 1],
+            ["KECAMATAN KONANG", 16, 0, 0, 0, 3, 0, 10, 3],
+            ["KECAMATAN KWANYAR", 2, 0, 0, 2, 0, 0, 0, 0],
+            ["KECAMATAN LABANG", 14, 0, 0, 0, 0, 2, 12, 0],
+            ["KECAMATAN MODUNG", 27, 0, 0, 0, 0, 1, 21, 2],
+            ["KECAMATAN SEPULU", 40, 0, 0, 0, 0, 0, 36, 4],
+            ["KECAMATAN SOCAH", 19, 0, 0, 0, 0, 0, 16, 3],
+            ["KECAMATAN TANAHMERAH", 16, 0, 0, 1, 0, 0, 10, 5],
+            ["KECAMATAN TANJUNGBUMI", 1, 0, 0, 0, 0, 0, 1, 0],
+            ["KECAMATAN TRAGAH", 36, 0, 0, 1, 0, 0, 34, 0]
+        ];
+
+        // --- 2. AREA INPUT DATA MANUAL (EDIT DI SINI) ---
+        // Tulis array data lengkap di sini untuk bulan yang ingin di-update.
+        // Format: ["Nama OPD", Total, AK, CPNS, RK, Pribadi, Diklat, Jabatan, Pendidikan]
+        // Tips: Kolom 'Total' bisa diisi angka 0, sistem akan menjumlahkan otomatis.
+        const dataManualInput = {
+            "Februari": [
+                // CONTOH: Saya mengisi data baru untuk BKPSDM dan BAKESBANGPOL di Februari.
+                // Baris lain yang tidak ditulis di sini akan otomatis menyalin data Januari.
+                ["BKPSDM", 0, 90, 4, 75, 50, 40, 230, 36], // Total dihitung otomatis dari angka detail
+                ["BAKESBANGPOL", 0, 1, 0, 2, 0, 0, 34, 0],
+                // ... Tambahkan baris lain sesuai kebutuhan ...
+            ],
+            // Contoh jika ingin mengisi data Maret:
+            "Maret": [], 
+            "April": [],
+			"Mei": [],
+			"Juni": [],
+			"Juli": [],
+			"Agustus": [],
+			"September": [],
+			"Oktober": [],
+			"November": [],
+			"Desember": [
+				["BKPSDM", 0, 90, 4, 75, 50, 40, 230, 36],
+			],
+            // ... seterusnya
+        };
+
+        // --- 3. LOGIKA PENGOLAHAN DATA ---
+
+        // Membersihkan LocalStorage agar data kode selalu dipakai (opsional)
+        // localStorage.removeItem('statistikData'); 
+
+        let myChart = null;
+        let currentData = [];
+
+        // Fungsi helper untuk menggabungkan data manual dan data bulan sebelumnya
+        function getMonthData(monthName, prevMonthData) {
+            if (dataManualInput[monthName] && dataManualInput[monthName].length > 0) {
+                // Ada data manual, gunakan data manual
+                // Re-calculate Total jika user mengisi 0
+                return dataManualInput[monthName].map(row => {
+                    if (row[1] === 0) {
+                        const totalManual = row[2] + row[3] + row[4] + row[5] + row[6] + row[7] + row[8];
+                        row[1] = totalManual;
+                    }
+                    return row;
+                });
+            } else {
+                // Tidak ada data manual, salin dari bulan sebelumnya (Dummy Auto-fill)
+                // Anda bisa mengubah logika ini untuk menambah angka random jika mau
+                return prevMonthData.map(row => {
+                    const name = row[0];
+                    // Contoh: Jika bulan berubah, angka tidak berubah (copy paste)
+                    // atau tambahkan sedikit: row[i] + 0
+                    
+                    // Kita copy exact saja agar stabil jika tidak ada input
+                    return [...row]; 
+                });
+            }
+        }
+
+        // Generate Database Per Bulan
+        const dataByMonth = {
+            "Januari": baseDataJanuary,
+        };
+
+        const monthsOrder = ["Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        let currentMonthData = baseDataJanuary;
+
+        monthsOrder.forEach(month => {
+            // Gunakan fungsi getMonthData untuk memilih data manual atau salinan
+            dataByMonth[month] = getMonthData(month, currentMonthData);
+            currentMonthData = dataByMonth[month]; // Update referensi
+        });
+
+        // --- 4. FUNGSI KALKULASI OTOMATIS ---
+        function calculateStats(data) {
+            let totalGrand = 0;
+            let maxRow = { name: "-", val: -1 };
+            let minRow = { name: "-", val: Infinity }; 
+            let colSums = [0, 0, 0, 0, 0, 0, 0]; 
+            let maxJabatan = { name: "-", val: -1 };
+
+            data.forEach(row => {
+                const total = row[1]; 
+                const name = row[0];
+
+                totalGrand += total;
+
+                if (total > maxRow.val) {
+                    maxRow = { name: name, val: total };
+                }
+
+                if (total < minRow.val) {
+                    minRow = { name: name, val: total };
+                }
+
+                for(let i=2; i<=8; i++) {
+                    colSums[i-2] += (row[i] || 0);
+                }
+
+                const jabatan = row[7];
+                if (jabatan > maxJabatan.val) {
+                    maxJabatan = { name: name, val: jabatan };
+                }
+            });
+
+            if (minRow.val === Infinity) {
+                minRow = { name: "-", val: 0 };
+            }
+
+            return {
+                total: totalGrand.toLocaleString('id-ID'),
+                topName: maxRow.name,
+                topValue: maxRow.val,
+                minName: minRow.name,
+                minValue: minRow.val,
+                topJabatan: maxJabatan.name,
+                chartData: colSums
+            };
+        }
+
+        // --- 5. RENDER FUNCTIONS ---
+
+        function renderSummary(stats) {
+            const container = document.getElementById('summary-section');
+            const cards = [
+                { type: 'total', title: 'Total Data Peremajaan', value: stats.total },
+                { type: 'winner', title: 'Update Data Terbanyak', value: `${stats.topName} (${stats.topValue})` },
+                { type: 'min', title: 'Update Data Paling Sedikit', value: `${stats.minName} (${stats.minValue})` },
+                { type: 'winner', title: 'Update Jabatan Terbanyak', value: stats.topJabatan }
+            ];
+
+            let html = '';
+            cards.forEach(card => {
+                html += `
+                    <div class="card ${card.type}">
+                        <h3>${card.title}</h3>
+                        <div class="value">${card.value}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderChart(chartData) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            if (myChart) { myChart.destroy(); }
+
+            const labels = ['AK', 'CPNS/PNS', 'R.KELUARGA', 'DATA PRIBADI', 'DIKLAT', 'JABATAN', 'PENDIDIKAN'];
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Data',
+                        data: chartData,
+                        backgroundColor: [
+                            'rgba(51, 51, 51, 0.7)',  
+                            'rgba(231, 111, 81, 0.7)', 
+                            'rgba(42, 157, 143, 0.7)', 
+                            'rgba(230, 57, 70, 0.7)', 
+                            'rgba(255, 183, 3, 0.7)', 
+                            'rgba(32, 106, 158, 0.7)', 
+                            'rgba(108, 117, 125, 0.7)' 
+                        ],
+                        borderColor: [
+                            'rgba(51, 51, 51, 1)',
+                            'rgba(231, 111, 81, 1)',
+                            'rgba(42, 157, 143, 1)',
+                            'rgba(230, 57, 70, 1)',
+                            'rgba(255, 183, 3, 1)',
+                            'rgba(32, 106, 158, 1)',
+                            'rgba(108, 117, 125, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function(context) { return ` Total: ${context.raw} Data`; } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { color: '#666' } },
+                        x: { grid: { display: false }, ticks: { color: '#333', font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        function renderTable(dataToRender, stats) {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            tbody.innerHTML = '';
+
+            if (dataToRender.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            } else {
+                emptyState.style.display = 'none';
+            }
+
+            dataToRender.forEach((row) => {
+                const tr = document.createElement('tr');
+                const formatNum = (num) => num === 0 || num === null || num === undefined ? '-' : num;
+                tr.innerHTML = `
+                    <td><strong>${row[0]}</strong></td>
+                    <td>${formatNum(row[1])}</td>
+                    <td>${formatNum(row[2])}</td>
+                    <td>${formatNum(row[3])}</td>
+                    <td>${formatNum(row[4])}</td>
+                    <td>${formatNum(row[5])}</td>
+                    <td>${formatNum(row[6])}</td>
+                    <td>${formatNum(row[7])}</td>
+                    <td>${formatNum(row[8])}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const trTotal = document.createElement('tr');
+            trTotal.className = 'total-row';
+            trTotal.innerHTML = `
+                <td>TOTAL DATA PEREMAJAAN</td>
+                <td>${stats.total}</td>
+                <td>${stats.chartData[0]}</td>
+                <td>${stats.chartData[1]}</td>
+                <td>${stats.chartData[2]}</td>
+                <td>${stats.chartData[3]}</td>
+                <td>${stats.chartData[4]}</td>
+                <td>${stats.chartData[5]}</td>
+                <td>${stats.chartData[6]}</td>
+            `;
+            tbody.appendChild(trTotal);
+        }
+
+        function initDashboard(monthName) {
+            const data = dataByMonth[monthName];
+            if (!data) return; 
+
+            currentData = data;
+            const stats = calculateStats(data);
+            renderSummary(stats);
+            renderChart(stats.chartData);
+            renderTable(data, stats);
+            document.getElementById('searchInput').value = '';
+        }
+
+        // --- Event Listeners ---
+        const monthSelector = document.getElementById('monthSelector');
+        
+        const allMonths = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        allMonths.forEach(month => {
+            const option = document.createElement('option');
+            option.value = month;
+            option.textContent = month;
+            monthSelector.appendChild(option);
+        });
+
+        monthSelector.addEventListener('change', (e) => {
+            initDashboard(e.target.value);
+        });
+
+        const searchInput = document.getElementById('searchInput');
+        
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filteredData = currentData.filter(row => {
+                return row[0].toLowerCase().includes(term);
+            });
+
+            const stats = calculateStats(currentData); 
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = ''; 
+            
+            if (filteredData.length === 0) {
+                 document.getElementById('emptyState').style.display = 'block';
+            } else {
+                 document.getElementById('emptyState').style.display = 'none';
+                 filteredData.forEach(row => {
+                    const tr = document.createElement('tr');
+                    const formatNum = (num) => num === 0 || num === null ? '-' : num;
+                    tr.innerHTML = `
+                        <td><strong>${row[0]}</strong></td>
+                        <td>${formatNum(row[1])}</td>
+                        <td>${formatNum(row[2])}</td>
+                        <td>${formatNum(row[3])}</td>
+                        <td>${formatNum(row[4])}</td>
+                        <td>${formatNum(row[5])}</td>
+                        <td>${formatNum(row[6])}</td>
+                        <td>${formatNum(row[7])}</td>
+                        <td>${formatNum(row[8])}</td>
+                    `;
+                    tbody.appendChild(tr);
+                 });
+            }
+            const trTotal = document.createElement('tr');
+            trTotal.className = 'total-row';
+            trTotal.innerHTML = `
+                <td>TOTAL DATA PEREMAJAAN</td>
+                <td>${stats.total}</td>
+                <td>${stats.chartData[0]}</td>
+                <td>${stats.chartData[1]}</td>
+                <td>${stats.chartData[2]}</td>
+                <td>${stats.chartData[3]}</td>
+                <td>${stats.chartData[4]}</td>
+                <td>${stats.chartData[5]}</td>
+                <td>${stats.chartData[6]}</td>
+            `;
+            tbody.appendChild(trTotal);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initDashboard('Januari'); 
+        });
+
+    </script>
+</body>
+</html>
