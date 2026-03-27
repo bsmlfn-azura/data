@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Statistik Pelayanan - BKPSDM Bangkalan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a1628;
+            --bg-secondary: #0f2137;
+            --bg-card: #142a45;
+            --fg-primary: #f1f5f9;
+            --fg-secondary: #94a3b8;
+            --fg-muted: #64748b;
+            --accent-gold: #d4a846;
+            --accent-gold-light: #f0c654;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --border: #1e3a5f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--fg-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .font-display { font-family: 'Space Grotesk', sans-serif; }
+
+        .bg-pattern {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% -20%, rgba(212, 168, 70, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+                linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        }
+
+        .grid-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+            background-image: 
+                linear-gradient(rgba(212, 168, 70, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(212, 168, 70, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        .header {
+            background: linear-gradient(180deg, var(--bg-card) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border);
+            position: relative; z-index: 10;
+        }
+        .header::before {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(20, 42, 69, 0.8) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light));
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(212, 168, 70, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 40px rgba(212, 168, 70, 0.1);
+        }
+        .stat-card:hover::before { opacity: 1; }
+        .stat-card.status-selesai::before { background: linear-gradient(90deg, var(--accent-green), #34d399); }
+        .stat-card.status-proses::before { background: linear-gradient(90deg, var(--accent-blue), #60a5fa); }
+        .stat-card.status-antrian::before { background: linear-gradient(90deg, var(--accent-orange), #fbbf24); }
+
+        .icon-container {
+            width: 56px; height: 56px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; position: relative;
+        }
+        .icon-container::after {
+            content: ''; position: absolute; inset: -2px; border-radius: 16px;
+            background: inherit; opacity: 0.3; filter: blur(8px);
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border); border-radius: 16px;
+            background: rgba(20, 42, 69, 0.5);
+            transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .upload-zone::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(212, 168, 70, 0.05) 0%, transparent 50%);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: var(--accent-gold); background: rgba(212, 168, 70, 0.05);
+        }
+        .upload-zone:hover::before, .upload-zone.drag-over::before { opacity: 1; }
+
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            position: relative;
+        }
+        .chart-container::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+        }
+
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
+        .data-table th {
+            background: rgba(212, 168, 70, 0.1); color: var(--accent-gold);
+            font-weight: 600; text-transform: uppercase; font-size: 0.75rem;
+            letter-spacing: 0.05em; padding: 16px; text-align: left;
+            border-bottom: 1px solid var(--border); white-space: nowrap;
+        }
+        .data-table td {
+            padding: 14px 16px; border-bottom: 1px solid rgba(30, 58, 95, 0.5);
+            color: var(--fg-secondary); white-space: nowrap;
+        }
+        .data-table tr:hover td { background: rgba(212, 168, 70, 0.03); color: var(--fg-primary); }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+        }
+        .badge-selesai { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+        .badge-proses { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+        .badge-antrian { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); }
+
+        .filter-select {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 10px; padding: 10px 36px 10px 14px; color: var(--fg-primary);
+            font-size: 0.875rem; cursor: pointer; transition: all 0.3s; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 10px center; background-size: 16px;
+        }
+        .filter-select:hover { border-color: var(--accent-gold); }
+        .filter-select:focus { outline: none; border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(212, 168, 70, 0.1); }
+
+        .pagination-btn {
+            min-width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border);
+            color: var(--fg-secondary); font-size: 0.875rem; cursor: pointer; transition: all 0.3s;
+        }
+        .pagination-btn:hover:not(:disabled) { border-color: var(--accent-gold); color: var(--accent-gold); }
+        .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pagination-btn.active { background: var(--accent-gold); border-color: var(--accent-gold); color: var(--bg-primary); font-weight: 600; }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+        .animate-in { animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; }
+        .animate-slide { animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; } .delay-5 { animation-delay: 0.5s; } .delay-6 { animation-delay: 0.6s; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-light) 100%);
+            color: var(--bg-primary); font-weight: 700; padding: 12px 24px;
+            border-radius: 10px; border: none; cursor: pointer; transition: all 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .btn-primary::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        .btn-primary:hover::before { left: 100%; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(212, 168, 70, 0.4); }
+
+        .btn-secondary {
+            background: var(--bg-secondary); color: var(--fg-primary); font-weight: 600;
+            padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border);
+            cursor: pointer; transition: all 0.3s;
+        }
+        .btn-secondary:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+        .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .month-btn {
+            padding: 8px 16px; border-radius: 8px; background: transparent;
+            border: 1px solid var(--border); color: var(--fg-secondary);
+            cursor: pointer; transition: all 0.3s; font-size: 0.875rem;
+        }
+        .month-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+        .month-btn.active { background: var(--accent-gold); border-color: var(--accent-gold); color: var(--bg-primary); font-weight: 600; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        @media (max-width: 768px) {
+            .stat-card { padding: 20px; }
+            .header-content { flex-direction: column; gap: 16px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    <div class="grid-overlay"></div>
+
+    <div class="relative z-10 min-h-screen">
+        <!-- Header -->
+        <header class="header py-4 px-6 lg:px-12">
+            <div class="max-w-7xl mx-auto">
+                <div class="header-content flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white rounded-full p-2 flex items-center justify-center shadow-lg" style="box-shadow: 0 4px 20px rgba(212, 168, 70, 0.3);">
+                            <svg viewBox="0 0 100 100" class="w-full h-full">
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="#d4a846" stroke-width="3"/>
+                                <text x="50" y="40" text-anchor="middle" font-size="12" fill="#0a1628" font-weight="bold">PEMERINTAH</text>
+                                <text x="50" y="55" text-anchor="middle" font-size="10" fill="#0a1628">KABUPATEN</text>
+                                <text x="50" y="70" text-anchor="middle" font-size="12" fill="#d4a846" font-weight="bold">BANGKALAN</text>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="font-display text-xl lg:text-2xl font-bold text-white">BKPSDM BANGKALAN</h1>
+                            <p class="text-sm lg:text-base text-[var(--fg-muted)]">Badan Kepegawaian dan Pengembangan Sumber Daya Manusia</p>
+                            <p class="text-xs text-[var(--accent-gold)]">Kabupaten Bangkalan - Jawa Timur</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden lg:block">
+                            <p class="text-sm text-[var(--fg-muted)]">Tahun Anggaran</p>
+                            <p class="text-lg font-bold text-[var(--accent-gold)]" id="currentYear">2025</p>
+                        </div>
+                        <div class="w-px h-10 bg-[var(--border)] hidden lg:block"></div>
+                        <div class="text-right hidden lg:block">
+                            <p class="text-sm text-[var(--fg-muted)]">Update Terakhir</p>
+                            <p class="text-sm font-medium" id="lastUpdate">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="px-6 lg:px-12 py-8 max-w-7xl mx-auto">
+            <!-- Upload Section -->
+            <section class="mb-8 animate-in">
+                <div class="upload-zone p-8" id="uploadZone">
+                    <div class="flex flex-col lg:flex-row items-center justify-center gap-6 text-center lg:text-left">
+                        <div class="icon-container bg-gradient-to-br from-[var(--accent-gold)] to-[var(--accent-gold-light)]">
+                            <svg class="w-8 h-8 text-[var(--bg-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-display text-xl font-bold mb-2">Import Data Pelayanan</h3>
+                            <p class="text-[var(--fg-secondary)] mb-4">Upload file Excel (.xlsx/.xls) untuk memperbarui statistik pelayanan</p>
+                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+                                <label class="btn-primary cursor-pointer inline-flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                    </svg>
+                                    Pilih File Excel
+                                    <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden">
+                                </label>
+                                <span class="text-sm text-[var(--fg-muted)]" id="fileName">Belum ada file dipilih</span>
+                            </div>
+                        </div>
+                        <div class="text-xs text-[var(--fg-muted)] max-w-xs hidden lg:block">
+                            <p class="font-medium mb-1">Format kolom yang didukung:</p>
+                            <p>Tanggal, Nama Pemohon, Unit Kerja, Jenis Pelayanan, PIC, Status</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Month Selector -->
+            <section class="mb-8 animate-in delay-1">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm text-[var(--fg-muted)] mr-2">Dashboard Bulan:</span>
+                    <div class="flex flex-wrap gap-2" id="monthSelector"></div>
+                </div>
+            </section>
+
+            <!-- Stats Cards -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card p-6 animate-in delay-2">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="icon-container bg-gradient-to-br from-[var(--accent-cyan)] to-cyan-400">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Hari Ini</span>
+                    </div>
+                    <div class="stat-number text-4xl font-display font-bold mb-1" id="dailyCount">0</div>
+                    <p class="text-sm text-[var(--fg-secondary)]">Pelayanan Hari Ini</p>
+                </div>
+
+                <div class="stat-card p-6 animate-in delay-3">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="icon-container bg-gradient-to-br from-[var(--accent-blue)] to-blue-400">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Bulan Ini</span>
+                    </div>
+                    <div class="stat-number text-4xl font-display font-bold mb-1" id="monthlyCount">0</div>
+                    <p class="text-sm text-[var(--fg-secondary)]">Pelayanan Bulan <span id="currentMonthName">-</span></p>
+                    <div class="mt-4">
+                        <div class="progress-bar">
+                            <div class="progress-fill bg-gradient-to-r from-[var(--accent-blue)] to-blue-400" id="monthlyProgress" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-[var(--fg-muted)] mt-2"><span id="monthlyPercent">0</span>% dari target bulanan</p>
+                    </div>
+                </div>
+
+                <div class="stat-card p-6 animate-in delay-4">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="icon-container bg-gradient-to-br from-[var(--accent-gold)] to-yellow-400">
+                            <svg class="w-6 h-6 text-[var(--bg-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Tahun Ini</span>
+                    </div>
+                    <div class="stat-number text-4xl font-display font-bold mb-1" id="yearlyCount">0</div>
+                    <p class="text-sm text-[var(--fg-secondary)]">Total Pelayanan Tahun <span id="yearDisplay">2025</span></p>
+                </div>
+
+                <div class="stat-card p-6 animate-in delay-5">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="icon-container bg-gradient-to-br from-purple-500 to-purple-400">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Rata-rata</span>
+                    </div>
+                    <div class="stat-number text-4xl font-display font-bold mb-1" id="avgCount">0</div>
+                    <p class="text-sm text-[var(--fg-secondary)]">Pelayanan per Hari</p>
+                </div>
+            </section>
+
+            <!-- Status Cards -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="stat-card status-selesai p-6 animate-in delay-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-[var(--accent-green)] bg-opacity-20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-[var(--accent-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm text-[var(--fg-muted)]">Selesai Ditangani</p>
+                                <p class="text-3xl font-display font-bold text-[var(--accent-green)]" id="selesaiCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill bg-[var(--accent-green)]" id="selesaiProgress" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-[var(--fg-muted)] mt-2"><span id="selesaiPercent">0</span>% dari total pelayanan</p>
+                </div>
+
+                <div class="stat-card status-proses p-6 animate-in delay-3">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-[var(--accent-blue)] bg-opacity-20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-[var(--accent-blue)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm text-[var(--fg-muted)]">Sedang Diproses</p>
+                                <p class="text-3xl font-display font-bold text-[var(--accent-blue)]" id="prosesCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill bg-[var(--accent-blue)]" id="prosesProgress" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-[var(--fg-muted)] mt-2"><span id="prosesPercent">0</span>% dari total pelayanan</p>
+                </div>
+
+                <div class="stat-card status-antrian p-6 animate-in delay-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-[var(--accent-orange)] bg-opacity-20 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-[var(--accent-orange)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm text-[var(--fg-muted)]">Dalam Antrian</p>
+                                <p class="text-3xl font-display font-bold text-[var(--accent-orange)]" id="antrianCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill bg-[var(--accent-orange)]" id="antrianProgress" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-[var(--fg-muted)] mt-2"><span id="antrianPercent">0</span>% dari total pelayanan</p>
+                </div>
+            </section>
+
+            <!-- Charts -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="chart-container p-6 animate-in delay-3">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="font-display text-lg font-bold">Trend Pelayanan Bulanan</h3>
+                            <p class="text-sm text-[var(--fg-muted)]">Tahun <span id="chartYear">2025</span></p>
+                        </div>
+                    </div>
+                    <div class="h-64"><canvas id="monthlyChart"></canvas></div>
+                </div>
+
+                <div class="chart-container p-6 animate-in delay-4">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="font-display text-lg font-bold">Distribusi Status Pelayanan</h3>
+                            <p class="text-sm text-[var(--fg-muted)]">Bulan <span id="pieMonthName">-</span></p>
+                        </div>
+                    </div>
+                    <div class="h-64 flex items-center justify-center"><canvas id="statusChart"></canvas></div>
+                </div>
+            </section>
+
+            <!-- Data Table -->
+            <section class="chart-container overflow-hidden animate-in delay-5">
+                <div class="p-6 border-b border-[var(--border)]">
+                    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h3 class="font-display text-lg font-bold">Data Pelayanan</h3>
+                            <p class="text-sm text-[var(--fg-muted)]">Total <span id="totalDataCount">0</span> data | Menampilkan <span id="displayedDataCount">0</span> data</p>
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="searchInput" placeholder="Cari data..." class="bg-[var(--bg-secondary)] border border-[var(--border)] rounded-lg px-4 py-2 pl-10 text-sm focus:outline-none focus:border-[var(--accent-gold)] transition-colors w-64">
+                            <svg class="w-4 h-4 text-[var(--fg-muted)] absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-[var(--fg-muted)]">Filter:</label>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <select id="filterYear" class="filter-select"><option value="all">Semua Tahun</option></select>
+                            <select id="filterMonth" class="filter-select">
+                                <option value="all">Semua Bulan</option>
+                                <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
+                                <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
+                                <option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option>
+                                <option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
+                            </select>
+                            <select id="filterDay" class="filter-select"><option value="all">Semua Tanggal</option></select>
+                            <button id="resetFilter" class="btn-secondary text-sm">Reset Filter</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>No</th><th>Tanggal</th><th>Nama Pemohon</th><th>Unit Kerja</th>
+                                <th>Jenis Pelayanan</th><th>PIC</th><th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody">
+                            <tr><td colspan="7" class="text-center py-8 text-[var(--fg-muted)]">Import file Excel untuk menampilkan data</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-6 border-t border-[var(--border)]">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="text-sm text-[var(--fg-muted)]">
+                            Halaman <span id="currentPageDisplay">1</span> dari <span id="totalPagesDisplay">1</span>
+                        </div>
+                        <div class="flex items-center gap-2" id="paginationContainer"></div>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="mt-12 py-6 border-t border-[var(--border)] text-center">
+                <p class="text-sm text-[var(--fg-muted)]">Dashboard Statistik Pelayanan BKPSDM Kabupaten Bangkalan</p>
+                <p class="text-xs text-[var(--fg-muted)] mt-2">Jl. Panglima Sudirman No. 15, Bangkalan, Jawa Timur 69111</p>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // State
+        let serviceData = [];
+        let filteredData = [];
+        let selectedMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let monthlyChart = null;
+        let statusChart = null;
+        let currentPage = 1;
+        const rowsPerPage = 20;
+        let filterYear = currentYear.toString();
+        let filterMonth = selectedMonth.toString();
+        let filterDay = 'all';
+
+        const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const MONTH_TARGET = 500;
+
+        // DOM
+        const fileInput = document.getElementById('fileInput');
+        const uploadZone = document.getElementById('uploadZone');
+        const fileName = document.getElementById('fileName');
+        const monthSelector = document.getElementById('monthSelector');
+        const searchInput = document.getElementById('searchInput');
+        const filterYearSelect = document.getElementById('filterYear');
+        const filterMonthSelect = document.getElementById('filterMonth');
+        const filterDaySelect = document.getElementById('filterDay');
+        const resetFilterBtn = document.getElementById('resetFilter');
+
+        // Init
+        function init() {
+            renderMonthSelector();
+            updateYearDisplay();
+            initCharts();
+            initFilters();
+            loadSampleData();
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            fileInput.addEventListener('change', handleFileUpload);
+            uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+            uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault(); uploadZone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFileUpload({ target: fileInput }); }
+            });
+            searchInput.addEventListener('input', handleSearch);
+            filterYearSelect.addEventListener('change', handleFilterChange);
+            filterMonthSelect.addEventListener('change', handleFilterChange);
+            filterDaySelect.addEventListener('change', handleFilterChange);
+            resetFilterBtn.addEventListener('click', resetFilters);
+        }
+
+        // Filters
+        function initFilters() {
+            filterMonthSelect.value = selectedMonth.toString();
+            updateYearFilter();
+            updateDayFilter();
+        }
+
+        function updateYearFilter() {
+            const years = new Set();
+            serviceData.forEach(d => { if (d.tanggal) years.add(d.tanggal.getFullYear()); });
+            if (years.size === 0) years.add(currentYear);
+            const sortedYears = Array.from(years).sort((a, b) => b - a);
+            filterYearSelect.innerHTML = '<option value="all">Semua Tahun</option>';
+            sortedYears.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year.toString(); option.textContent = year;
+                if (year.toString() === filterYear) option.selected = true;
+                filterYearSelect.appendChild(option);
+            });
+        }
+
+        function updateDayFilter() {
+            filterDaySelect.innerHTML = '<option value="all">Semua Tanggal</option>';
+            for (let i = 1; i <= 31; i++) {
+                const option = document.createElement('option');
+                option.value = i.toString(); option.textContent = i;
+                filterDaySelect.appendChild(option);
+            }
+        }
+
+        function handleFilterChange() {
+            filterYear = filterYearSelect.value;
+            filterMonth = filterMonthSelect.value;
+            filterDay = filterDaySelect.value;
+            currentPage = 1;
+            applyFiltersAndRender();
+        }
+
+        function resetFilters() {
+            filterYear = currentYear.toString();
+            filterMonth = selectedMonth.toString();
+            filterDay = 'all';
+            filterYearSelect.value = filterYear;
+            filterMonthSelect.value = filterMonth;
+            filterDaySelect.value = 'all';
+            currentPage = 1;
+            searchInput.value = '';
+            applyFiltersAndRender();
+        }
+
+        function applyFiltersAndRender() {
+            filteredData = serviceData.filter(d => {
+                const matchYear = filterYear === 'all' || d.tanggal.getFullYear().toString() === filterYear;
+                const matchMonth = filterMonth === 'all' || d.tanggal.getMonth().toString() === filterMonth;
+                const matchDay = filterDay === 'all' || d.tanggal.getDate().toString() === filterDay;
+                return matchYear && matchMonth && matchDay;
+            });
+            renderTable();
+            renderPagination();
+            updateDataCounts();
+        }
+
+        function updateDataCounts() {
+            document.getElementById('totalDataCount').textContent = serviceData.length.toLocaleString('id-ID');
+            document.getElementById('displayedDataCount').textContent = filteredData.length.toLocaleString('id-ID');
+        }
+
+        // Month Selector
+        function renderMonthSelector() {
+            monthSelector.innerHTML = MONTHS.map((month, index) => `
+                <button class="month-btn ${index === selectedMonth ? 'active' : ''}" data-month="${index}">${month.substring(0, 3)}</button>
+            `).join('');
+            monthSelector.querySelectorAll('.month-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    selectedMonth = parseInt(btn.dataset.month);
+                    renderMonthSelector();
+                    updateDashboard();
+                });
+            });
+        }
+
+        // File Handling
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            fileName.textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    processExcelData(jsonData);
+                    showNotification('Data berhasil diimport!', 'success');
+                } catch (error) {
+                    console.error('Error parsing Excel:', error);
+                    showNotification('Gagal membaca file Excel', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // === PERBAIKAN UTAMA: Normalisasi Header ===
+        function processExcelData(jsonData) {
+            serviceData = jsonData.map((row, index) => {
+                // 1. Normalisasi Key: Ubah ke huruf kecil dan trim spasi
+                const cleanRow = {};
+                Object.keys(row).forEach(key => {
+                    cleanRow[key.toLowerCase().trim()] = row[key];
+                });
+
+                // 2. Ambil data dengan nama kolom yang sudah dinormalisasi
+                // Tanggal
+                const tanggal = cleanRow['tanggal'] || cleanRow['date'] || cleanRow['tgl'] || new Date();
+                
+                // Nama Pemohon
+                const pemohon = cleanRow['nama pemohon'] || cleanRow['pemohon'] || cleanRow['nama'] || cleanRow['nama_pemohon'] || `Pemohon ${index + 1}`;
+                
+                // Unit Kerja
+                const unitKerja = cleanRow['unit kerja'] || cleanRow['unit_kerja'] || cleanRow['unit'] || cleanRow['opd'] || cleanRow['instansi'] || '-';
+                
+                // Jenis Pelayanan
+                const jenis = cleanRow['jenis pelayanan'] || cleanRow['jenis'] || cleanRow['layanan'] || cleanRow['jenis_pelayanan'] || 'Pelayanan Umum';
+                
+                // PIC (Penangan utama masalah user)
+                const pic = cleanRow['pic'] || cleanRow['petugas'] || cleanRow['staff'] || cleanRow['nama pic'] || cleanRow['nama_pic'] || cleanRow['pegawai'] || '-';
+                
+                // Status
+                const status = cleanRow['status'] || cleanRow['keterangan'] || 'Proses';
+
+                // Parse Date
+                let parsedDate;
+                if (typeof tanggal === 'number') {
+                    parsedDate = new Date((tanggal - 25569) * 86400 * 1000);
+                } else if (tanggal instanceof Date) {
+                    parsedDate = tanggal;
+                } else {
+                    parsedDate = new Date(tanggal);
+                }
+
+                return {
+                    id: index + 1,
+                    tanggal: parsedDate,
+                    tanggalStr: formatDate(parsedDate),
+                    pemohon: pemohon,
+                    unitKerja: unitKerja,
+                    jenis: jenis,
+                    pic: pic,
+                    status: normalizeStatus(status)
+                };
+            });
+
+            serviceData.sort((a, b) => b.tanggal - a.tanggal);
+            filteredData = [...serviceData];
+            updateYearFilter();
+            resetFilters();
+            updateDashboard();
+            updateLastUpdate();
+        }
+
+        function normalizeStatus(status) {
+            const s = status.toString().toLowerCase();
+            if (s.includes('selesai') || s.includes('done') || s.includes('complete')) return 'Selesai';
+            if (s.includes('proses') || s.includes('process') || s.includes('diproses')) return 'Proses';
+            return 'Antrian';
+        }
+
+        // Sample Data
+        function loadSampleData() {
+            const sampleTypes = ['Mutasi', 'Cuti', 'Kenaikan Pangkat', 'Promosi', 'Pensiun', 'CPNS'];
+            const sampleUnits = ['Dinas Pendidikan', 'Dinas Kesehatan', 'Dinas PUPR', 'Sekretariat Daerah', 'Dinas Perhubungan', 'Dinas Sosial', 'BPBD', 'Dinas Kependudukan'];
+            const samplePICs = ['Ahmad Fauzi, S.Sos', 'Siti Rahayu, S.AP', 'Budi Santoso, M.Si', 'Dewi Kusuma, S.E', 'Eko Prasetyo, S.Kom'];
+            const sampleNames = ['Abdul Rahman', 'Siti Aminah', 'Budi Hartono', 'Dewi Sartika', 'Eko Wahyudi', 'Fitriani', 'Gunawan Hidayat'];
+            
+            serviceData = [];
+            for (let month = 0; month < 12; month++) {
+                const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
+                const servicesThisMonth = Math.floor(Math.random() * 200) + 100;
+                for (let i = 0; i < servicesThisMonth; i++) {
+                    const day = Math.floor(Math.random() * daysInMonth) + 1;
+                    const date = new Date(currentYear, month, day);
+                    const statusRand = Math.random();
+                    let status = 'Selesai';
+                    if (statusRand > 0.85) status = 'Antrian';
+                    else if (statusRand > 0.70) status = 'Proses';
+                    
+                    serviceData.push({
+                        id: serviceData.length + 1, tanggal: date, tanggalStr: formatDate(date),
+                        pemohon: sampleNames[Math.floor(Math.random() * sampleNames.length)],
+                        unitKerja: sampleUnits[Math.floor(Math.random() * sampleUnits.length)],
+                        jenis: sampleTypes[Math.floor(Math.random() * sampleTypes.length)],
+                        pic: samplePICs[Math.floor(Math.random() * samplePICs.length)],
+                        status: status
+                    });
+                }
+            }
+            serviceData.sort((a, b) => b.tanggal - a.tanggal);
+            filteredData = [...serviceData];
+            updateYearFilter();
+            applyFiltersAndRender();
+            updateDashboard();
+        }
+
+        // Dashboard Update
+        function updateDashboard() {
+            const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
+            const today = new Date();
+            const todayData = serviceData.filter(d => d.tanggal.toDateString() === today.toDateString());
+            const yearData = serviceData.filter(d => d.tanggal.getFullYear() === currentYear);
+
+            animateNumber('dailyCount', todayData.length);
+            animateNumber('monthlyCount', monthData.length);
+            animateNumber('yearlyCount', yearData.length);
+            
+            const daysInMonth = new Date(currentYear, selectedMonth + 1, 0).getDate();
+            animateNumber('avgCount', Math.round(monthData.length / daysInMonth));
+
+            const selesai = monthData.filter(d => d.status === 'Selesai').length;
+            const proses = monthData.filter(d => d.status === 'Proses').length;
+            const antrian = monthData.filter(d => d.status === 'Antrian').length;
+            const total = monthData.length || 1;
+
+            animateNumber('selesaiCount', selesai);
+            animateNumber('prosesCount', proses);
+            animateNumber('antrianCount', antrian);
+
+            document.getElementById('selesaiPercent').textContent = Math.round((selesai / total) * 100);
+            document.getElementById('prosesPercent').textContent = Math.round((proses / total) * 100);
+            document.getElementById('antrianPercent').textContent = Math.round((antrian / total) * 100);
+            document.getElementById('monthlyPercent').textContent = Math.min(Math.round((monthData.length / MONTH_TARGET) * 100), 100);
+
+            setTimeout(() => {
+                document.getElementById('selesaiProgress').style.width = Math.round((selesai / total) * 100) + '%';
+                document.getElementById('prosesProgress').style.width = Math.round((proses / total) * 100) + '%';
+                document.getElementById('antrianProgress').style.width = Math.round((antrian / total) * 100) + '%';
+                document.getElementById('monthlyProgress').style.width = Math.min(Math.round((monthData.length / MONTH_TARGET) * 100), 100) + '%';
+            }, 100);
+
+            document.getElementById('currentMonthName').textContent = MONTHS[selectedMonth];
+            document.getElementById('pieMonthName').textContent = MONTHS[selectedMonth];
+            updateCharts();
+        }
+
+        function updateYearDisplay() {
+            document.getElementById('currentYear').textContent = currentYear;
+            document.getElementById('yearDisplay').textContent = currentYear;
+            document.getElementById('chartYear').textContent = currentYear;
+        }
+
+        function updateLastUpdate() {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Charts
+        function initCharts() {
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+
+            monthlyChart = new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: MONTHS.map(m => m.substring(0, 3)),
+                    datasets: [
+                        { label: 'Total', data: new Array(12).fill(0), backgroundColor: 'rgba(212, 168, 70, 0.8)', borderRadius: 6 },
+                        { label: 'Selesai', data: new Array(12).fill(0), backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 6 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(148,163,184,0.8)' } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(148,163,184,0.8)' } } } }
+            });
+
+            statusChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Selesai', 'Proses', 'Antrian'],
+                    datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(16, 185, 129, 0.9)', 'rgba(59, 130, 246, 0.9)', 'rgba(245, 158, 11, 0.9)'], borderWidth: 2, hoverOffset: 10 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: 'rgba(148,163,184,0.8)', padding: 20, usePointStyle: true } } } }
+            });
+        }
+
+        function updateCharts() {
+            const monthlyTotals = []; const monthlySelesai = [];
+            for (let month = 0; month < 12; month++) {
+                const mData = serviceData.filter(d => d.tanggal.getMonth() === month && d.tanggal.getFullYear() === currentYear);
+                monthlyTotals.push(mData.length);
+                monthlySelesai.push(mData.filter(d => d.status === 'Selesai').length);
+            }
+            monthlyChart.data.datasets[0].data = monthlyTotals;
+            monthlyChart.data.datasets[1].data = monthlySelesai;
+            monthlyChart.update('none');
+
+            const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
+            statusChart.data.datasets[0].data = [monthData.filter(d => d.status === 'Selesai').length, monthData.filter(d => d.status === 'Proses').length, monthData.filter(d => d.status === 'Antrian').length];
+            statusChart.update('none');
+        }
+
+        // Table & Pagination
+        function renderTable() {
+            const tbody = document.getElementById('dataTableBody');
+            if (!filteredData.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8">Tidak ada data</td></tr>'; return; }
+            const start = (currentPage - 1) * rowsPerPage;
+            const pageData = filteredData.slice(start, start + rowsPerPage);
+            tbody.innerHTML = pageData.map((row, i) => `
+                <tr class="animate-slide" style="animation-delay: ${i * 0.03}s">
+                    <td class="font-medium text-[var(--fg-primary)]">${start + i + 1}</td>
+                    <td>${row.tanggalStr}</td>
+                    <td class="text-[var(--fg-primary)]">${row.pemohon}</td>
+                    <td>${row.unitKerja}</td>
+                    <td>${row.jenis}</td>
+                    <td class="text-[var(--accent-gold)]">${row.pic}</td>
+                    <td><span class="badge badge-${row.status.toLowerCase()}"><span class="w-2 h-2 rounded-full bg-current"></span>${row.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('paginationContainer');
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
+            document.getElementById('currentPageDisplay').textContent = currentPage;
+            document.getElementById('totalPagesDisplay').textContent = totalPages;
+            let html = `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>`;
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+            if (startPage > 1) html += `<button class="pagination-btn" onclick="goToPage(1)">1</button>${startPage > 2 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}`;
+            for (let i = startPage; i <= endPage; i++) html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            if (endPage < totalPages) html += `${endPage < totalPages - 1 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}<button class="pagination-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>`;
+            container.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderTable(); renderPagination();
+            document.querySelector('.chart-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase();
+            let base = serviceData.filter(d => (filterYear === 'all' || d.tanggal.getFullYear().toString() === filterYear) && (filterMonth === 'all' || d.tanggal.getMonth().toString() === filterMonth) && (filterDay === 'all' || d.tanggal.getDate().toString() === filterDay));
+            filteredData = query ? base.filter(d => d.pemohon.toLowerCase().includes(query) || d.jenis.toLowerCase().includes(query) || d.status.toLowerCase().includes(query) || d.unitKerja.toLowerCase().includes(query) || d.pic.toLowerCase().includes(query)) : base;
+            currentPage = 1; renderTable(); renderPagination(); updateDataCounts();
+        }
+
+        // Utils
+        function animateNumber(id, target) {
+            const el = document.getElementById(id); const start = parseInt(el.textContent) || 0; const dur = 1000; const sTime = performance.now();
+            function upd(t) { const p = Math.min((t - sTime) / dur, 1); el.textContent = Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3))).toLocaleString('id-ID'); if (p < 1) requestAnimationFrame(upd); }
+            requestAnimationFrame(upd);
+        }
+        function formatDate(d) { return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }); }
+        function showNotification(msg, type) {
+            const n = document.createElement('div');
+            n.className = `fixed top-4 right-4 px-6 py-3 rounded-lg z-50 animate-in ${type === 'success' ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-red)]'}`;
+            n.style.color = 'white'; n.innerHTML = `<div class="flex items-center gap-2"><span class="font-medium">${msg}</span></div>`;
+            document.body.appendChild(n);
+            setTimeout(() => { n.style.opacity = '0'; n.style.transform = 'translateY(-10px)'; n.style.transition = 'all 0.3s'; setTimeout(() => n.remove(), 300); }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

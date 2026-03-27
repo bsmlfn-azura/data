@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Peremajaan Data - BKPSDM Bangkalan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#8B0000',
+                        secondary: '#1a1a2e',
+                        accent: '#D4AF37',
+                        surface: '#16213e',
+                        card: '#0f172a',
+                        muted: '#94a3b8'
+                    },
+                    fontFamily: {
+                        display: ['Playfair Display', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --fg: #f8fafc;
+            --muted: #64748b;
+            --accent: #D4AF37;
+            --primary: #8B0000;
+            --card: #0f172a;
+            --border: #1e293b;
+            --glow: rgba(212, 175, 55, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-pattern {
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 0, 0, 0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(212, 175, 55, 0.08), transparent),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .logo-glow {
+            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
+        }
+
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.1);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(22, 33, 62, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .highlight-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .highlight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--primary), var(--accent));
+        }
+
+        .highlight-worst::before {
+            background: linear-gradient(90deg, #ef4444, #dc2626, #ef4444);
+        }
+
+        .table-container {
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) var(--card);
+        }
+
+        .table-container::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: var(--card);
+            border-radius: 3px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .animate-fade-up {
+            animation: fadeUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .animate-scale-in {
+            animation: scaleIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); }
+        }
+
+        .pulse-glow {
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .loading-skeleton {
+            background: linear-gradient(90deg, var(--card) 25%, rgba(255,255,255,0.05) 50%, var(--card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .btn-filter {
+            transition: all 0.3s ease;
+        }
+
+        .btn-filter:hover {
+            background: linear-gradient(135deg, var(--primary), #b91c1c);
+            transform: translateY(-2px);
+        }
+
+        .btn-filter.active {
+            background: linear-gradient(135deg, var(--primary), #b91c1c);
+            box-shadow: 0 4px 20px rgba(139, 0, 0, 0.4);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .data-row {
+            transition: all 0.2s ease;
+        }
+
+        .data-row:hover {
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .number-animate {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-pattern">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-gradient-to-r from-secondary/95 via-primary/95 to-secondary/95 backdrop-blur-md border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <img src="https://z-cdn-media.chatglm.cn/files/31f53b87-ac2d-42f6-bc5a-52738ea1fa35.png?auth_key=1874618426-b692ba3ed5ef44d6983f7c2f0b704dfc-0-89f29cd0c1398025546f2a1f678b2edb" 
+                         alt="Logo BKPSDM Bangkalan" 
+                         class="w-14 h-14 md:w-16 md:h-16 object-contain logo-glow">
+                    <div>
+                        <h1 class="font-display text-xl md:text-2xl lg:text-3xl font-bold text-white tracking-wide">
+                            BKPSDM Bangkalan
+                        </h1>
+                        <p class="text-accent text-xs md:text-sm font-medium tracking-wider">
+                            Dashboard Statistik Peremajaan Data
+                        </p>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center gap-3 text-sm text-muted">
+                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span id="currentYear" class="font-semibold text-white"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6 md:py-8">
+        <!-- Filter Section -->
+        <section class="mb-8 animate-fade-up" style="animation-delay: 0.1s">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-white mb-1">Rekap Peremajaan Data</h2>
+                    <p class="text-muted text-sm">Pantau progres update data ASN di setiap OPD</p>
+                </div>
+                <div class="flex items-center gap-2 bg-card/50 rounded-xl p-1.5 border border-white/5">
+                    <label for="monthFilter" class="text-sm text-muted ml-2">Bulan:</label>
+                    <select id="monthFilter" class="bg-surface text-white px-4 py-2 rounded-lg border border-white/10 focus:outline-none focus:border-accent text-sm font-medium cursor-pointer">
+                        <option value="all">Semua Bulan</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Cards -->
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-fade-up" style="animation-delay: 0.2s">
+            <div class="stat-card rounded-2xl p-5 card-hover">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                    </div>
+                    <span class="text-muted text-sm">Total OPD</span>
+                </div>
+                <p class="text-3xl md:text-4xl font-bold text-white" id="totalOPD">-</p>
+            </div>
+            <div class="stat-card rounded-2xl p-5 card-hover">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <span class="text-muted text-sm">Total Data</span>
+                </div>
+                <p class="text-3xl md:text-4xl font-bold text-white" id="totalData">-</p>
+            </div>
+            <div class="stat-card rounded-2xl p-5 card-hover">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                    </div>
+                    <span class="text-muted text-sm">Rata-rata/OPD</span>
+                </div>
+                <p class="text-3xl md:text-4xl font-bold text-white" id="avgData">-</p>
+            </div>
+            <div class="stat-card rounded-2xl p-5 card-hover">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </div>
+                    <span class="text-muted text-sm">Total ASN</span>
+                </div>
+                <p class="text-3xl md:text-4xl font-bold text-white" id="totalASN">-</p>
+            </div>
+        </section>
+
+        <!-- Highlight Cards -->
+        <section class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- OPD Highlights -->
+            <div class="animate-fade-up" style="animation-delay: 0.3s">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                    </svg>
+                    Peringkat OPD
+                </h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="highlight-card stat-card rounded-2xl p-5 card-hover pulse-glow">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Terbanyak</span>
+                        </div>
+                        <p class="text-white font-bold text-lg mb-1 truncate" id="topOPDName">-</p>
+                        <p class="text-2xl font-bold text-emerald-400" id="topOPDValue">-</p>
+                        <span class="text-xs text-muted">data diperbarui</span>
+                    </div>
+                    <div class="highlight-card highlight-worst stat-card rounded-2xl p-5 card-hover">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-red-400 font-semibold uppercase tracking-wider">Terendah</span>
+                        </div>
+                        <p class="text-white font-bold text-lg mb-1 truncate" id="lowOPDName">-</p>
+                        <p class="text-2xl font-bold text-red-400" id="lowOPDValue">-</p>
+                        <span class="text-xs text-muted">data diperbarui</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Type Highlights -->
+            <div class="animate-fade-up" style="animation-delay: 0.4s">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Jenis Data Terupdate
+                </h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="stat-card rounded-2xl p-5 card-hover border-t-2 border-t-emerald-500">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Terbanyak</span>
+                        </div>
+                        <p class="text-white font-bold text-lg mb-1" id="topTypeName">-</p>
+                        <p class="text-2xl font-bold text-emerald-400" id="topTypeValue">-</p>
+                        <span class="text-xs text-muted">entri data</span>
+                    </div>
+                    <div class="stat-card rounded-2xl p-5 card-hover border-t-2 border-t-amber-500">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-amber-400 font-semibold uppercase tracking-wider">Terendah</span>
+                        </div>
+                        <p class="text-white font-bold text-lg mb-1" id="lowTypeName">-</p>
+                        <p class="text-2xl font-bold text-amber-400" id="lowTypeValue">-</p>
+                        <span class="text-xs text-muted">entri data</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section class="grid lg:grid-cols-2 gap-6 mb-8">
+            <div class="stat-card rounded-2xl p-6 animate-fade-up" style="animation-delay: 0.5s">
+                <h3 class="text-lg font-semibold text-white mb-4">Distribusi Data per Jenis</h3>
+                <div class="chart-container">
+                    <canvas id="dataTypeChart"></canvas>
+                </div>
+            </div>
+            <div class="stat-card rounded-2xl p-6 animate-fade-up" style="animation-delay: 0.6s">
+                <h3 class="text-lg font-semibold text-white mb-4">Top 10 OPD dengan Data Terbanyak</h3>
+                <div class="chart-container">
+                    <canvas id="opdChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Table -->
+        <section class="stat-card rounded-2xl overflow-hidden animate-fade-up" style="animation-delay: 0.7s">
+            <div class="p-6 border-b border-white/5">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <h3 class="text-lg font-semibold text-white">Detail Data per OPD</h3>
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Cari OPD..." 
+                               class="bg-surface text-white px-4 py-2 pl-10 rounded-lg border border-white/10 focus:outline-none focus:border-accent text-sm w-full md:w-64">
+                        <svg class="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="table-container overflow-x-auto max-h-[500px] overflow-y-auto">
+                <table class="w-full">
+                    <thead class="bg-secondary/50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-accent uppercase tracking-wider">No</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-accent uppercase tracking-wider">Nama OPD</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">AK</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">CPNS/PNS</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">R. Keluarga</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">Data Pribadi</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">Diklat</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">Jabatan</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">Pendidikan</th>
+                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="divide-y divide-white/5">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-6 text-center">
+            <p class="text-muted text-sm">
+                Dashboard Statistik Peremajaan Data ASN &copy; <span id="footerYear"></span> - 
+                <span class="text-accent">BKPSDM Kabupaten Bangkalan</span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-secondary/90 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-accent/30 border-t-accent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-white font-medium">Memuat data dari spreadsheet...</p>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIGURATION =====
+        // GANTI DENGAN URL GOOGLE SHEET ANDA (CSV format)
+        const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDoVbNFVhZKiygXm4xySnEK40_Arrp7bixwgEevhqaO4p3f2lm_-piuSkekYOrJVErhfmvcXJ6iFZ5/pub?gid=0&single=true&output=csv';
+        
+        // Contoh data untuk demo jika tidak ada koneksi spreadsheet
+        const DEMO_DATA = [
+            { bulan: 'Januari', opd: 'Dinas Pendidikan', ak: 245, cpns: 180, keluarga: 220, pribadi: 245, diklat: 150, jabatan: 200, pendidikan: 190 },
+            { bulan: 'Januari', opd: 'Dinas Kesehatan', ak: 189, cpns: 156, keluarga: 175, pribadi: 189, diklat: 120, jabatan: 165, pendidikan: 145 },
+            { bulan: 'Januari', opd: 'Dinas PUPR', ak: 134, cpns: 98, keluarga: 120, pribadi: 134, diklat: 85, jabatan: 110, pendidikan: 95 },
+            { bulan: 'Januari', opd: 'Dinas Perhubungan', ak: 78, cpns: 65, keluarga: 72, pribadi: 78, diklat: 45, jabatan: 68, pendidikan: 58 },
+            { bulan: 'Januari', opd: 'Badan Keuangan', ak: 56, cpns: 45, keluarga: 52, pribadi: 56, diklat: 38, jabatan: 48, pendidikan: 42 },
+            { bulan: 'Januari', opd: 'Badan Kesbangpol', ak: 34, cpns: 28, keluarga: 32, pribadi: 34, diklat: 22, jabatan: 30, pendidikan: 26 },
+            { bulan: 'Februari', opd: 'Dinas Pendidikan', ak: 260, cpns: 195, keluarga: 235, pribadi: 260, diklat: 165, jabatan: 215, pendidikan: 205 },
+            { bulan: 'Februari', opd: 'Dinas Kesehatan', ak: 200, cpns: 170, keluarga: 190, pribadi: 200, diklat: 135, jabatan: 180, pendidikan: 160 },
+            { bulan: 'Februari', opd: 'Dinas PUPR', ak: 145, cpns: 110, keluarga: 135, pribadi: 145, diklat: 95, jabatan: 125, pendidikan: 108 },
+            { bulan: 'Februari', opd: 'Dinas Perhubungan', ak: 85, cpns: 72, keluarga: 80, pribadi: 85, diklat: 52, jabatan: 75, pendidikan: 65 },
+            { bulan: 'Februari', opd: 'Sekretariat Daerah', ak: 112, cpns: 95, keluarga: 105, pribadi: 112, diklat: 78, jabatan: 98, pendidikan: 88 },
+            { bulan: 'Februari', opd: 'Inspektorat', ak: 45, cpns: 38, keluarga: 42, pribadi: 45, diklat: 30, jabatan: 40, pendidikan: 35 },
+            { bulan: 'Maret', opd: 'Dinas Pendidikan', ak: 275, cpns: 210, keluarga: 250, pribadi: 275, diklat: 180, jabatan: 230, pendidikan: 220 },
+            { bulan: 'Maret', opd: 'Dinas Kesehatan', ak: 215, cpns: 185, keluarga: 205, pribadi: 215, diklat: 150, jabatan: 195, pendidikan: 175 },
+            { bulan: 'Maret', opd: 'Dinas PUPR', ak: 158, cpns: 125, keluarga: 148, pribadi: 158, diklat: 108, jabatan: 138, pendidikan: 122 },
+            { bulan: 'Maret', opd: 'Dinas Perumahan', ak: 68, cpns: 55, keluarga: 62, pribadi: 68, diklat: 42, jabatan: 58, pendidikan: 50 },
+            { bulan: 'Maret', opd: 'Badan Penanggulangan Bencana', ak: 52, cpns: 42, keluarga: 48, pribadi: 52, diklat: 35, jabatan: 45, pendidikan: 40 },
+            { bulan: 'Maret', opd: 'Badan Perpustakaan', ak: 28, cpns: 22, keluarga: 25, pribadi: 28, diklat: 18, jabatan: 24, pendidikan: 21 }
+        ];
+
+        // ===== GLOBAL VARIABLES =====
+        let rawData = [];
+        let filteredData = [];
+        let currentMonth = 'all';
+        let dataTypeChart = null;
+        let opdChart = null;
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current year
+            const year = new Date().getFullYear();
+            document.getElementById('currentYear').textContent = year;
+            document.getElementById('footerYear').textContent = year;
+
+            // Initialize month filter
+            initMonthFilter();
+
+            // Load data
+            loadData();
+
+            // Event listeners
+            document.getElementById('monthFilter').addEventListener('change', handleMonthChange);
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+        });
+
+        // ===== FUNCTIONS =====
+        function initMonthFilter() {
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                           'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            const select = document.getElementById('monthFilter');
+            
+            months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadData() {
+            showLoading(true);
+            
+            try {
+                // Try to fetch from Google Spreadsheet
+                // Note: For production, replace DEMO_DATA with actual fetch
+                 const response = await fetch(SPREADSHEET_URL);
+                 const csvText = await response.text();
+                 rawData = parseCSV(csvText);
+                
+                // Using demo data for now
+                //await new Promise(resolve => setTimeout(resolve, 1000));
+                //rawData = DEMO_DATA;
+                
+                // Process data
+                processAndDisplayData();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                // Fallback to demo data
+                //rawData = DEMO_DATA;
+                processAndDisplayData();
+            }
+            
+            showLoading(false);
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const values = lines[i].split(',');
+                const row = {};
+                
+                headers.forEach((header, index) => {
+                    row[header] = values[index] ? values[index].trim() : '';
+                });
+                
+                // Map CSV columns to our format
+                data.push({
+                    bulan: row.bulan || '',
+                    opd: row.opd || row.nama_opd || '',
+                    ak: parseInt(row.ak) || 0,
+                    cpns: parseInt(row.cpns || row['cpns/pns']) || 0,
+                    keluarga: parseInt(row.keluarga || row.r_keluarga) || 0,
+                    pribadi: parseInt(row.pribadi || row.data_pribadi) || 0,
+                    diklat: parseInt(row.diklat) || 0,
+                    jabatan: parseInt(row.jabatan) || 0,
+                    pendidikan: parseInt(row.pendidikan) || 0
+                });
+            }
+            
+            return data;
+        }
+
+        function processAndDisplayData() {
+            // Apply month filter
+            filterData();
+            
+            // Update all displays
+            updateStats();
+            updateHighlights();
+            updateTable();
+            updateCharts();
+        }
+
+        function filterData() {
+            if (currentMonth === 'all') {
+                // Aggregate by OPD across all months
+                const opdMap = new Map();
+                
+                rawData.forEach(row => {
+                    if (!opdMap.has(row.opd)) {
+                        opdMap.set(row.opd, {
+                            opd: row.opd,
+                            ak: 0, cpns: 0, keluarga: 0, pribadi: 0, 
+                            diklat: 0, jabatan: 0, pendidikan: 0
+                        });
+                    }
+                    const agg = opdMap.get(row.opd);
+                    agg.ak += row.ak;
+                    agg.cpns += row.cpns;
+                    agg.keluarga += row.keluarga;
+                    agg.pribadi += row.pribadi;
+                    agg.diklat += row.diklat;
+                    agg.jabatan += row.jabatan;
+                    agg.pendidikan += row.pendidikan;
+                });
+                
+                filteredData = Array.from(opdMap.values());
+            } else {
+                filteredData = rawData.filter(row => row.bulan === currentMonth);
+            }
+        }
+
+        function updateStats() {
+            const totalOPD = filteredData.length;
+            const totals = filteredData.reduce((acc, row) => {
+                acc.ak += row.ak;
+                acc.cpns += row.cpns;
+                acc.keluarga += row.keluarga;
+                acc.pribadi += row.pribadi;
+                acc.diklat += row.diklat;
+                acc.jabatan += row.jabatan;
+                acc.pendidikan += row.pendidikan;
+                return acc;
+            }, { ak: 0, cpns: 0, keluarga: 0, pribadi: 0, diklat: 0, jabatan: 0, pendidikan: 0 });
+            
+            const totalData = totals.ak + totals.cpns + totals.keluarga + totals.pribadi + 
+                             totals.diklat + totals.jabatan + totals.pendidikan;
+            const avgData = totalOPD > 0 ? Math.round(totalData / totalOPD) : 0;
+            const totalASN = totals.cpns;
+            
+            animateNumber('totalOPD', totalOPD);
+            animateNumber('totalData', totalData);
+            animateNumber('avgData', avgData);
+            animateNumber('totalASN', totalASN);
+        }
+
+        function updateHighlights() {
+            if (filteredData.length === 0) return;
+            
+            // Sort by total for OPD ranking
+            const sortedByTotal = [...filteredData].sort((a, b) => {
+                const totalA = a.ak + a.cpns + a.keluarga + a.pribadi + a.diklat + a.jabatan + a.pendidikan;
+                const totalB = b.ak + b.cpns + b.keluarga + b.pribadi + b.diklat + b.jabatan + b.pendidikan;
+                return totalB - totalA;
+            });
+            
+            // Top OPD
+            const topOPD = sortedByTotal[0];
+            const topTotal = topOPD.ak + topOPD.cpns + topOPD.keluarga + topOPD.pribadi + 
+                            topOPD.diklat + topOPD.jabatan + topOPD.pendidikan;
+            document.getElementById('topOPDName').textContent = topOPD.opd;
+            animateNumber('topOPDValue', topTotal);
+            
+            // Lowest OPD
+            const lowOPD = sortedByTotal[sortedByTotal.length - 1];
+            const lowTotal = lowOPD.ak + lowOPD.cpns + lowOPD.keluarga + lowOPD.pribadi + 
+                            lowOPD.diklat + lowOPD.jabatan + lowOPD.pendidikan;
+            document.getElementById('lowOPDName').textContent = lowOPD.opd;
+            animateNumber('lowOPDValue', lowTotal);
+            
+            // Data type totals
+            const typeTotals = {
+                'AK': filteredData.reduce((sum, r) => sum + r.ak, 0),
+                'CPNS/PNS': filteredData.reduce((sum, r) => sum + r.cpns, 0),
+                'R. Keluarga': filteredData.reduce((sum, r) => sum + r.keluarga, 0),
+                'Data Pribadi': filteredData.reduce((sum, r) => sum + r.pribadi, 0),
+                'Diklat': filteredData.reduce((sum, r) => sum + r.diklat, 0),
+                'Jabatan': filteredData.reduce((sum, r) => sum + r.jabatan, 0),
+                'Pendidikan': filteredData.reduce((sum, r) => sum + r.pendidikan, 0)
+            };
+            
+            const sortedTypes = Object.entries(typeTotals).sort((a, b) => b[1] - a[1]);
+            
+            document.getElementById('topTypeName').textContent = sortedTypes[0][0];
+            animateNumber('topTypeValue', sortedTypes[0][1]);
+            
+            document.getElementById('lowTypeName').textContent = sortedTypes[sortedTypes.length - 1][0];
+            animateNumber('lowTypeValue', sortedTypes[sortedTypes.length - 1][1]);
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('dataTableBody');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            const displayData = filteredData.filter(row => 
+                row.opd.toLowerCase().includes(searchTerm)
+            ).sort((a, b) => {
+                const totalA = a.ak + a.cpns + a.keluarga + a.pribadi + a.diklat + a.jabatan + a.pendidikan;
+                const totalB = b.ak + b.cpns + b.keluarga + b.pribadi + b.diklat + b.jabatan + b.pendidikan;
+                return totalB - totalA;
+            });
+            
+            tbody.innerHTML = displayData.map((row, index) => {
+                const total = row.ak + row.cpns + row.keluarga + row.pribadi + row.diklat + row.jabatan + row.pendidikan;
+                return `
+                    <tr class="data-row">
+                        <td class="px-4 py-3 text-sm text-muted">${index + 1}</td>
+                        <td class="px-4 py-3 text-sm font-medium text-white">${row.opd}</td>
+                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.ak)}</td>
+                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.cpns)}</td>
+                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.keluarga)}</td>
+                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.pribadi)}</td>
+                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.diklat)}</td>
+                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.jabatan)}</td>
+                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.pendidikan)}</td>
+                        <td class="px-4 py-3 text-sm text-center font-bold text-accent">${formatNumber(total)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateCharts() {
+            // Data Type Chart
+            const typeCtx = document.getElementById('dataTypeChart').getContext('2d');
+            
+            const typeTotals = {
+                'AK': filteredData.reduce((sum, r) => sum + r.ak, 0),
+                'CPNS/PNS': filteredData.reduce((sum, r) => sum + r.cpns, 0),
+                'R. Keluarga': filteredData.reduce((sum, r) => sum + r.keluarga, 0),
+                'Data Pribadi': filteredData.reduce((sum, r) => sum + r.pribadi, 0),
+                'Diklat': filteredData.reduce((sum, r) => sum + r.diklat, 0),
+                'Jabatan': filteredData.reduce((sum, r) => sum + r.jabatan, 0),
+                'Pendidikan': filteredData.reduce((sum, r) => sum + r.pendidikan, 0)
+            };
+            
+            if (dataTypeChart) dataTypeChart.destroy();
+            
+            dataTypeChart = new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(typeTotals),
+                    datasets: [{
+                        data: Object.values(typeTotals),
+                        backgroundColor: [
+                            '#8B0000',
+                            '#D4AF37',
+                            '#059669',
+                            '#3B82F6',
+                            '#8B5CF6',
+                            '#EC4899',
+                            '#F59E0B'
+                        ],
+                        borderColor: '#0a0a0f',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#94a3b8',
+                                font: { family: 'Plus Jakarta Sans', size: 11 },
+                                padding: 15
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+            
+            // OPD Chart
+            const opdCtx = document.getElementById('opdChart').getContext('2d');
+            
+            const sortedOPD = [...filteredData].sort((a, b) => {
+                const totalA = a.ak + a.cpns + a.keluarga + a.pribadi + a.diklat + a.jabatan + a.pendidikan;
+                const totalB = b.ak + b.cpns + b.keluarga + b.pribadi + b.diklat + b.jabatan + b.pendidikan;
+                return totalB - totalA;
+            }).slice(0, 10);
+            
+            if (opdChart) opdChart.destroy();
+            
+            opdChart = new Chart(opdCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedOPD.map(r => r.opd.length > 20 ? r.opd.substring(0, 20) + '...' : r.opd),
+                    datasets: [{
+                        label: 'Total Data',
+                        data: sortedOPD.map(r => r.ak + r.cpns + r.keluarga + r.pribadi + r.diklat + r.jabatan + r.pendidikan),
+                        backgroundColor: (context) => {
+                            const chart = context.chart;
+                            const {ctx, chartArea} = chart;
+                            if (!chartArea) return '#8B0000';
+                            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                            gradient.addColorStop(0, '#8B0000');
+                            gradient.addColorStop(1, '#D4AF37');
+                            return gradient;
+                        },
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b', font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function handleMonthChange(e) {
+            currentMonth = e.target.value;
+            processAndDisplayData();
+        }
+
+        function handleSearch(e) {
+            updateTable();
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function animateNumber(elementId, target) {
+            const element = document.getElementById(elementId);
+            const start = parseInt(element.textContent.replace(/\D/g, '')) || 0;
+            const duration = 1000;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function
+                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                const current = Math.round(start + (target - start) * easeOutQuart);
+                
+                element.textContent = formatNumber(current);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+    </script>
+</body>
+</html>
