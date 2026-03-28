@@ -149,19 +149,18 @@
                         <svg class="w-10 h-10 text-[var(--bg-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                     </div>
                     <h3 class="font-display text-2xl font-bold mb-2">Hubungkan ke Database Spreadsheet</h3>
-                    <p class="text-[var(--fg-secondary)] mb-6 max-w-md mx-auto">Masukkan URL Google Spreadsheet yang sudah di-publish. Data akan otomatis diperbarui.</p>
+                    <p class="text-[var(--fg-secondary)] mb-6 max-w-md mx-auto">Masukkan URL Google Spreadsheet.</p>
                     <div class="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
-                        <input type="text" id="initialUrlInput" class="input-form flex-1 pl-4" placeholder="Paste URL Google Spreadsheet di sini...">
+                        <input type="text" id="initialUrlInput" class="input-form flex-1 pl-4" placeholder="Paste URL Google Spreadsheet...">
                         <button onclick="saveInitialUrl()" class="btn-primary whitespace-nowrap">Hubungkan</button>
                     </div>
-                    <div class="mt-6 text-xs text-[var(--fg-muted)] bg-[var(--bg-secondary)] p-4 rounded-lg max-w-md mx-auto text-left">
-                        <p class="font-bold mb-2 text-[var(--fg-primary)]">Panduan Pengaturan (Wajib):</p>
-                        <ol class="list-decimal list-inside space-y-1">
-                            <li>Buka Spreadsheet Anda.</li>
-                            <li>Klik tombol <strong>"Share" (Bagikan)</strong> di kanan atas.</li>
-                            <li>Ubah "General Access" menjadi <strong>"Anyone with the link" (Siapa saja yang memiliki link)</strong>.</li>
-                            <li>Pastikan Role-nya <strong>"Viewer" (Pembaca)</strong>.</li>
-                            <li>Salin URL dari address bar (bukan link publish).</li>
+                    <div class="mt-6 text-xs text-[var(--fg-muted)] bg-[var(--bg-secondary)] p-4 rounded-lg max-w-md mx-auto text-left border border-[var(--border)]">
+                        <p class="font-bold mb-2 text-[var(--accent-gold)]">Panduan Cepat:</p>
+                        <ol class="list-decimal list-inside space-y-1 text-[var(--fg-secondary)]">
+                            <li><strong> Cara Paling Mudah (Direkomendasikan):</strong><br>
+                            Klik <strong>File > Bagikan > Publikasikan ke web</strong>. Pilih format <strong>CSV</strong>. Salin URL yang muncul.</li>
+                            <li class="mt-2"><strong>Atau pakai Link Share:</strong><br>
+                            Atur Share ke "Anyone with the link". Gunakan link tersebut.</li>
                         </ol>
                     </div>
                 </div>
@@ -277,22 +276,35 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
-        <div class="bg-[var(--bg-card)] p-8 rounded-xl border border-[var(--border)] w-full max-w-md">
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden items-center justify-center p-4">
+        <div class="bg-[var(--bg-card)] p-6 rounded-xl border border-[var(--border)] w-full max-w-lg">
             <h3 class="font-display text-xl font-bold mb-4">Pengaturan Koneksi</h3>
             <label class="block text-sm text-[var(--fg-muted)] mb-2">URL Google Spreadsheet</label>
-            <input type="text" id="settingsUrlInput" class="input-form w-full mb-4" placeholder="URL Spreadsheet...">
+            <input type="text" id="settingsUrlInput" class="input-form w-full mb-2" placeholder="URL Spreadsheet...">
+            <p class="text-xs text-[var(--fg-muted)] mb-4">Gunakan link dari menu <strong>File > Publish to web</strong> (Format CSV) untuk hasil terbaik.</p>
+            
+            <div class="bg-[var(--bg-secondary)] rounded-lg p-3 mb-4 text-xs">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-[var(--fg-muted)]">Status Koneksi:</span>
+                    <span id="debugStatus" class="font-semibold">-</span>
+                </div>
+                <div class="text-[var(--fg-muted)]">
+                    <p>Respons:</p>
+                    <pre id="debugResponse" class="whitespace-pre-wrap break-all bg-[var(--bg-primary)] p-2 rounded mt-1 max-h-20 overflow-auto text-red-400"></pre>
+                </div>
+            </div>
+
             <div class="flex gap-3">
-                <button onclick="closeSettings()" class="btn-secondary flex-1">Batal</button>
+                <button onclick="testConnection()" class="btn-secondary flex-1">Test Koneksi</button>
                 <button onclick="saveSettings()" class="btn-primary flex-1">Simpan & Reload</button>
             </div>
-            <p class="text-xs text-[var(--fg-muted)] mt-4 text-center">Data akan di-reset jika URL diubah.</p>
+            <button onclick="closeSettings()" class="w-full mt-3 text-center text-xs text-[var(--fg-muted)] hover:text-white">Tutup</button>
         </div>
     </div>
 
     <script>
         // State & Config
-        const STORAGE_KEY_URL = 'bkpsdm_db_url_v3';
+        const STORAGE_KEY_URL = 'bkpsdm_db_url_v4';
         const SYNC_INTERVAL = 60000; 
         let serviceData = [];
         let filteredData = [];
@@ -344,7 +356,7 @@
         }
 
         // ==========================================
-        // IMPROVED SYNC LOGIC
+        // ROBUST SYNC LOGIC
         // ==========================================
         function startAutoSync(url) {
             if (syncTimer) clearInterval(syncTimer);
@@ -355,69 +367,86 @@
         async function syncData(url) {
             setStatus('loading', 'Menyinkronkan...');
             
-            // 1. Extract Sheet ID (Improved Regex)
+            // 1. Extract IDs
             let sheetId = null;
             let gid = '0';
-            
-            // Match Standard URL: /d/SHEET_ID/
-            const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]{25,})/); 
-            // Match GID
-            const gidMatch = url.match(/[#&]gid=(\d+)/);
+            let isPublished = false;
 
-            if (idMatch) sheetId = idMatch[1];
+            // Check for Published URL (Format: /d/e/2PACX...)
+            const pubMatch = url.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
+            if (pubMatch) {
+                isPublished = true;
+                sheetId = pubMatch[1];
+            } else {
+                // Check for Standard URL (Format: /d/ID/)
+                const stdMatch = url.match(/\/d\/([a-zA-Z0-9-_]{25,})/);
+                if (stdMatch) sheetId = stdMatch[1];
+            }
+
+            // Check for GID
+            const gidMatch = url.match(/[#&]gid=(\d+)/);
             if (gidMatch) gid = gidMatch[1];
 
             if (!sheetId) {
                 setStatus('error', 'Format URL Salah');
-                showNotification('Format URL tidak dikenali. Gunakan URL Standar Google Sheets.', 'error');
                 return;
             }
 
-            try {
-                // 2. Construct GVIZ URL (Most reliable for public sheets)
-                // We use a simple SELECT * query
+            // 2. Construct Target URL
+            let targetUrl;
+            if (isPublished) {
+                // URL for Published to Web: direct CSV export
+                targetUrl = `https://docs.google.com/spreadsheets/d/e/${sheetId}/pub?gid=${gid}&output=csv`;
+            } else {
+                // URL for Standard Share: use GVIZ (Visualisation API)
                 const query = encodeURIComponent("SELECT *");
-                const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&tq=${query}`;
-                
-                const response = await fetch(gvizUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP Error: ${response.status}`);
-                }
+                targetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&tq=${query}`;
+            }
 
+            try {
+                const response = await fetch(targetUrl);
                 const text = await response.text();
 
-                // 3. CHECK IF RESPONSE IS VALID DATA
-                // Google sometimes returns an HTML login page or "Moved Temporarily" if permissions fail
-                if (text.startsWith('<') || text.startsWith('<!') || text.length < 10) {
-                    throw new Error('Respons Bukan Data (HTML Login/Error)');
+                // 3. Validation: Check if response is HTML
+                if (text.trim().startsWith('<') || text.includes('<!DOCTYPE') || text.includes('<html')) {
+                    throw new Error('RESPON_HTML');
                 }
 
-                // 4. Parse CSV
+                // 4. Parse
                 const workbook = XLSX.read(text, { type: 'string' });
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(sheet);
 
-                if (jsonData.length === 0) throw new Error('Data Kosong');
+                if (jsonData.length === 0) throw new Error('DATA_KOSONG');
 
                 processExcelData(jsonData);
                 
                 const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                setStatus('connected', 'Terhubung', `Terakhir sync: ${time}`);
+                setStatus('connected', 'Terhubung', `Last sync: ${time}`);
                 
             } catch (err) {
                 console.error(err);
-                // Detailed Error Message
-                let msg = 'Gagal memuat data.';
-                if (err.message.includes('HTML')) {
-                    msg = 'Akses Ditolak. Pastikan Spreadsheet sudah "Anyone with the link".';
-                } else if (err.message.includes('Network')) {
-                    msg = 'Gagal koneksi internet.';
-                }
-                
-                setStatus('error', 'Gagal Sinkron', err.message);
-                showNotification(msg, 'error');
+                handleSyncError(err, url);
             }
+        }
+
+        function handleSyncError(err, url) {
+            let msg = 'Gagal memuat data.';
+            let detail = err.message;
+            
+            if (detail === 'RESPON_HTML') {
+                msg = 'Ditolak (HTML). ';
+                if (url.includes('/e/')) {
+                    msg += 'Link Publish mungkin sudah di-revoke atau salah.';
+                } else {
+                    msg += 'Sheet belum "Publish to Web". Gunakan File > Share > Publish to web.';
+                }
+            } else if (detail === 'DATA_KOSONG') {
+                msg = 'Data kosong atau format tidak sesuai.';
+            }
+            
+            setStatus('error', 'Gagal Sinkron', msg);
+            showNotification(msg, 'error');
         }
 
         function forceSync() {
@@ -474,6 +503,8 @@
             document.getElementById('settingsUrlInput').value = localStorage.getItem(STORAGE_KEY_URL) || '';
             document.getElementById('settingsModal').classList.remove('hidden');
             document.getElementById('settingsModal').classList.add('flex');
+            document.getElementById('debugStatus').textContent = '-';
+            document.getElementById('debugResponse').textContent = 'Klik "Test Koneksi" untuk mencoba.';
         }
         function closeSettings() {
             document.getElementById('settingsModal').classList.add('hidden');
@@ -491,6 +522,63 @@
             if (url) {
                 localStorage.setItem(STORAGE_KEY_URL, url);
                 location.reload();
+            }
+        }
+
+        async function testConnection() {
+            const url = document.getElementById('settingsUrlInput').value.trim();
+            if(!url) return;
+            
+            const statusEl = document.getElementById('debugStatus');
+            const respEl = document.getElementById('debugResponse');
+            statusEl.textContent = 'Menguji...';
+            statusEl.className = 'font-semibold text-yellow-400';
+            respEl.textContent = '';
+
+            // Reuse logic from syncData but with UI feedback
+            let sheetId = null;
+            let gid = '0';
+            let isPublished = false;
+            const pubMatch = url.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
+            if (pubMatch) { isPublished = true; sheetId = pubMatch[1]; } 
+            else {
+                const stdMatch = url.match(/\/d\/([a-zA-Z0-9-_]{25,})/);
+                if (stdMatch) sheetId = stdMatch[1];
+            }
+            const gidMatch = url.match(/[#&]gid=(\d+)/);
+            if (gidMatch) gid = gidMatch[1];
+
+            if (!sheetId) {
+                statusEl.textContent = 'Format URL Salah';
+                statusEl.className = 'font-semibold text-red-400';
+                return;
+            }
+
+            let targetUrl = isPublished 
+                ? `https://docs.google.com/spreadsheets/d/e/${sheetId}/pub?gid=${gid}&output=csv`
+                : `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&tq=${encodeURIComponent("SELECT *")}`;
+
+            try {
+                const resp = await fetch(targetUrl);
+                const text = await resp.text();
+                
+                // Show raw snippet
+                const snippet = text.substring(0, 150) + (text.length > 150 ? '...' : '');
+                
+                if (text.trim().startsWith('<')) {
+                    statusEl.textContent = 'GAGAL (Respons HTML)';
+                    statusEl.className = 'font-semibold text-red-400';
+                    respEl.textContent = "Google mengembalikan halaman web (bukan data).\n\nSolusi: Pastikan file sudah 'Publish to Web' (File > Share > Publish to web).";
+                } else {
+                    statusEl.textContent = 'SUKSES';
+                    statusEl.className = 'font-semibold text-green-400';
+                    respEl.textContent = snippet;
+                    respEl.className = 'whitespace-pre-wrap break-all bg-[var(--bg-primary)] p-2 rounded mt-1 max-h-20 overflow-auto text-green-300';
+                }
+            } catch(e) {
+                statusEl.textContent = 'ERROR JARINGAN';
+                statusEl.className = 'font-semibold text-red-400';
+                respEl.textContent = e.message;
             }
         }
 
