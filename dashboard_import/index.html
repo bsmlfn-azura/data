@@ -6,6 +6,7 @@
     <title>Dashboard Statistik Pelayanan - BKPSDM Bangkalan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Library XLSX tetap digunakan untuk parsing CSV yang robust -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -149,12 +150,12 @@
                         <svg class="w-10 h-10 text-[var(--bg-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                     </div>
                     <h3 class="font-display text-2xl font-bold mb-2">Hubungkan ke Database Spreadsheet</h3>
-                    <p class="text-[var(--fg-secondary)] mb-6 max-w-md mx-auto">Masukkan URL Google Spreadsheet yang sudah di-publish. Data akan otomatis diperbarui setiap 60 detik.</p>
+                    <p class="text-[var(--fg-secondary)] mb-6 max-w-md mx-auto">Masukkan URL Google Spreadsheet yang sudah di-publish. Data akan otomatis diperbarui.</p>
                     <div class="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
                         <input type="text" id="initialUrlInput" class="input-form flex-1 pl-4" placeholder="Paste URL Google Spreadsheet di sini...">
                         <button onclick="saveInitialUrl()" class="btn-primary whitespace-nowrap">Hubungkan</button>
                     </div>
-                    <p class="text-xs text-[var(--fg-muted)] mt-4">Pastikan akses spreadsheet diatur ke "Anyone with the link can view".</p>
+                    <p class="text-xs text-[var(--fg-muted)] mt-4">Penting: Pastikan akses spreadsheet diatur ke <strong>"Anyone with the link can view"</strong> (Bagikan > Umum).</p>
                 </div>
             </section>
 
@@ -167,7 +168,7 @@
                             <span class="text-sm text-[var(--fg-muted)] mr-2">Filter Bulan:</span>
                             <div class="flex flex-wrap gap-2" id="monthSelector"></div>
                         </div>
-                        <button onclick="forceSync()" class="btn-secondary text-xs flex items-center gap-2 animate-pulse">
+                        <button onclick="forceSync()" class="btn-secondary text-xs flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                             Sync Sekarang
                         </button>
@@ -214,7 +215,7 @@
                     </div>
                 </section>
 
-                <!-- Status & PIC Sections (Condensed for brevity, logic remains same) -->
+                <!-- Status & PIC Sections -->
                 <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                      <div class="stat-card status-selesai p-6 animate-in delay-2">
                         <div class="flex items-center gap-3 mb-2"><div class="w-10 h-10 rounded-lg bg-[var(--accent-green)] bg-opacity-20 flex items-center justify-center"><svg class="w-5 h-5 text-[var(--accent-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><p class="text-xs text-[var(--fg-muted)]">Selesai</p><p class="text-2xl font-display font-bold text-[var(--accent-green)]" id="selesaiCount">0</p></div></div>
@@ -230,7 +231,7 @@
                     </div>
                 </section>
 
-                <!-- Charts & Table (Skeleton) -->
+                <!-- Charts & Table -->
                 <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in delay-5">
                     <div class="lg:col-span-1 chart-container p-6">
                         <h3 class="font-display text-lg font-bold mb-4">Peringkat PIC</h3>
@@ -283,7 +284,7 @@
 
     <script>
         // State & Config
-        const STORAGE_KEY_URL = 'bkpsdm_db_url';
+        const STORAGE_KEY_URL = 'bkpsdm_db_url_v2'; // V2 key to reset old settings
         const SYNC_INTERVAL = 60000; // 60 seconds
         let serviceData = [];
         let filteredData = [];
@@ -298,14 +299,14 @@
         let filterDay = 'all';
         const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
-        // DOM Elements
+        // DOM
         const setupScreen = document.getElementById('setupScreen');
         const dashboardContent = document.getElementById('dashboardContent');
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const statusTime = document.getElementById('statusTime');
 
-        // Initialization
+        // Init
         function init() {
             initCharts();
             initFilters();
@@ -334,7 +335,9 @@
             updateYearDisplay();
         }
 
-        // Sync Logic
+        // ==========================================
+        // FIX: ROBUST SYNC USING GVIZ
+        // ==========================================
         function startAutoSync(url) {
             if (syncTimer) clearInterval(syncTimer);
             syncData(url); // Immediate first sync
@@ -344,19 +347,37 @@
         async function syncData(url) {
             setStatus('loading', 'Menyinkronkan...');
             
+            // 1. Extract Sheet ID
             let sheetId = null;
-            const patterns = [/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/, /\/d\/([a-zA-Z0-9-_]+)/, /id=([a-zA-Z0-9-_]+)/];
-            for (const pattern of patterns) { const match = url.match(pattern); if (match) { sheetId = match[1]; break; } }
+            let gid = '0'; // Default to first sheet
+            const idPatterns = [/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/, /\/d\/([a-zA-Z0-9-_]+)/, /id=([a-zA-Z0-9-_]+)/];
+            for (const pattern of idPatterns) {
+                const match = url.match(pattern);
+                if (match) { sheetId = match[1]; break; }
+            }
 
-            if (!sheetId) { setStatus('error', 'URL Tidak Valid'); return; }
+            // 2. Extract GID (Specific Tab)
+            const gidMatch = url.match(/[#&]gid=(\d+)/);
+            if (gidMatch) gid = gidMatch[1];
+
+            if (!sheetId) {
+                setStatus('error', 'Format URL Salah');
+                return;
+            }
 
             try {
-                const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
-                const response = await fetch(csvUrl + '&t=' + Date.now()); // Cache busting
-                if (!response.ok) throw new Error('Gagal fetch');
+                // 3. Use Google Visualization API (gviz) - CORS Friendly
+                // This endpoint returns CSV data and is generally allowed for public sheets
+                const query = encodeURIComponent("SELECT *");
+                const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&tq=${query}`;
                 
-                const csvData = await response.text();
-                const workbook = XLSX.read(csvData, { type: 'string' });
+                const response = await fetch(gvizUrl);
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const csvText = await response.text();
+
+                // 4. Parse CSV using XLSX library (it handles CSV strings too)
+                const workbook = XLSX.read(csvText, { type: 'string' });
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(sheet);
 
@@ -364,9 +385,12 @@
                 
                 const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 setStatus('connected', 'Terhubung', `Terakhir sync: ${time}`);
+                
             } catch (err) {
                 console.error(err);
                 setStatus('error', 'Gagal Sinkron');
+                // Show specific error hint in UI
+                showNotification('Pastikan Spreadsheet sudah Public (Anyone with the link)', 'error');
             }
         }
 
@@ -381,13 +405,15 @@
             statusTime.textContent = time;
         }
 
-        // Data Processing
+        // Data Processing (Same as before)
         function processExcelData(jsonData) {
+            if(!jsonData || jsonData.length === 0) return;
+            
             serviceData = jsonData.map((row, index) => {
                 const cleanRow = {};
                 Object.keys(row).forEach(key => { cleanRow[key.toLowerCase().trim()] = row[key]; });
 
-                const tanggal = cleanRow['tanggal'] || cleanRow['date'] || new Date();
+                const tanggal = cleanRow['tanggal'] || cleanRow['date'] || cleanRow['tgl'] || new Date();
                 let parsedDate = new Date(tanggal);
                 if (typeof tanggal === 'number') parsedDate = new Date((tanggal - 25569) * 86400 * 1000);
 
@@ -395,10 +421,10 @@
                     id: index + 1,
                     tanggal: parsedDate,
                     tanggalStr: formatDate(parsedDate),
-                    pemohon: cleanRow['nama pemohon'] || cleanRow['pemohon'] || '-',
-                    unitKerja: cleanRow['unit kerja'] || cleanRow['unit'] || '-',
-                    jenis: cleanRow['jenis pelayanan'] || cleanRow['jenis'] || '-',
-                    pic: cleanRow['pic'] || cleanRow['petugas'] || '-',
+                    pemohon: cleanRow['nama pemohon'] || cleanRow['pemohon'] || cleanRow['nama'] || '-',
+                    unitKerja: cleanRow['unit kerja'] || cleanRow['unit'] || cleanRow['opd'] || '-',
+                    jenis: cleanRow['jenis pelayanan'] || cleanRow['jenis'] || cleanRow['layanan'] || '-',
+                    pic: cleanRow['pic'] || cleanRow['petugas'] || cleanRow['staff'] || '-',
                     status: normalizeStatus(cleanRow['status'] || 'Proses')
                 };
             });
@@ -417,26 +443,23 @@
             return 'Antrian';
         }
 
-        // Settings
+        // Settings (Same as before)
         function openSettings() {
             document.getElementById('settingsUrlInput').value = localStorage.getItem(STORAGE_KEY_URL) || '';
             document.getElementById('settingsModal').classList.remove('hidden');
             document.getElementById('settingsModal').classList.add('flex');
         }
-
         function closeSettings() {
             document.getElementById('settingsModal').classList.add('hidden');
         }
-
         function saveSettings() {
             const url = document.getElementById('settingsUrlInput').value.trim();
             if (url) {
                 localStorage.setItem(STORAGE_KEY_URL, url);
                 closeSettings();
-                location.reload(); // Reload to reset state and start fresh sync
+                location.reload();
             }
         }
-
         function saveInitialUrl() {
             const url = document.getElementById('initialUrlInput').value.trim();
             if (url) {
@@ -445,7 +468,7 @@
             }
         }
 
-        // Dashboard Logic (Condensed)
+        // Dashboard Logic (Same as before)
         function updateDashboard() {
             const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
             const today = new Date();
@@ -481,17 +504,15 @@
         
         function updateYearDisplay() { document.getElementById('currentYear').textContent = currentYear; document.getElementById('yearDisplay').textContent = currentYear; }
 
-        // Charts
+        // Charts (Same)
         function initCharts() {
             const ctx1 = document.getElementById('monthlyChart').getContext('2d');
             const ctx2 = document.getElementById('statusChart').getContext('2d');
             const ctx3 = document.getElementById('picPerformanceChart').getContext('2d');
-
             monthlyChart = new Chart(ctx1, { type: 'bar', data: { labels: MONTHS.map(m=>m.slice(0,3)), datasets: [{data: new Array(12).fill(0), backgroundColor: 'rgba(212,168,70,0.8)'}, {data: new Array(12).fill(0), backgroundColor: 'rgba(16,185,129,0.8)'}] }, options: { responsive: true, maintainAspectRatio: false, plugins: {legend: false}, scales: { x: {grid: {color: 'rgba(255,255,255,0.05)'}}, y: {grid: {color: 'rgba(255,255,255,0.05)'}} } } });
             statusChart = new Chart(ctx2, { type: 'doughnut', data: { labels: ['Selesai', 'Proses', 'Antrian'], datasets: [{data: [0,0,0], backgroundColor: ['rgba(16,185,129,0.9)', 'rgba(59,130,246,0.9)', 'rgba(245,158,11,0.9)']}] }, options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: {position: 'bottom'} } } });
             picChart = new Chart(ctx3, { type: 'bar', data: { labels: [], datasets: [{data: [], backgroundColor: 'rgba(59,130,246,0.7)'}, {data: [], backgroundColor: 'rgba(16,185,129,0.9)'}] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: {legend: false}, scales: { x: {grid: {color: 'rgba(255,255,255,0.05)'}}, y: {grid: false} } } });
         }
-
         function updateCharts() {
             const totals = [], selesaiArr = [];
             for (let m = 0; m < 12; m++) {
@@ -502,17 +523,14 @@
             monthlyChart.data.datasets[0].data = totals;
             monthlyChart.data.datasets[1].data = selesaiArr;
             monthlyChart.update('none');
-
             const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
             statusChart.data.datasets[0].data = [monthData.filter(d=>d.status==='Selesai').length, monthData.filter(d=>d.status==='Proses').length, monthData.filter(d=>d.status==='Antrian').length];
             statusChart.update('none');
         }
-
         function updatePICPerformance(monthData) {
             const stats = {};
             monthData.forEach(d => { if(!stats[d.pic]) stats[d.pic] = {t:0, s:0}; stats[d.pic].t++; if(d.status==='Selesai') stats[d.pic].s++; });
             const sorted = Object.keys(stats).map(k => ({name:k, ...stats[k]})).sort((a,b)=>b.s-a.s);
-            
             document.getElementById('picRankingList').innerHTML = sorted.slice(0,10).map((p,i) => `
                 <div class="pic-rank-item">
                     <div class="rank-badge ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other'}">${i+1}</div>
@@ -520,18 +538,14 @@
                     <div class="text-right"><p class="font-bold text-[var(--accent-green)]">${p.s}</p><p class="text-xs text-[var(--fg-muted)]">${p.t} total</p></div>
                 </div>
             `).join('');
-
             picChart.data.labels = sorted.slice(0,5).map(p=>p.name);
             picChart.data.datasets[0].data = sorted.slice(0,5).map(p=>p.t);
             picChart.data.datasets[1].data = sorted.slice(0,5).map(p=>p.s);
             picChart.update('none');
         }
 
-        // Filters & Table (Condensed)
-        function initFilters() { 
-            filterMonthSelect.value = selectedMonth.toString(); 
-            updateDayFilter(); 
-        }
+        // Filters & Table (Same)
+        function initFilters() { filterMonthSelect.value = selectedMonth.toString(); updateDayFilter(); }
         function updateYearFilter() {
             const years = new Set(serviceData.map(d => d.tanggal.getFullYear()));
             if(years.size===0) years.add(currentYear);
@@ -570,8 +584,7 @@
 
         function handleSearch(e) {
             const q = e.target.value.toLowerCase();
-            // Re-apply base filters then search
-            handleFilterChange(); // This resets filteredData based on dropdowns
+            handleFilterChange(); 
             if(q) filteredData = filteredData.filter(d => d.pemohon.toLowerCase().includes(q) || d.jenis.toLowerCase().includes(q) || d.pic.toLowerCase().includes(q));
             renderTable(); renderPagination();
         }
@@ -609,6 +622,13 @@
             requestAnimationFrame(up);
         }
         function formatDate(d) { return d.toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'}); }
+        function showNotification(msg, type) {
+            const n = document.createElement('div');
+            n.className = `fixed top-4 right-4 px-6 py-3 rounded-lg z-[200] animate-in ${type === 'success' ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-red)]'}`;
+            n.style.color = 'white'; n.innerHTML = `<div class="flex items-center gap-2"><span class="font-medium">${msg}</span></div>`;
+            document.body.appendChild(n);
+            setTimeout(() => { n.style.opacity = '0'; n.style.transform = 'translateY(-10px)'; n.style.transition = 'all 0.3s'; setTimeout(() => n.remove(), 300); }, 5000);
+        }
 
         // Start
         document.addEventListener('DOMContentLoaded', init);
