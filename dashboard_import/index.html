@@ -6,6 +6,7 @@
     <title>Dashboard Statistik Pelayanan - BKPSDM Bangkalan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Library XLSX tetap digunakan untuk parsing CSV dari Google Spreadsheet -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -100,20 +101,20 @@
             background: inherit; opacity: 0.3; filter: blur(8px);
         }
 
-        .upload-zone {
-            border: 2px dashed var(--border); border-radius: 16px;
+        .connection-zone {
+            border: 2px solid var(--border); border-radius: 16px;
             background: rgba(20, 42, 69, 0.5);
             transition: all 0.3s; position: relative; overflow: hidden;
         }
-        .upload-zone::before {
+        .connection-zone::before {
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(135deg, rgba(212, 168, 70, 0.05) 0%, transparent 50%);
             opacity: 0; transition: opacity 0.3s;
         }
-        .upload-zone:hover, .upload-zone.drag-over {
+        .connection-zone:hover {
             border-color: var(--accent-gold); background: rgba(212, 168, 70, 0.05);
         }
-        .upload-zone:hover::before, .upload-zone.drag-over::before { opacity: 1; }
+        .connection-zone:hover::before { opacity: 1; }
 
         .chart-container {
             background: var(--bg-card);
@@ -168,9 +169,11 @@
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         .animate-in { animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; }
         .animate-slide { animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; }
         .delay-4 { animation-delay: 0.4s; } .delay-5 { animation-delay: 0.5s; } .delay-6 { animation-delay: 0.6s; }
 
@@ -192,6 +195,7 @@
         }
         .btn-primary:hover::before { left: 100%; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(212, 168, 70, 0.4); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         .btn-secondary {
             background: var(--bg-secondary); color: var(--fg-primary); font-weight: 600;
@@ -210,6 +214,14 @@
         }
         .month-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
         .month-btn.active { background: var(--accent-gold); border-color: var(--accent-gold); color: var(--bg-primary); font-weight: 600; }
+
+        .input-url {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px 16px; color: var(--fg-primary);
+            font-size: 0.875rem; width: 100%; transition: all 0.3s;
+        }
+        .input-url:focus { outline: none; border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(212, 168, 70, 0.1); }
+        .input-url::placeholder { color: var(--fg-muted); }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -264,32 +276,31 @@
 
         <!-- Main Content -->
         <main class="px-6 lg:px-12 py-8 max-w-7xl mx-auto">
-            <!-- Upload Section -->
+            
+            <!-- Google Sheet Connection Section -->
             <section class="mb-8 animate-in">
-                <div class="upload-zone p-8" id="uploadZone">
+                <div class="connection-zone p-8" id="connectionZone">
                     <div class="flex flex-col lg:flex-row items-center justify-center gap-6 text-center lg:text-left">
-                        <div class="icon-container bg-gradient-to-br from-[var(--accent-gold)] to-[var(--accent-gold-light)]">
-                            <svg class="w-8 h-8 text-[var(--bg-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        <div class="icon-container bg-gradient-to-br from-green-500 to-green-400">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                         </div>
-                        <div class="flex-1">
-                            <h3 class="font-display text-xl font-bold mb-2">Import Data Pelayanan</h3>
-                            <p class="text-[var(--fg-secondary)] mb-4">Upload file Excel (.xlsx/.xls) untuk memperbarui statistik pelayanan</p>
-                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3">
-                                <label class="btn-primary cursor-pointer inline-flex items-center gap-2">
+                        <div class="flex-1 w-full">
+                            <h3 class="font-display text-xl font-bold mb-2">Sambungkan ke Google Spreadsheet</h3>
+                            <p class="text-[var(--fg-secondary)] mb-4">Tempel URL Google Spreadsheet yang sudah di-publish ke web.</p>
+                            <div class="flex flex-col sm:flex-row gap-3 w-full max-w-2xl">
+                                <input type="text" id="sheetUrlInput" class="input-url flex-1" placeholder="Contoh: https://docs.google.com/spreadsheets/d/xxxxx/edit">
+                                <button id="loadDataBtn" class="btn-primary whitespace-nowrap flex items-center justify-center gap-2" onclick="loadFromGoogleSheet()">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                     </svg>
-                                    Pilih File Excel
-                                    <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden">
-                                </label>
-                                <span class="text-sm text-[var(--fg-muted)]" id="fileName">Belum ada file dipilih</span>
+                                    Muat Data
+                                </button>
                             </div>
-                        </div>
-                        <div class="text-xs text-[var(--fg-muted)] max-w-xs hidden lg:block">
-                            <p class="font-medium mb-1">Format kolom yang didukung:</p>
-                            <p>Tanggal, Nama Pemohon, Unit Kerja, Jenis Pelayanan, PIC, Status</p>
+                            <p class="text-xs text-[var(--fg-muted)] mt-3">
+                                Pastikan spreadsheet sudah diatur ke "Anyone with the link can view" (Bagikan > Umum > Siapa saja yang memiliki link).
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -494,7 +505,7 @@
                             </tr>
                         </thead>
                         <tbody id="dataTableBody">
-                            <tr><td colspan="7" class="text-center py-8 text-[var(--fg-muted)]">Import file Excel untuk menampilkan data</td></tr>
+                            <tr><td colspan="7" class="text-center py-8 text-[var(--fg-muted)]">Sambungkan ke Google Spreadsheet untuk menampilkan data</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -534,9 +545,8 @@
         const MONTH_TARGET = 500;
 
         // DOM
-        const fileInput = document.getElementById('fileInput');
-        const uploadZone = document.getElementById('uploadZone');
-        const fileName = document.getElementById('fileName');
+        const sheetUrlInput = document.getElementById('sheetUrlInput');
+        const loadDataBtn = document.getElementById('loadDataBtn');
         const monthSelector = document.getElementById('monthSelector');
         const searchInput = document.getElementById('searchInput');
         const filterYearSelect = document.getElementById('filterYear');
@@ -550,23 +560,194 @@
             updateYearDisplay();
             initCharts();
             initFilters();
-            loadSampleData();
             setupEventListeners();
+            // Load sample data initially for demo
+            loadSampleData(); 
         }
 
         function setupEventListeners() {
-            fileInput.addEventListener('change', handleFileUpload);
-            uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-            uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-            uploadZone.addEventListener('drop', (e) => {
-                e.preventDefault(); uploadZone.classList.remove('drag-over');
-                if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFileUpload({ target: fileInput }); }
-            });
             searchInput.addEventListener('input', handleSearch);
             filterYearSelect.addEventListener('change', handleFilterChange);
             filterMonthSelect.addEventListener('change', handleFilterChange);
             filterDaySelect.addEventListener('change', handleFilterChange);
             resetFilterBtn.addEventListener('click', resetFilters);
+            
+            // Enter key on input
+            sheetUrlInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') loadFromGoogleSheet();
+            });
+        }
+
+        // ==========================================
+        // GOOGLE SHEET INTEGRATION
+        // ==========================================
+        async function loadFromGoogleSheet() {
+            const url = sheetUrlInput.value.trim();
+            if (!url) {
+                showNotification('Masukkan URL Google Spreadsheet', 'error');
+                return;
+            }
+
+            // Extract Sheet ID from URL
+            let sheetId = null;
+            
+            // Regex patterns for different Google Sheet URL formats
+            const patterns = [
+                /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/, // Standard format
+                /\/d\/([a-zA-Z0-9-_]+)/, // Short format
+                /id=([a-zA-Z0-9-_]+)/, // Query param format
+                /^([a-zA-Z0-9-_]{30,})$/ // Direct ID
+            ];
+
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) {
+                    sheetId = match[1];
+                    break;
+                }
+            }
+
+            if (!sheetId) {
+                showNotification('Format URL tidak valid. Pastikan URL berasal dari Google Spreadsheet.', 'error');
+                return;
+            }
+
+            // Construct CSV Export URL
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
+            
+            // Show loading state
+            loadDataBtn.disabled = true;
+            loadDataBtn.innerHTML = `
+                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Memuat...
+            `;
+
+            try {
+                const response = await fetch(csvUrl);
+                if (!response.ok) throw new Error('Gagal mengakses spreadsheet. Pastikan sudah di-publish ke web.');
+                
+                const csvData = await response.text();
+                
+                // Use XLSX library to parse CSV (it handles CSV strings well)
+                const workbook = XLSX.read(csvData, { type: 'string' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                
+                if (jsonData.length === 0) {
+                    showNotification('Spreadsheet kosong atau tidak ada data', 'error');
+                    return;
+                }
+
+                processExcelData(jsonData);
+                showNotification(`Berhasil memuat ${jsonData.length} data dari Spreadsheet`, 'success');
+                
+            } catch (error) {
+                console.error('Error loading sheet:', error);
+                showNotification('Gagal memuat data. Pastikan link benar dan sudah di-publish ke web.', 'error');
+            } finally {
+                loadDataBtn.disabled = false;
+                loadDataBtn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Muat Data
+                `;
+            }
+        }
+
+        // ==========================================
+        // DATA PROCESSING
+        // ==========================================
+        function processExcelData(jsonData) {
+            serviceData = jsonData.map((row, index) => {
+                // Normalisasi Key: Ubah ke huruf kecil dan trim spasi
+                const cleanRow = {};
+                Object.keys(row).forEach(key => {
+                    cleanRow[key.toLowerCase().trim()] = row[key];
+                });
+
+                // Ambil data dengan nama kolom yang sudah dinormalisasi
+                const tanggal = cleanRow['tanggal'] || cleanRow['date'] || cleanRow['tgl'] || new Date();
+                const pemohon = cleanRow['nama pemohon'] || cleanRow['pemohon'] || cleanRow['nama'] || cleanRow['nama_pemohon'] || `Pemohon ${index + 1}`;
+                const unitKerja = cleanRow['unit kerja'] || cleanRow['unit_kerja'] || cleanRow['unit'] || cleanRow['opd'] || cleanRow['instansi'] || '-';
+                const jenis = cleanRow['jenis pelayanan'] || cleanRow['jenis'] || cleanRow['layanan'] || cleanRow['jenis_pelayanan'] || 'Pelayanan Umum';
+                const pic = cleanRow['pic'] || cleanRow['petugas'] || cleanRow['staff'] || cleanRow['nama pic'] || cleanRow['nama_pic'] || cleanRow['pegawai'] || '-';
+                const status = cleanRow['status'] || cleanRow['keterangan'] || 'Proses';
+
+                // Parse Date
+                let parsedDate;
+                if (typeof tanggal === 'number') {
+                    parsedDate = new Date((tanggal - 25569) * 86400 * 1000);
+                } else if (tanggal instanceof Date) {
+                    parsedDate = tanggal;
+                } else {
+                    parsedDate = new Date(tanggal);
+                }
+
+                return {
+                    id: index + 1,
+                    tanggal: parsedDate,
+                    tanggalStr: formatDate(parsedDate),
+                    pemohon: pemohon,
+                    unitKerja: unitKerja,
+                    jenis: jenis,
+                    pic: pic,
+                    status: normalizeStatus(status)
+                };
+            });
+
+            serviceData.sort((a, b) => b.tanggal - a.tanggal);
+            filteredData = [...serviceData];
+            updateYearFilter();
+            resetFilters();
+            updateDashboard();
+            updateLastUpdate();
+        }
+
+        function normalizeStatus(status) {
+            const s = status.toString().toLowerCase();
+            if (s.includes('selesai') || s.includes('done') || s.includes('complete')) return 'Selesai';
+            if (s.includes('proses') || s.includes('process') || s.includes('diproses')) return 'Proses';
+            return 'Antrian';
+        }
+
+        // Sample Data
+        function loadSampleData() {
+            const sampleTypes = ['Mutasi', 'Cuti', 'Kenaikan Pangkat', 'Promosi', 'Pensiun', 'CPNS'];
+            const sampleUnits = ['Dinas Pendidikan', 'Dinas Kesehatan', 'Dinas PUPR', 'Sekretariat Daerah', 'Dinas Perhubungan', 'Dinas Sosial', 'BPBD', 'Dinas Kependudukan'];
+            const samplePICs = ['Ahmad Fauzi, S.Sos', 'Siti Rahayu, S.AP', 'Budi Santoso, M.Si', 'Dewi Kusuma, S.E', 'Eko Prasetyo, S.Kom'];
+            const sampleNames = ['Abdul Rahman', 'Siti Aminah', 'Budi Hartono', 'Dewi Sartika', 'Eko Wahyudi', 'Fitriani', 'Gunawan Hidayat'];
+            
+            serviceData = [];
+            for (let month = 0; month < 12; month++) {
+                const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
+                const servicesThisMonth = Math.floor(Math.random() * 200) + 100;
+                for (let i = 0; i < servicesThisMonth; i++) {
+                    const day = Math.floor(Math.random() * daysInMonth) + 1;
+                    const date = new Date(currentYear, month, day);
+                    const statusRand = Math.random();
+                    let status = 'Selesai';
+                    if (statusRand > 0.85) status = 'Antrian';
+                    else if (statusRand > 0.70) status = 'Proses';
+                    
+                    serviceData.push({
+                        id: serviceData.length + 1, tanggal: date, tanggalStr: formatDate(date),
+                        pemohon: sampleNames[Math.floor(Math.random() * sampleNames.length)],
+                        unitKerja: sampleUnits[Math.floor(Math.random() * sampleUnits.length)],
+                        jenis: sampleTypes[Math.floor(Math.random() * sampleTypes.length)],
+                        pic: samplePICs[Math.floor(Math.random() * samplePICs.length)],
+                        status: status
+                    });
+                }
+            }
+            serviceData.sort((a, b) => b.tanggal - a.tanggal);
+            filteredData = [...serviceData];
+            updateYearFilter();
+            applyFiltersAndRender();
+            updateDashboard();
         }
 
         // Filters
@@ -650,129 +831,6 @@
             });
         }
 
-        // File Handling
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            fileName.textContent = file.name;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const data = new Uint8Array(event.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                    processExcelData(jsonData);
-                    showNotification('Data berhasil diimport!', 'success');
-                } catch (error) {
-                    console.error('Error parsing Excel:', error);
-                    showNotification('Gagal membaca file Excel', 'error');
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        // === PERBAIKAN UTAMA: Normalisasi Header ===
-        function processExcelData(jsonData) {
-            serviceData = jsonData.map((row, index) => {
-                // 1. Normalisasi Key: Ubah ke huruf kecil dan trim spasi
-                const cleanRow = {};
-                Object.keys(row).forEach(key => {
-                    cleanRow[key.toLowerCase().trim()] = row[key];
-                });
-
-                // 2. Ambil data dengan nama kolom yang sudah dinormalisasi
-                // Tanggal
-                const tanggal = cleanRow['tanggal'] || cleanRow['date'] || cleanRow['tgl'] || new Date();
-                
-                // Nama Pemohon
-                const pemohon = cleanRow['nama pemohon'] || cleanRow['pemohon'] || cleanRow['nama'] || cleanRow['nama_pemohon'] || `Pemohon ${index + 1}`;
-                
-                // Unit Kerja
-                const unitKerja = cleanRow['unit kerja'] || cleanRow['unit_kerja'] || cleanRow['unit'] || cleanRow['opd'] || cleanRow['instansi'] || '-';
-                
-                // Jenis Pelayanan
-                const jenis = cleanRow['jenis pelayanan'] || cleanRow['jenis'] || cleanRow['layanan'] || cleanRow['jenis_pelayanan'] || 'Pelayanan Umum';
-                
-                // PIC (Penangan utama masalah user)
-                const pic = cleanRow['pic'] || cleanRow['petugas'] || cleanRow['staff'] || cleanRow['nama pic'] || cleanRow['nama_pic'] || cleanRow['pegawai'] || '-';
-                
-                // Status
-                const status = cleanRow['status'] || cleanRow['keterangan'] || 'Proses';
-
-                // Parse Date
-                let parsedDate;
-                if (typeof tanggal === 'number') {
-                    parsedDate = new Date((tanggal - 25569) * 86400 * 1000);
-                } else if (tanggal instanceof Date) {
-                    parsedDate = tanggal;
-                } else {
-                    parsedDate = new Date(tanggal);
-                }
-
-                return {
-                    id: index + 1,
-                    tanggal: parsedDate,
-                    tanggalStr: formatDate(parsedDate),
-                    pemohon: pemohon,
-                    unitKerja: unitKerja,
-                    jenis: jenis,
-                    pic: pic,
-                    status: normalizeStatus(status)
-                };
-            });
-
-            serviceData.sort((a, b) => b.tanggal - a.tanggal);
-            filteredData = [...serviceData];
-            updateYearFilter();
-            resetFilters();
-            updateDashboard();
-            updateLastUpdate();
-        }
-
-        function normalizeStatus(status) {
-            const s = status.toString().toLowerCase();
-            if (s.includes('selesai') || s.includes('done') || s.includes('complete')) return 'Selesai';
-            if (s.includes('proses') || s.includes('process') || s.includes('diproses')) return 'Proses';
-            return 'Antrian';
-        }
-
-        // Sample Data
-        function loadSampleData() {
-            const sampleTypes = ['Mutasi', 'Cuti', 'Kenaikan Pangkat', 'Promosi', 'Pensiun', 'CPNS'];
-            const sampleUnits = ['Dinas Pendidikan', 'Dinas Kesehatan', 'Dinas PUPR', 'Sekretariat Daerah', 'Dinas Perhubungan', 'Dinas Sosial', 'BPBD', 'Dinas Kependudukan'];
-            const samplePICs = ['Ahmad Fauzi, S.Sos', 'Siti Rahayu, S.AP', 'Budi Santoso, M.Si', 'Dewi Kusuma, S.E', 'Eko Prasetyo, S.Kom'];
-            const sampleNames = ['Abdul Rahman', 'Siti Aminah', 'Budi Hartono', 'Dewi Sartika', 'Eko Wahyudi', 'Fitriani', 'Gunawan Hidayat'];
-            
-            serviceData = [];
-            for (let month = 0; month < 12; month++) {
-                const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
-                const servicesThisMonth = Math.floor(Math.random() * 200) + 100;
-                for (let i = 0; i < servicesThisMonth; i++) {
-                    const day = Math.floor(Math.random() * daysInMonth) + 1;
-                    const date = new Date(currentYear, month, day);
-                    const statusRand = Math.random();
-                    let status = 'Selesai';
-                    if (statusRand > 0.85) status = 'Antrian';
-                    else if (statusRand > 0.70) status = 'Proses';
-                    
-                    serviceData.push({
-                        id: serviceData.length + 1, tanggal: date, tanggalStr: formatDate(date),
-                        pemohon: sampleNames[Math.floor(Math.random() * sampleNames.length)],
-                        unitKerja: sampleUnits[Math.floor(Math.random() * sampleUnits.length)],
-                        jenis: sampleTypes[Math.floor(Math.random() * sampleTypes.length)],
-                        pic: samplePICs[Math.floor(Math.random() * samplePICs.length)],
-                        status: status
-                    });
-                }
-            }
-            serviceData.sort((a, b) => b.tanggal - a.tanggal);
-            filteredData = [...serviceData];
-            updateYearFilter();
-            applyFiltersAndRender();
-            updateDashboard();
-        }
-
         // Dashboard Update
         function updateDashboard() {
             const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
@@ -844,98 +902,4 @@
                 type: 'doughnut',
                 data: {
                     labels: ['Selesai', 'Proses', 'Antrian'],
-                    datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(16, 185, 129, 0.9)', 'rgba(59, 130, 246, 0.9)', 'rgba(245, 158, 11, 0.9)'], borderWidth: 2, hoverOffset: 10 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: 'rgba(148,163,184,0.8)', padding: 20, usePointStyle: true } } } }
-            });
-        }
-
-        function updateCharts() {
-            const monthlyTotals = []; const monthlySelesai = [];
-            for (let month = 0; month < 12; month++) {
-                const mData = serviceData.filter(d => d.tanggal.getMonth() === month && d.tanggal.getFullYear() === currentYear);
-                monthlyTotals.push(mData.length);
-                monthlySelesai.push(mData.filter(d => d.status === 'Selesai').length);
-            }
-            monthlyChart.data.datasets[0].data = monthlyTotals;
-            monthlyChart.data.datasets[1].data = monthlySelesai;
-            monthlyChart.update('none');
-
-            const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
-            statusChart.data.datasets[0].data = [monthData.filter(d => d.status === 'Selesai').length, monthData.filter(d => d.status === 'Proses').length, monthData.filter(d => d.status === 'Antrian').length];
-            statusChart.update('none');
-        }
-
-        // Table & Pagination
-        function renderTable() {
-            const tbody = document.getElementById('dataTableBody');
-            if (!filteredData.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8">Tidak ada data</td></tr>'; return; }
-            const start = (currentPage - 1) * rowsPerPage;
-            const pageData = filteredData.slice(start, start + rowsPerPage);
-            tbody.innerHTML = pageData.map((row, i) => `
-                <tr class="animate-slide" style="animation-delay: ${i * 0.03}s">
-                    <td class="font-medium text-[var(--fg-primary)]">${start + i + 1}</td>
-                    <td>${row.tanggalStr}</td>
-                    <td class="text-[var(--fg-primary)]">${row.pemohon}</td>
-                    <td>${row.unitKerja}</td>
-                    <td>${row.jenis}</td>
-                    <td class="text-[var(--accent-gold)]">${row.pic}</td>
-                    <td><span class="badge badge-${row.status.toLowerCase()}"><span class="w-2 h-2 rounded-full bg-current"></span>${row.status}</span></td>
-                </tr>
-            `).join('');
-        }
-
-        function renderPagination() {
-            const container = document.getElementById('paginationContainer');
-            const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
-            document.getElementById('currentPageDisplay').textContent = currentPage;
-            document.getElementById('totalPagesDisplay').textContent = totalPages;
-            let html = `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            </button>`;
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(totalPages, startPage + 4);
-            if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
-            if (startPage > 1) html += `<button class="pagination-btn" onclick="goToPage(1)">1</button>${startPage > 2 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}`;
-            for (let i = startPage; i <= endPage; i++) html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-            if (endPage < totalPages) html += `${endPage < totalPages - 1 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}<button class="pagination-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
-            html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </button>`;
-            container.innerHTML = html;
-        }
-
-        function goToPage(page) {
-            const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
-            if (page < 1 || page > totalPages) return;
-            currentPage = page;
-            renderTable(); renderPagination();
-            document.querySelector('.chart-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        function handleSearch(e) {
-            const query = e.target.value.toLowerCase();
-            let base = serviceData.filter(d => (filterYear === 'all' || d.tanggal.getFullYear().toString() === filterYear) && (filterMonth === 'all' || d.tanggal.getMonth().toString() === filterMonth) && (filterDay === 'all' || d.tanggal.getDate().toString() === filterDay));
-            filteredData = query ? base.filter(d => d.pemohon.toLowerCase().includes(query) || d.jenis.toLowerCase().includes(query) || d.status.toLowerCase().includes(query) || d.unitKerja.toLowerCase().includes(query) || d.pic.toLowerCase().includes(query)) : base;
-            currentPage = 1; renderTable(); renderPagination(); updateDataCounts();
-        }
-
-        // Utils
-        function animateNumber(id, target) {
-            const el = document.getElementById(id); const start = parseInt(el.textContent) || 0; const dur = 1000; const sTime = performance.now();
-            function upd(t) { const p = Math.min((t - sTime) / dur, 1); el.textContent = Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3))).toLocaleString('id-ID'); if (p < 1) requestAnimationFrame(upd); }
-            requestAnimationFrame(upd);
-        }
-        function formatDate(d) { return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }); }
-        function showNotification(msg, type) {
-            const n = document.createElement('div');
-            n.className = `fixed top-4 right-4 px-6 py-3 rounded-lg z-50 animate-in ${type === 'success' ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-red)]'}`;
-            n.style.color = 'white'; n.innerHTML = `<div class="flex items-center gap-2"><span class="font-medium">${msg}</span></div>`;
-            document.body.appendChild(n);
-            setTimeout(() => { n.style.opacity = '0'; n.style.transform = 'translateY(-10px)'; n.style.transition = 'all 0.3s'; setTimeout(() => n.remove(), 300); }, 3000);
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
+                    datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(16, 185, 129, 0.9)', 'rgba(59, 130, 246, 0.9)', 'rgba(245, 158, 11, 0.9)
