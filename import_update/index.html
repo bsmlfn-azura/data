@@ -318,19 +318,17 @@
     </footer>
 
     <script>
+           <script>
         // ===== KONFIGURASI GOOGLE SHEET =====
-        // Ganti dengan ID Spreadsheet Anda (string panjang di URL)
-        const SPREADSHEET_ID = '1oza5XRb4k8ByAO-IRsxV7e1FJGitm55WsmRqxXm5BLk'; // Contoh ID
-        
-        // Nama sheet (tab di bawah spreadsheet), default 'Sheet1'
+        // GANTI DENGAN ID SPREADSHEET ANDA
+        const SPREADSHEET_ID = 'MASUKKAN_ID_SPREADSHEET_ANDA_DISINI'; 
         const SHEET_NAME = 'Sheet1'; 
 
-        const DATA_CATEGORIES = ['AK', 'CPNS_PNS', 'R_KELUARGA', 'DATA_PRIBADI', 'DIKLAT', 'JABATAN', 'PENDIDIKAN'];
+        const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         const CATEGORY_LABELS = {
             'AK': 'Angka Kredit', 'CPNS_PNS': 'CPNS/PNS', 'R_KELUARGA': 'Riwayat Keluarga',
             'DATA_PRIBADI': 'Data Pribadi', 'DIKLAT': 'Diklat', 'JABATAN': 'Jabatan', 'PENDIDIKAN': 'Pendidikan'
         };
-        const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
         // ===== STATE =====
         let currentYear = '2026';
@@ -342,86 +340,162 @@
         // ===== INITIALIZE =====
         document.addEventListener('DOMContentLoaded', () => {
             renderMonthSelector();
-            fetchGoogleSheetsData(); // Langsung ambil data
+            fetchGoogleSheetsData();
         });
 
-        // ===== FUNGSI AMBIL DATA (Menggunakan Google Visualization API/JSONP) =====
+        // ===== FUNGSI AMBIL DATA (ROBUST VERSION) =====
         async function fetchGoogleSheetsData() {
             const statusEl = document.getElementById('connectionStatus');
-            statusEl.textContent = 'Menghubungi...';
+            statusEl.textContent = 'Sinkronisasi...';
             
-            // Menggunakan Google Visualization API (gviz) yang support CORS untuk public sheet
-            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+            // Query gviz dengan header=1 agar baris pertama dianggap header
+            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}&headers=1`;
             
             try {
                 const response = await fetch(url);
                 const text = await response.text();
-                
-                // Response dari gviz dibungkus dengan "google.visualization.Query.setResponse(...);"
-                // Kita perlu membersihkannya untuk mendapatkan JSON murni
                 const jsonString = text.substring(47).slice(0, -2);
                 const json = JSON.parse(jsonString);
                 
-                // Parse data dari format Google Visualization ke format kita
-                allData = parseGvizData(json);
+                // Parse dengan deteksi kolom otomatis
+                const result = parseGvizDataSmart(json);
                 
+                if (Object.keys(result.data).length === 0) {
+                    throw new Error("Data kosong atau format tidak sesuai");
+                }
+
+                allData = result.data;
+                
+                // Auto-switch tahun dan bulan jika tahun 2026 tidak ada
+                const availableYears = Object.keys(allData);
+                if (!availableYears.includes(currentYear) && availableYears.length > 0) {
+                    currentYear = availableYears[0]; // Ambil tahun pertama yang ada
+                    // Update dropdown tahun jika perlu (opsional, di sini kita override state saja)
+                }
+                
+                const availableMonths = Object.keys(allData[currentYear] || {});
+                if (!availableMonths.includes(currentMonth) && availableMonths.length > 0) {
+                    currentMonth = availableMonths[0]; // Ambil bulan pertama yang ada
+                }
+
+                // Render ulang selector bulan untuk highlight yang aktif
+                renderMonthSelector();
+
                 statusEl.textContent = 'Terhubung';
                 statusEl.parentElement.querySelector('.pulse-dot').style.background = '#22c55e';
                 
+                console.log("Data berhasil dimuat:", allData);
                 updateDashboard();
                 
             } catch (error) {
-                console.error('Error fetching data:', error);
-                statusEl.textContent = 'Gagal Memuat';
+                console.error('Detail Error:', error);
+                statusEl.textContent = 'Format Salah';
                 statusEl.parentElement.querySelector('.pulse-dot').style.background = '#ef4444';
-                
-                // Load sample data jika gagal
+                alert("Gagal membaca data. Pastikan:\n1. ID Spreadsheet benar.\n2. Nama Sheet benar (case sensitive).\n3. Header kolom ada (TAHUN, BULAN, OPD, dll).");
                 loadSampleData();
             }
         }
 
-        function parseGvizData(json) {
+        function parseGvizDataSmart(json) {
             const rows = json.table.rows;
             const cols = json.table.cols;
+            
+            // 1. Deteksi Indeks Kolom berdasarkan Header
+            // Kita ambil header dari baris pertama data atau dari definisi col
+            // Google viz sering menyimpan label header di 'cols[i].label'
+            let headers = cols.map(c => (c.label || '').toUpperCase().replace(/[^a-zA-Z0-9_]/g, '')); 
+            // Jika label kosong, kita coba ambil dari baris pertama (cadangan)
+            if (headers.every(h => !h)) {
+                if(rows[0] && rows[0].c) {
+                    headers = rows[0].c.map(cell => (cell && cell.v ? String(cell.v).toUpperCase().trim() : ''));
+                }
+            }
+            console.log("Headers terdeteksi:", headers);
+
+            const idx = {
+                tahun: headers.findIndex(h => h === 'TAHUN'),
+                bulan: headers.findIndex(h => h === 'BULAN'),
+                opd: headers.findIndex(h => h === 'OPD' || h === 'NAMAOPD'),
+                ak: headers.findIndex(h => h === 'AK'),
+                cpns: headers.findIndex(h => h === 'CPNSPNS' || h === 'CPNS' || h === 'CPNS_PNS'),
+                keluarga: headers.findIndex(h => h === 'RKELUARGA' || h === 'RKELUARGA' || h.includes('KELUARGA')),
+                pribadi: headers.findIndex(h => h === 'DATAPRIBADI' || h.includes('PRIBADI')),
+                diklat: headers.findIndex(h => h === 'DIKLAT'),
+                jabatan: headers.findIndex(h => h === 'JABATAN'),
+                pendidikan: headers.findIndex(h => h === 'PENDIDIKAN')
+            };
+
+            // Validasi minimal
+            if (idx.tahun === -1 || idx.bulan === -1 || idx.opd === -1) {
+                throw new Error("Kolom TAHUN, BULAN, atau OPD tidak ditemukan. Cek header spreadsheet.");
+            }
+
             const data = {};
 
-            // Asumsikan urutan kolom: TAHUN, BULAN, OPD, AK, CPNS_PNS, R_KELUARGA, DATA_PRIBADI, DIKLAT, JABATAN, PENDIDIKAN
-            // Index: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-            
-            rows.forEach(row => {
-                const values = row.c;
-                if (!values || values.length < 10) return; // Skip jika data tidak lengkap
+            // 2. Proses Baris Data
+            // Jika baris pertama adalah header (karena cols.label kosong), skip baris pertama
+            let startRow = 0;
+            // Heuristik sederana: jika baris pertama mengandung string "TAHUN", skip
+            const firstRowVal = rows[0] && rows[0].c[idx.tahun] ? String(rows[0].c[idx.tahun].v) : '';
+            if (firstRowVal.toUpperCase() === 'TAHUN') startRow = 1;
 
-                const year = (values[0] && values[0].v) ? String(values[0].v) : 'Unknown';
-                const month = (values[1] && values[1].v) ? String(values[1].v) : 'Unknown';
-                const opd = (values[2] && values[2].v) ? String(values[2].v) : 'Unknown OPD';
-                
-                const item = {
-                    OPD: opd,
-                    AK: (values[3] && values[3].v) ? Number(values[3].v) : 0,
-                    CPNS_PNS: (values[4] && values[4].v) ? Number(values[4].v) : 0,
-                    R_KELUARGA: (values[5] && values[5].v) ? Number(values[5].v) : 0,
-                    DATA_PRIBADI: (values[6] && values[6].v) ? Number(values[6].v) : 0,
-                    DIKLAT: (values[7] && values[7].v) ? Number(values[7].v) : 0,
-                    JABATAN: (values[8] && values[8].v) ? Number(values[8].v) : 0,
-                    PENDIDIKAN: (values[9] && values[9].v) ? Number(values[9].v) : 0
+            for (let i = startRow; i < rows.length; i++) {
+                const cells = rows[i].c;
+                if (!cells) continue;
+
+                const getVal = (index, def = '') => {
+                    if (index === -1) return def;
+                    return cells[index] && cells[index].v !== null ? cells[index].v : def;
                 };
 
-                if (!data[year]) data[year] = {};
-                if (!data[year][month]) data[year][month] = [];
-                data[year][month].push(item);
-            });
+                let yearRaw = String(getVal(idx.tahun, '0'));
+                let monthRaw = String(getVal(idx.bulan, 'Unknown')).trim();
+                const opdRaw = String(getVal(idx.opd, 'Unknown OPD')).trim();
 
-            return data;
+                // Normalisasi Tahun (hapus desimal jika format tanggal)
+                if (yearRaw.includes('/')) yearRaw = yearRaw.split('/')[2]; // format dd/mm/yyyy
+                if (yearRaw.includes('-')) yearRaw = yearRaw.split('-')[0]; // format yyyy-mm-dd
+                yearRaw = yearRaw.substring(0, 4);
+
+                // Normalisasi Bulan (kapitalisasi pertama)
+                // Jika bulan angka, konversi ke nama
+                if (!isNaN(monthRaw)) {
+                    const mIdx = parseInt(monthRaw) - 1;
+                    monthRaw = MONTHS[mIdx] || monthRaw;
+                } else {
+                    monthRaw = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1).toLowerCase();
+                    // Koreksi typo umum
+                    if (monthRaw === "January") monthRaw = "Januari";
+                    if (monthRaw === "February") monthRaw = "Februari";
+                    if (monthRaw === "August") monthRaw = "Agustus";
+                    if (monthRaw === "October") monthRaw = "Oktober";
+                    if (monthRaw === "December") monthRaw = "Desember";
+                }
+
+                const item = {
+                    OPD: opdRaw,
+                    AK: Number(getVal(idx.ak, 0)) || 0,
+                    CPNS_PNS: Number(getVal(idx.cpns, 0)) || 0,
+                    R_KELUARGA: Number(getVal(idx.keluarga, 0)) || 0,
+                    DATA_PRIBADI: Number(getVal(idx.pribadi, 0)) || 0,
+                    DIKLAT: Number(getVal(idx.diklat, 0)) || 0,
+                    JABATAN: Number(getVal(idx.jabatan, 0)) || 0,
+                    PENDIDIKAN: Number(getVal(idx.pendidikan, 0)) || 0
+                };
+
+                if (!data[yearRaw]) data[yearRaw] = {};
+                if (!data[yearRaw][monthRaw]) data[yearRaw][monthRaw] = [];
+                data[yearRaw][monthRaw].push(item);
+            }
+
+            return { data };
         }
 
         function loadSampleData() {
-            // Fallback data jika koneksi gagal
             allData = {
                 '2026': {
                     'Januari': [
-                        { OPD: 'Dinas Pendidikan (Sample)', AK: 245, CPNS_PNS: 89, R_KELUARGA: 156, DATA_PRIBADI: 245, DIKLAT: 78, JABATAN: 45, PENDIDIKAN: 34 },
-                        { OPD: 'Dinas Kesehatan (Sample)', AK: 312, CPNS_PNS: 124, R_KELUARGA: 198, DATA_PRIBADI: 312, DIKLAT: 95, JABATAN: 67, PENDIDIKAN: 45 }
+                        { OPD: 'Data Tidak Ditemukan (Sample)', AK: 0, CPNS_PNS: 0, R_KELUARGA: 0, DATA_PRIBADI: 0, DIKLAT: 0, JABATAN: 0, PENDIDIKAN: 0 }
                     ]
                 }
             };
@@ -448,7 +522,12 @@
 
         function updateDashboard() {
             const yearData = allData[currentYear];
-            if (!yearData) return;
+            if (!yearData) {
+                console.warn("Tahun " + currentYear + " tidak ada di data");
+                // Bersihkan tampilan jika tidak ada data
+                document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="10" class="text-center p-4">Data tahun ' + currentYear + ' tidak tersedia</td></tr>';
+                return;
+            }
             
             const monthData = yearData[currentMonth] || [];
             
@@ -470,7 +549,6 @@
             let grandTotal = 0;
             data.forEach(item => { grandTotal += calculateTotal(item); });
             const avgPerOPD = totalOPD > 0 ? Math.round(grandTotal / totalOPD) : 0;
-            
             animateValue('totalOPD', totalOPD);
             animateValue('totalData', grandTotal);
             animateValue('avgData', avgPerOPD);
@@ -481,7 +559,6 @@
             const startValue = parseInt(element.textContent.replace(/\./g, '')) || 0;
             const duration = 500;
             const startTime = performance.now();
-            
             function update(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
@@ -504,12 +581,17 @@
             document.getElementById('bottomOPDName').textContent = bottomOPD.OPD;
             document.getElementById('bottomOPDValue').textContent = calculateTotal(bottomOPD).toLocaleString('id-ID');
             
-            const typeTotals = {};
-            DATA_CATEGORIES.forEach(cat => {
-                typeTotals[cat] = data.reduce((sum, item) => sum + (item[cat] || 0), 0);
-            });
-            const sortedTypes = Object.entries(typeTotals).sort((a, b) => b[1] - a[1]);
+            const typeTotals = {
+                'AK': data.reduce((s, i) => s + i.AK, 0),
+                'CPNS_PNS': data.reduce((s, i) => s + i.CPNS_PNS, 0),
+                'R_KELUARGA': data.reduce((s, i) => s + i.R_KELUARGA, 0),
+                'DATA_PRIBADI': data.reduce((s, i) => s + i.DATA_PRIBADI, 0),
+                'DIKLAT': data.reduce((s, i) => s + i.DIKLAT, 0),
+                'JABATAN': data.reduce((s, i) => s + i.JABATAN, 0),
+                'PENDIDIKAN': data.reduce((s, i) => s + i.PENDIDIKAN, 0)
+            };
             
+            const sortedTypes = Object.entries(typeTotals).sort((a, b) => b[1] - a[1]);
             document.getElementById('topTypeName').textContent = CATEGORY_LABELS[sortedTypes[0][0]];
             document.getElementById('topTypeValue').textContent = sortedTypes[0][1].toLocaleString('id-ID');
             document.getElementById('bottomTypeName').textContent = CATEGORY_LABELS[sortedTypes[sortedTypes.length - 1][0]];
@@ -518,56 +600,38 @@
 
         function updateCharts(data) {
             if (data.length === 0) return;
-            
             const opdCtx = document.getElementById('opdChart').getContext('2d');
             if (opdChart) opdChart.destroy();
-            
             const sortedData = [...data].sort((a, b) => calculateTotal(b) - calculateTotal(a)).slice(0, 10);
-            
             opdChart = new Chart(opdCtx, {
                 type: 'bar',
                 data: {
                     labels: sortedData.map(d => d.OPD.length > 20 ? d.OPD.substring(0, 17) + '...' : d.OPD),
-                    datasets: [{
-                        label: 'Total Data',
-                        data: sortedData.map(d => calculateTotal(d)),
-                        backgroundColor: 'rgba(201, 162, 39, 0.6)',
-                        borderColor: 'rgba(201, 162, 39, 1)',
-                        borderWidth: 1, borderRadius: 6, borderSkipped: false,
-                    }]
+                    datasets: [{ label: 'Total Data', data: sortedData.map(d => calculateTotal(d)), backgroundColor: 'rgba(201, 162, 39, 0.6)', borderColor: 'rgba(201, 162, 39, 1)', borderWidth: 1, borderRadius: 6 }]
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10, 22, 40, 0.9)', titleColor: '#c9a227', bodyColor: '#f1f5f9' } },
-                    scales: { x: { grid: { color: 'rgba(201, 162, 39, 0.1)' }, ticks: { color: '#64748b' } }, y: { grid: { display: false }, ticks: { color: '#f1f5f9' } } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(201, 162, 39, 0.1)' }, ticks: { color: '#64748b' } }, y: { grid: { display: false }, ticks: { color: '#f1f5f9' } } } }
             });
             
             const typeCtx = document.getElementById('typeChart').getContext('2d');
             if (typeChart) typeChart.destroy();
-            
-            const typeTotals = DATA_CATEGORIES.map(cat => data.reduce((sum, item) => sum + (item[cat] || 0), 0));
+            const typeTotals = ['AK', 'CPNS_PNS', 'R_KELUARGA', 'DATA_PRIBADI', 'DIKLAT', 'JABATAN', 'PENDIDIKAN'].map(k => data.reduce((s, i) => s + i[k], 0));
             const colors = ['#c9a227', '#e63946', '#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#06b6d4'];
-            
             typeChart = new Chart(typeCtx, {
                 type: 'doughnut',
-                data: {
-                    labels: DATA_CATEGORIES.map(cat => CATEGORY_LABELS[cat]),
-                    datasets: [{ data: typeTotals, backgroundColor: colors, borderColor: '#0a1628', borderWidth: 3, hoverOffset: 10 }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, cutout: '60%',
-                    plugins: { legend: { position: 'right', labels: { color: '#f1f5f9', padding: 15, usePointStyle: true } }, tooltip: { backgroundColor: 'rgba(10, 22, 40, 0.9)' } }
-                }
+                data: { labels: Object.values(CATEGORY_LABELS), datasets: [{ data: typeTotals, backgroundColor: colors, borderColor: '#0a1628', borderWidth: 3 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right', labels: { color: '#f1f5f9', padding: 15, usePointStyle: true } } } }
             });
         }
 
         function updateTable(data) {
             const tbody = document.getElementById('dataTableBody');
             tbody.innerHTML = '';
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center p-4">Tidak ada data untuk bulan ini.</td></tr>';
+                return;
+            }
             const sortedData = [...data].sort((a, b) => calculateTotal(b) - calculateTotal(a));
             const maxTotal = sortedData.length > 0 ? calculateTotal(sortedData[0]) : 1;
-            
             sortedData.forEach((item, index) => {
                 const total = calculateTotal(item);
                 const percentage = (total / maxTotal * 100).toFixed(1);
@@ -582,14 +646,7 @@
                     <td>${item.DIKLAT.toLocaleString('id-ID')}</td>
                     <td>${item.JABATAN.toLocaleString('id-ID')}</td>
                     <td>${item.PENDIDIKAN.toLocaleString('id-ID')}</td>
-                    <td>
-                        <div class="flex items-center gap-3">
-                            <span class="font-semibold text-white">${total.toLocaleString('id-ID')}</span>
-                            <div class="progress-bar w-20 hidden sm:block">
-                                <div class="progress-fill bg-gradient-to-r from-[var(--accent)] to-[var(--accent-red)]" style="width: ${percentage}%"></div>
-                            </div>
-                        </div>
-                    </td>
+                    <td><div class="flex items-center gap-3"><span class="font-semibold text-white">${total.toLocaleString('id-ID')}</span><div class="progress-bar w-20 hidden sm:block"><div class="progress-fill bg-gradient-to-r from-[var(--accent)] to-[var(--accent-red)]" style="width: ${percentage}%"></div></div></div></td>
                 `;
                 tbody.appendChild(row);
             });
@@ -602,6 +659,7 @@
                 row.style.display = opdName.includes(searchTerm) ? '' : 'none';
             });
         });
+    </script>
     </script>
 </body>
 </html>
