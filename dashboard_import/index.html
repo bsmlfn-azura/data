@@ -6,7 +6,6 @@
     <title>Dashboard Statistik Pelayanan - BKPSDM Bangkalan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Library XLSX tetap digunakan untuk parsing CSV dari Google Spreadsheet -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -110,11 +109,14 @@
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(135deg, rgba(212, 168, 70, 0.05) 0%, transparent 50%);
             opacity: 0; transition: opacity 0.3s;
+            pointer-events: none; 
+            z-index: 0;
         }
         .connection-zone:hover {
             border-color: var(--accent-gold); background: rgba(212, 168, 70, 0.05);
         }
         .connection-zone:hover::before { opacity: 1; }
+        .connection-zone > * { position: relative; z-index: 1; }
 
         .chart-container {
             background: var(--bg-card);
@@ -169,11 +171,9 @@
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         .animate-in { animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; }
         .animate-slide { animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; }
         .delay-4 { animation-delay: 0.4s; } .delay-5 { animation-delay: 0.5s; } .delay-6 { animation-delay: 0.6s; }
 
@@ -245,13 +245,9 @@
             <div class="max-w-7xl mx-auto">
                 <div class="header-content flex items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white rounded-full p-2 flex items-center justify-center shadow-lg" style="box-shadow: 0 4px 20px rgba(212, 168, 70, 0.3);">
-                            <svg viewBox="0 0 100 100" class="w-full h-full">
-                                <circle cx="50" cy="50" r="45" fill="none" stroke="#d4a846" stroke-width="3"/>
-                                <text x="50" y="40" text-anchor="middle" font-size="12" fill="#0a1628" font-weight="bold">PEMERINTAH</text>
-                                <text x="50" y="55" text-anchor="middle" font-size="10" fill="#0a1628">KABUPATEN</text>
-                                <text x="50" y="70" text-anchor="middle" font-size="12" fill="#d4a846" font-weight="bold">BANGKALAN</text>
-                            </svg>
+                        <!-- Logo Section -->
+                        <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white rounded-full p-1 flex items-center justify-center shadow-lg" style="box-shadow: 0 4px 20px rgba(212, 168, 70, 0.3);">
+                            <img src="https://z-cdn-media.chatglm.cn/files/26c3c8d1-efd8-4254-802a-5a59c4719227.png?auth_key=1874665779-8c0f667d2e3849baa102aac999963a10-0-b0dc042951db9c11eb9524c07f40350f" alt="Logo BKPSDM Bangkalan" class="w-full h-full object-contain">
                         </div>
                         <div>
                             <h1 class="font-display text-xl lg:text-2xl font-bold text-white">BKPSDM BANGKALAN</h1>
@@ -561,7 +557,6 @@
             initCharts();
             initFilters();
             setupEventListeners();
-            // Load sample data initially for demo
             loadSampleData(); 
         }
 
@@ -571,8 +566,6 @@
             filterMonthSelect.addEventListener('change', handleFilterChange);
             filterDaySelect.addEventListener('change', handleFilterChange);
             resetFilterBtn.addEventListener('click', resetFilters);
-            
-            // Enter key on input
             sheetUrlInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') loadFromGoogleSheet();
             });
@@ -588,15 +581,12 @@
                 return;
             }
 
-            // Extract Sheet ID from URL
             let sheetId = null;
-            
-            // Regex patterns for different Google Sheet URL formats
             const patterns = [
-                /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/, // Standard format
-                /\/d\/([a-zA-Z0-9-_]+)/, // Short format
-                /id=([a-zA-Z0-9-_]+)/, // Query param format
-                /^([a-zA-Z0-9-_]{30,})$/ // Direct ID
+                /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/,
+                /\/d\/([a-zA-Z0-9-_]+)/,
+                /id=([a-zA-Z0-9-_]+)/,
+                /^([a-zA-Z0-9-_]{30,})$/
             ];
 
             for (const pattern of patterns) {
@@ -608,14 +598,12 @@
             }
 
             if (!sheetId) {
-                showNotification('Format URL tidak valid. Pastikan URL berasal dari Google Spreadsheet.', 'error');
+                showNotification('Format URL tidak valid.', 'error');
                 return;
             }
 
-            // Construct CSV Export URL
             const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
             
-            // Show loading state
             loadDataBtn.disabled = true;
             loadDataBtn.innerHTML = `
                 <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -627,26 +615,23 @@
 
             try {
                 const response = await fetch(csvUrl);
-                if (!response.ok) throw new Error('Gagal mengakses spreadsheet. Pastikan sudah di-publish ke web.');
-                
+                if (!response.ok) throw new Error('Gagal mengakses spreadsheet.');
                 const csvData = await response.text();
-                
-                // Use XLSX library to parse CSV (it handles CSV strings well)
                 const workbook = XLSX.read(csvData, { type: 'string' });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet);
                 
                 if (jsonData.length === 0) {
-                    showNotification('Spreadsheet kosong atau tidak ada data', 'error');
+                    showNotification('Spreadsheet kosong', 'error');
                     return;
                 }
 
                 processExcelData(jsonData);
-                showNotification(`Berhasil memuat ${jsonData.length} data dari Spreadsheet`, 'success');
+                showNotification(`Berhasil memuat ${jsonData.length} data`, 'success');
                 
             } catch (error) {
-                console.error('Error loading sheet:', error);
-                showNotification('Gagal memuat data. Pastikan link benar dan sudah di-publish ke web.', 'error');
+                console.error('Error:', error);
+                showNotification('Gagal memuat. Pastikan link benar dan public.', 'error');
             } finally {
                 loadDataBtn.disabled = false;
                 loadDataBtn.innerHTML = `
@@ -663,13 +648,11 @@
         // ==========================================
         function processExcelData(jsonData) {
             serviceData = jsonData.map((row, index) => {
-                // Normalisasi Key: Ubah ke huruf kecil dan trim spasi
                 const cleanRow = {};
                 Object.keys(row).forEach(key => {
                     cleanRow[key.toLowerCase().trim()] = row[key];
                 });
 
-                // Ambil data dengan nama kolom yang sudah dinormalisasi
                 const tanggal = cleanRow['tanggal'] || cleanRow['date'] || cleanRow['tgl'] || new Date();
                 const pemohon = cleanRow['nama pemohon'] || cleanRow['pemohon'] || cleanRow['nama'] || cleanRow['nama_pemohon'] || `Pemohon ${index + 1}`;
                 const unitKerja = cleanRow['unit kerja'] || cleanRow['unit_kerja'] || cleanRow['unit'] || cleanRow['opd'] || cleanRow['instansi'] || '-';
@@ -677,7 +660,6 @@
                 const pic = cleanRow['pic'] || cleanRow['petugas'] || cleanRow['staff'] || cleanRow['nama pic'] || cleanRow['nama_pic'] || cleanRow['pegawai'] || '-';
                 const status = cleanRow['status'] || cleanRow['keterangan'] || 'Proses';
 
-                // Parse Date
                 let parsedDate;
                 if (typeof tanggal === 'number') {
                     parsedDate = new Date((tanggal - 25569) * 86400 * 1000);
@@ -714,7 +696,6 @@
             return 'Antrian';
         }
 
-        // Sample Data
         function loadSampleData() {
             const sampleTypes = ['Mutasi', 'Cuti', 'Kenaikan Pangkat', 'Promosi', 'Pensiun', 'CPNS'];
             const sampleUnits = ['Dinas Pendidikan', 'Dinas Kesehatan', 'Dinas PUPR', 'Sekretariat Daerah', 'Dinas Perhubungan', 'Dinas Sosial', 'BPBD', 'Dinas Kependudukan'];
@@ -902,98 +883,98 @@
                 type: 'doughnut',
                 data: {
                     labels: ['Selesai', 'Proses', 'Antrian'],
-                    datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(16, 185, 129, 0.9)', 'rgba(59, 130, 246, 0.9)', 'rgba(245, 158, 11, 0.9)
-                '], borderWidth: 2, hoverOffset: 10 }]
-},
-options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: 'rgba(148,163,184,0.8)', padding: 20, usePointStyle: true } } } }
-});
-}
+                    datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(16, 185, 129, 0.9)', 'rgba(59, 130, 246, 0.9)', 'rgba(245, 158, 11, 0.9)'], borderWidth: 2, hoverOffset: 10 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: 'rgba(148,163,184,0.8)', padding: 20, usePointStyle: true } } } }
+            });
+        }
 
-function updateCharts() {
-const monthlyTotals = []; const monthlySelesai = [];
-for (let month = 0; month < 12; month++) {
-const mData = serviceData.filter(d => d.tanggal.getMonth() === month && d.tanggal.getFullYear() === currentYear);
-monthlyTotals.push(mData.length);
-monthlySelesai.push(mData.filter(d => d.status === 'Selesai').length);
-}
-monthlyChart.data.datasets[0].data = monthlyTotals;
-monthlyChart.data.datasets[1].data = monthlySelesai;
-monthlyChart.update('none');
+        function updateCharts() {
+            const monthlyTotals = []; const monthlySelesai = [];
+            for (let month = 0; month < 12; month++) {
+                const mData = serviceData.filter(d => d.tanggal.getMonth() === month && d.tanggal.getFullYear() === currentYear);
+                monthlyTotals.push(mData.length);
+                monthlySelesai.push(mData.filter(d => d.status === 'Selesai').length);
+            }
+            monthlyChart.data.datasets[0].data = monthlyTotals;
+            monthlyChart.data.datasets[1].data = monthlySelesai;
+            monthlyChart.update('none');
 
-const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
-statusChart.data.datasets[0].data = [monthData.filter(d => d.status === 'Selesai').length, monthData.filter(d => d.status === 'Proses').length, monthData.filter(d => d.status === 'Antrian').length];
-statusChart.update('none');
-}
+            const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
+            statusChart.data.datasets[0].data = [monthData.filter(d => d.status === 'Selesai').length, monthData.filter(d => d.status === 'Proses').length, monthData.filter(d => d.status === 'Antrian').length];
+            statusChart.update('none');
+        }
 
-// Table & Pagination
-function renderTable() {
-const tbody = document.getElementById('dataTableBody');
-if (!filteredData.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8">Tidak ada data</td></tr>'; return; }
-const start = (currentPage - 1) * rowsPerPage;
-const pageData = filteredData.slice(start, start + rowsPerPage);
-tbody.innerHTML = pageData.map((row, i) => `
-<tr class="animate-slide" style="animation-delay: ${i * 0.03}s">
-<td class="font-medium text-[var(--fg-primary)]">${start + i + 1}</td>
-<td>${row.tanggalStr}</td>
-<td class="text-[var(--fg-primary)]">${row.pemohon}</td>
-<td>${row.unitKerja}</td>
-<td>${row.jenis}</td>
-<td class="text-[var(--accent-gold)]">${row.pic}</td>
-<td><span class="badge badge-${row.status.toLowerCase()}"><span class="w-2 h-2 rounded-full bg-current"></span>${row.status}</span></td>
-</tr>
-`).join('');
-}
+        // Table & Pagination
+        function renderTable() {
+            const tbody = document.getElementById('dataTableBody');
+            if (!filteredData.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8">Tidak ada data</td></tr>'; return; }
+            const start = (currentPage - 1) * rowsPerPage;
+            const pageData = filteredData.slice(start, start + rowsPerPage);
+            tbody.innerHTML = pageData.map((row, i) => `
+                <tr class="animate-slide" style="animation-delay: ${i * 0.03}s">
+                    <td class="font-medium text-[var(--fg-primary)]">${start + i + 1}</td>
+                    <td>${row.tanggalStr}</td>
+                    <td class="text-[var(--fg-primary)]">${row.pemohon}</td>
+                    <td>${row.unitKerja}</td>
+                    <td>${row.jenis}</td>
+                    <td class="text-[var(--accent-gold)]">${row.pic}</td>
+                    <td><span class="badge badge-${row.status.toLowerCase()}"><span class="w-2 h-2 rounded-full bg-current"></span>${row.status}</span></td>
+                </tr>
+            `).join('');
+        }
 
-function renderPagination() {
-const container = document.getElementById('paginationContainer');
-const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
-document.getElementById('currentPageDisplay').textContent = currentPage;
-document.getElementById('totalPagesDisplay').textContent = totalPages;
-let html = `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
-<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-</button>`;
-let startPage = Math.max(1, currentPage - 2);
-let endPage = Math.min(totalPages, startPage + 4);
-if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
-if (startPage > 1) html += `<button class="pagination-btn" onclick="goToPage(1)">1</button>${startPage > 2 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}`;
-for (let i = startPage; i <= endPage; i++) html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-if (endPage < totalPages) html += `${endPage < totalPages - 1 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}<button class="pagination-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
-html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
-<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-</button>`;
-container.innerHTML = html;
-}
+        function renderPagination() {
+            const container = document.getElementById('paginationContainer');
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
+            document.getElementById('currentPageDisplay').textContent = currentPage;
+            document.getElementById('totalPagesDisplay').textContent = totalPages;
+            let html = `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>`;
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+            if (startPage > 1) html += `<button class="pagination-btn" onclick="goToPage(1)">1</button>${startPage > 2 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}`;
+            for (let i = startPage; i <= endPage; i++) html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            if (endPage < totalPages) html += `${endPage < totalPages - 1 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}<button class="pagination-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>`;
+            container.innerHTML = html;
+        }
 
-function goToPage(page) {
-const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
-if (page < 1 || page > totalPages) return;
-currentPage = page;
-renderTable(); renderPagination();
-document.querySelector('.chart-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderTable(); renderPagination();
+            document.querySelector('.chart-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
-function handleSearch(e) {
-const query = e.target.value.toLowerCase();
-let base = serviceData.filter(d => (filterYear === 'all' || d.tanggal.getFullYear().toString() === filterYear) && (filterMonth === 'all' || d.tanggal.getMonth().toString() === filterMonth) && (filterDay === 'all' || d.tanggal.getDate().toString() === filterDay));
-filteredData = query ? base.filter(d => d.pemohon.toLowerCase().includes(query) || d.jenis.toLowerCase().includes(query) || d.status.toLowerCase().includes(query) || d.unitKerja.toLowerCase().includes(query) || d.pic.toLowerCase().includes(query)) : base;
-currentPage = 1; renderTable(); renderPagination(); updateDataCounts();
-}
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase();
+            let base = serviceData.filter(d => (filterYear === 'all' || d.tanggal.getFullYear().toString() === filterYear) && (filterMonth === 'all' || d.tanggal.getMonth().toString() === filterMonth) && (filterDay === 'all' || d.tanggal.getDate().toString() === filterDay));
+            filteredData = query ? base.filter(d => d.pemohon.toLowerCase().includes(query) || d.jenis.toLowerCase().includes(query) || d.status.toLowerCase().includes(query) || d.unitKerja.toLowerCase().includes(query) || d.pic.toLowerCase().includes(query)) : base;
+            currentPage = 1; renderTable(); renderPagination(); updateDataCounts();
+        }
 
-// Utils
-function animateNumber(id, target) {
-const el = document.getElementById(id); const start = parseInt(el.textContent) || 0; const dur = 1000; const sTime = performance.now();
-function upd(t) { const p = Math.min((t - sTime) / dur, 1); el.textContent = Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3))).toLocaleString('id-ID'); if (p < 1) requestAnimationFrame(upd); }
-requestAnimationFrame(upd);
-}
-function formatDate(d) { return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }); }
-function showNotification(msg, type) {
-const n = document.createElement('div');
-n.className = `fixed top-4 right-4 px-6 py-3 rounded-lg z-50 animate-in ${type === 'success' ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-red)]'}`;
-n.style.color = 'white'; n.innerHTML = `<div class="flex items-center gap-2"><span class="font-medium">${msg}</span></div>`;
-document.body.appendChild(n);
-setTimeout(() => { n.style.opacity = '0'; n.style.transform = 'translateY(-10px)'; n.style.transition = 'all 0.3s'; setTimeout(() => n.remove(), 300); }, 3000);
-}
+        // Utils
+        function animateNumber(id, target) {
+            const el = document.getElementById(id); const start = parseInt(el.textContent) || 0; const dur = 1000; const sTime = performance.now();
+            function upd(t) { const p = Math.min((t - sTime) / dur, 1); el.textContent = Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3))).toLocaleString('id-ID'); if (p < 1) requestAnimationFrame(upd); }
+            requestAnimationFrame(upd);
+        }
+        function formatDate(d) { return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }); }
+        function showNotification(msg, type) {
+            const n = document.createElement('div');
+            n.className = `fixed top-4 right-4 px-6 py-3 rounded-lg z-50 animate-in ${type === 'success' ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-red)]'}`;
+            n.style.color = 'white'; n.innerHTML = `<div class="flex items-center gap-2"><span class="font-medium">${msg}</span></div>`;
+            document.body.appendChild(n);
+            setTimeout(() => { n.style.opacity = '0'; n.style.transform = 'translateY(-10px)'; n.style.transition = 'all 0.3s'; setTimeout(() => n.remove(), 300); }, 3000);
+        }
 
-document.addEventListener('DOMContentLoaded', init);
-</script></body>
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
 </html>
