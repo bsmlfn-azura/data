@@ -129,6 +129,34 @@
             background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
         }
 
+        /* PIC Performance Specific Styles */
+        .pic-rank-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 12px;
+            transition: background 0.3s;
+        }
+        .pic-rank-item:hover {
+            background: rgba(212, 168, 70, 0.05);
+        }
+        .rank-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3); }
+        .rank-2 { background: linear-gradient(135deg, #C0C0C0, #A8A8A8); color: #000; }
+        .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #FFF; }
+        .rank-other { background: var(--bg-secondary); border: 1px solid var(--border); color: var(--fg-muted); }
+
         .data-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
         .data-table th {
             background: rgba(212, 168, 70, 0.1); color: var(--accent-gold);
@@ -245,7 +273,6 @@
             <div class="max-w-7xl mx-auto">
                 <div class="header-content flex items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <!-- Logo Section -->
                         <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white rounded-full p-1 flex items-center justify-center shadow-lg" style="box-shadow: 0 4px 20px rgba(212, 168, 70, 0.3);">
                             <img src="https://z-cdn-media.chatglm.cn/files/26c3c8d1-efd8-4254-802a-5a59c4719227.png?auth_key=1874665779-8c0f667d2e3849baa102aac999963a10-0-b0dc042951db9c11eb9524c07f40350f" alt="Logo BKPSDM Bangkalan" class="w-full h-full object-contain">
                         </div>
@@ -295,7 +322,7 @@
                                 </button>
                             </div>
                             <p class="text-xs text-[var(--fg-muted)] mt-3">
-                                Pastikan spreadsheet sudah diatur ke "Anyone with the link can view" (Bagikan > Umum > Siapa saja yang memiliki link).
+                                Pastikan spreadsheet sudah diatur ke "Anyone with the link can view".
                             </p>
                         </div>
                     </div>
@@ -434,6 +461,37 @@
                 </div>
             </section>
 
+            <!-- NEW: PIC Performance Section -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in delay-5">
+                <!-- PIC Ranking List -->
+                <div class="lg:col-span-1 chart-container p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="font-display text-lg font-bold">Peringkat PIC</h3>
+                            <p class="text-sm text-[var(--fg-muted)]">Berdasarkan pelayanan selesai</p>
+                        </div>
+                        <span class="text-xs text-[var(--accent-gold)] uppercase font-semibold" id="picMonthLabel">-</span>
+                    </div>
+                    <div id="picRankingList" class="space-y-2 max-h-80 overflow-y-auto pr-2">
+                        <!-- PIC Items will be rendered here -->
+                        <div class="text-center py-8 text-[var(--fg-muted)]">Memuat data...</div>
+                    </div>
+                </div>
+
+                <!-- PIC Chart -->
+                <div class="lg:col-span-2 chart-container p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="font-display text-lg font-bold">Statistik Kinerja PIC</h3>
+                            <p class="text-sm text-[var(--fg-muted)]">Perbandingan total layanan vs selesai</p>
+                        </div>
+                    </div>
+                    <div class="h-72">
+                        <canvas id="picPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
             <!-- Charts -->
             <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div class="chart-container p-6 animate-in delay-3">
@@ -531,6 +589,7 @@
         let currentYear = new Date().getFullYear();
         let monthlyChart = null;
         let statusChart = null;
+        let picChart = null;
         let currentPage = 1;
         const rowsPerPage = 20;
         let filterYear = currentYear.toString();
@@ -571,47 +630,20 @@
             });
         }
 
-        // ==========================================
         // GOOGLE SHEET INTEGRATION
-        // ==========================================
         async function loadFromGoogleSheet() {
             const url = sheetUrlInput.value.trim();
-            if (!url) {
-                showNotification('Masukkan URL Google Spreadsheet', 'error');
-                return;
-            }
+            if (!url) { showNotification('Masukkan URL Google Spreadsheet', 'error'); return; }
 
             let sheetId = null;
-            const patterns = [
-                /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/,
-                /\/d\/([a-zA-Z0-9-_]+)/,
-                /id=([a-zA-Z0-9-_]+)/,
-                /^([a-zA-Z0-9-_]{30,})$/
-            ];
+            const patterns = [/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/, /\/d\/([a-zA-Z0-9-_]+)/, /id=([a-zA-Z0-9-_]+)/, /^([a-zA-Z0-9-_]{30,})$/];
+            for (const pattern of patterns) { const match = url.match(pattern); if (match) { sheetId = match[1]; break; } }
 
-            for (const pattern of patterns) {
-                const match = url.match(pattern);
-                if (match) {
-                    sheetId = match[1];
-                    break;
-                }
-            }
-
-            if (!sheetId) {
-                showNotification('Format URL tidak valid.', 'error');
-                return;
-            }
-
+            if (!sheetId) { showNotification('Format URL tidak valid.', 'error'); return; }
             const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
             
             loadDataBtn.disabled = true;
-            loadDataBtn.innerHTML = `
-                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Memuat...
-            `;
+            loadDataBtn.innerHTML = `<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memuat...`;
 
             try {
                 const response = await fetch(csvUrl);
@@ -621,64 +653,37 @@
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet);
                 
-                if (jsonData.length === 0) {
-                    showNotification('Spreadsheet kosong', 'error');
-                    return;
-                }
-
+                if (jsonData.length === 0) { showNotification('Spreadsheet kosong', 'error'); return; }
                 processExcelData(jsonData);
                 showNotification(`Berhasil memuat ${jsonData.length} data`, 'success');
-                
             } catch (error) {
                 console.error('Error:', error);
                 showNotification('Gagal memuat. Pastikan link benar dan public.', 'error');
             } finally {
                 loadDataBtn.disabled = false;
-                loadDataBtn.innerHTML = `
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    Muat Data
-                `;
+                loadDataBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Muat Data`;
             }
         }
 
-        // ==========================================
         // DATA PROCESSING
-        // ==========================================
         function processExcelData(jsonData) {
             serviceData = jsonData.map((row, index) => {
                 const cleanRow = {};
-                Object.keys(row).forEach(key => {
-                    cleanRow[key.toLowerCase().trim()] = row[key];
-                });
+                Object.keys(row).forEach(key => { cleanRow[key.toLowerCase().trim()] = row[key]; });
 
                 const tanggal = cleanRow['tanggal'] || cleanRow['date'] || cleanRow['tgl'] || new Date();
-                const pemohon = cleanRow['nama pemohon'] || cleanRow['pemohon'] || cleanRow['nama'] || cleanRow['nama_pemohon'] || `Pemohon ${index + 1}`;
-                const unitKerja = cleanRow['unit kerja'] || cleanRow['unit_kerja'] || cleanRow['unit'] || cleanRow['opd'] || cleanRow['instansi'] || '-';
-                const jenis = cleanRow['jenis pelayanan'] || cleanRow['jenis'] || cleanRow['layanan'] || cleanRow['jenis_pelayanan'] || 'Pelayanan Umum';
-                const pic = cleanRow['pic'] || cleanRow['petugas'] || cleanRow['staff'] || cleanRow['nama pic'] || cleanRow['nama_pic'] || cleanRow['pegawai'] || '-';
-                const status = cleanRow['status'] || cleanRow['keterangan'] || 'Proses';
+                const pemohon = cleanRow['nama pemohon'] || cleanRow['pemohon'] || cleanRow['nama'] || `Pemohon ${index + 1}`;
+                const unitKerja = cleanRow['unit kerja'] || cleanRow['unit_kerja'] || cleanRow['unit'] || cleanRow['opd'] || '-';
+                const jenis = cleanRow['jenis pelayanan'] || cleanRow['jenis'] || cleanRow['layanan'] || 'Pelayanan Umum';
+                const pic = cleanRow['pic'] || cleanRow['petugas'] || cleanRow['staff'] || cleanRow['nama pic'] || '-';
+                const status = cleanRow['status'] || 'Proses';
 
                 let parsedDate;
-                if (typeof tanggal === 'number') {
-                    parsedDate = new Date((tanggal - 25569) * 86400 * 1000);
-                } else if (tanggal instanceof Date) {
-                    parsedDate = tanggal;
-                } else {
-                    parsedDate = new Date(tanggal);
-                }
+                if (typeof tanggal === 'number') parsedDate = new Date((tanggal - 25569) * 86400 * 1000);
+                else if (tanggal instanceof Date) parsedDate = tanggal;
+                else parsedDate = new Date(tanggal);
 
-                return {
-                    id: index + 1,
-                    tanggal: parsedDate,
-                    tanggalStr: formatDate(parsedDate),
-                    pemohon: pemohon,
-                    unitKerja: unitKerja,
-                    jenis: jenis,
-                    pic: pic,
-                    status: normalizeStatus(status)
-                };
+                return { id: index + 1, tanggal: parsedDate, tanggalStr: formatDate(parsedDate), pemohon, unitKerja, jenis, pic, status: normalizeStatus(status) };
             });
 
             serviceData.sort((a, b) => b.tanggal - a.tanggal);
@@ -691,15 +696,15 @@
 
         function normalizeStatus(status) {
             const s = status.toString().toLowerCase();
-            if (s.includes('selesai') || s.includes('done') || s.includes('complete')) return 'Selesai';
-            if (s.includes('proses') || s.includes('process') || s.includes('diproses')) return 'Proses';
+            if (s.includes('selesai') || s.includes('done')) return 'Selesai';
+            if (s.includes('proses') || s.includes('process')) return 'Proses';
             return 'Antrian';
         }
 
         function loadSampleData() {
             const sampleTypes = ['Mutasi', 'Cuti', 'Kenaikan Pangkat', 'Promosi', 'Pensiun', 'CPNS'];
-            const sampleUnits = ['Dinas Pendidikan', 'Dinas Kesehatan', 'Dinas PUPR', 'Sekretariat Daerah', 'Dinas Perhubungan', 'Dinas Sosial', 'BPBD', 'Dinas Kependudukan'];
-            const samplePICs = ['Ahmad Fauzi, S.Sos', 'Siti Rahayu, S.AP', 'Budi Santoso, M.Si', 'Dewi Kusuma, S.E', 'Eko Prasetyo, S.Kom'];
+            const sampleUnits = ['Dinas Pendidikan', 'Dinas Kesehatan', 'Dinas PUPR', 'Sekretariat Daerah', 'Dinas Perhubungan'];
+            const samplePICs = ['Ahmad Fauzi, S.Sos', 'Siti Rahayu, S.AP', 'Budi Santoso, M.Si', 'Dewi Kusuma, S.E', 'Eko Prasetyo, S.Kom', 'Fitri Handayani, S.Pd', 'Gunawan, M.M'];
             const sampleNames = ['Abdul Rahman', 'Siti Aminah', 'Budi Hartono', 'Dewi Sartika', 'Eko Wahyudi', 'Fitriani', 'Gunawan Hidayat'];
             
             serviceData = [];
@@ -732,11 +737,7 @@
         }
 
         // Filters
-        function initFilters() {
-            filterMonthSelect.value = selectedMonth.toString();
-            updateYearFilter();
-            updateDayFilter();
-        }
+        function initFilters() { filterMonthSelect.value = selectedMonth.toString(); updateYearFilter(); updateDayFilter(); }
 
         function updateYearFilter() {
             const years = new Set();
@@ -745,8 +746,7 @@
             const sortedYears = Array.from(years).sort((a, b) => b - a);
             filterYearSelect.innerHTML = '<option value="all">Semua Tahun</option>';
             sortedYears.forEach(year => {
-                const option = document.createElement('option');
-                option.value = year.toString(); option.textContent = year;
+                const option = document.createElement('option'); option.value = year.toString(); option.textContent = year;
                 if (year.toString() === filterYear) option.selected = true;
                 filterYearSelect.appendChild(option);
             });
@@ -754,31 +754,15 @@
 
         function updateDayFilter() {
             filterDaySelect.innerHTML = '<option value="all">Semua Tanggal</option>';
-            for (let i = 1; i <= 31; i++) {
-                const option = document.createElement('option');
-                option.value = i.toString(); option.textContent = i;
-                filterDaySelect.appendChild(option);
-            }
+            for (let i = 1; i <= 31; i++) { const option = document.createElement('option'); option.value = i.toString(); option.textContent = i; filterDaySelect.appendChild(option); }
         }
 
-        function handleFilterChange() {
-            filterYear = filterYearSelect.value;
-            filterMonth = filterMonthSelect.value;
-            filterDay = filterDaySelect.value;
-            currentPage = 1;
-            applyFiltersAndRender();
-        }
+        function handleFilterChange() { filterYear = filterYearSelect.value; filterMonth = filterMonthSelect.value; filterDay = filterDaySelect.value; currentPage = 1; applyFiltersAndRender(); }
 
         function resetFilters() {
-            filterYear = currentYear.toString();
-            filterMonth = selectedMonth.toString();
-            filterDay = 'all';
-            filterYearSelect.value = filterYear;
-            filterMonthSelect.value = filterMonth;
-            filterDaySelect.value = 'all';
-            currentPage = 1;
-            searchInput.value = '';
-            applyFiltersAndRender();
+            filterYear = currentYear.toString(); filterMonth = selectedMonth.toString(); filterDay = 'all';
+            filterYearSelect.value = filterYear; filterMonthSelect.value = filterMonth; filterDaySelect.value = 'all';
+            currentPage = 1; searchInput.value = ''; applyFiltersAndRender();
         }
 
         function applyFiltersAndRender() {
@@ -788,27 +772,15 @@
                 const matchDay = filterDay === 'all' || d.tanggal.getDate().toString() === filterDay;
                 return matchYear && matchMonth && matchDay;
             });
-            renderTable();
-            renderPagination();
-            updateDataCounts();
+            renderTable(); renderPagination(); updateDataCounts();
         }
 
-        function updateDataCounts() {
-            document.getElementById('totalDataCount').textContent = serviceData.length.toLocaleString('id-ID');
-            document.getElementById('displayedDataCount').textContent = filteredData.length.toLocaleString('id-ID');
-        }
+        function updateDataCounts() { document.getElementById('totalDataCount').textContent = serviceData.length.toLocaleString('id-ID'); document.getElementById('displayedDataCount').textContent = filteredData.length.toLocaleString('id-ID'); }
 
-        // Month Selector
         function renderMonthSelector() {
-            monthSelector.innerHTML = MONTHS.map((month, index) => `
-                <button class="month-btn ${index === selectedMonth ? 'active' : ''}" data-month="${index}">${month.substring(0, 3)}</button>
-            `).join('');
+            monthSelector.innerHTML = MONTHS.map((month, index) => `<button class="month-btn ${index === selectedMonth ? 'active' : ''}" data-month="${index}">${month.substring(0, 3)}</button>`).join('');
             monthSelector.querySelectorAll('.month-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    selectedMonth = parseInt(btn.dataset.month);
-                    renderMonthSelector();
-                    updateDashboard();
-                });
+                btn.addEventListener('click', () => { selectedMonth = parseInt(btn.dataset.month); renderMonthSelector(); updateDashboard(); });
             });
         }
 
@@ -849,43 +821,37 @@
 
             document.getElementById('currentMonthName').textContent = MONTHS[selectedMonth];
             document.getElementById('pieMonthName').textContent = MONTHS[selectedMonth];
+            document.getElementById('picMonthLabel').textContent = MONTHS[selectedMonth];
+
             updateCharts();
+            updatePICPerformance(monthData); // Update PIC stats based on selected month
         }
 
-        function updateYearDisplay() {
-            document.getElementById('currentYear').textContent = currentYear;
-            document.getElementById('yearDisplay').textContent = currentYear;
-            document.getElementById('chartYear').textContent = currentYear;
-        }
-
-        function updateLastUpdate() {
-            document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-        }
+        function updateYearDisplay() { document.getElementById('currentYear').textContent = currentYear; document.getElementById('yearDisplay').textContent = currentYear; document.getElementById('chartYear').textContent = currentYear; }
+        function updateLastUpdate() { document.getElementById('lastUpdate').textContent = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 
         // Charts
         function initCharts() {
             const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
             const statusCtx = document.getElementById('statusChart').getContext('2d');
+            const picCtx = document.getElementById('picPerformanceChart').getContext('2d');
 
             monthlyChart = new Chart(monthlyCtx, {
                 type: 'bar',
-                data: {
-                    labels: MONTHS.map(m => m.substring(0, 3)),
-                    datasets: [
-                        { label: 'Total', data: new Array(12).fill(0), backgroundColor: 'rgba(212, 168, 70, 0.8)', borderRadius: 6 },
-                        { label: 'Selesai', data: new Array(12).fill(0), backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 6 }
-                    ]
-                },
+                data: { labels: MONTHS.map(m => m.substring(0, 3)), datasets: [{ label: 'Total', data: new Array(12).fill(0), backgroundColor: 'rgba(212, 168, 70, 0.8)', borderRadius: 6 }, { label: 'Selesai', data: new Array(12).fill(0), backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(148,163,184,0.8)' } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(148,163,184,0.8)' } } } }
             });
 
             statusChart = new Chart(statusCtx, {
                 type: 'doughnut',
-                data: {
-                    labels: ['Selesai', 'Proses', 'Antrian'],
-                    datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(16, 185, 129, 0.9)', 'rgba(59, 130, 246, 0.9)', 'rgba(245, 158, 11, 0.9)'], borderWidth: 2, hoverOffset: 10 }]
-                },
+                data: { labels: ['Selesai', 'Proses', 'Antrian'], datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(16, 185, 129, 0.9)', 'rgba(59, 130, 246, 0.9)', 'rgba(245, 158, 11, 0.9)'], borderWidth: 2, hoverOffset: 10 }] },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: 'rgba(148,163,184,0.8)', padding: 20, usePointStyle: true } } } }
+            });
+
+            picChart = new Chart(picCtx, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Total Layanan', data: [], backgroundColor: 'rgba(59, 130, 246, 0.7)', borderRadius: 4 }, { label: 'Selesai', data: [], backgroundColor: 'rgba(16, 185, 129, 0.9)', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { position: 'top', labels: { color: 'rgba(148,163,184,0.8)', usePointStyle: true } } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(148,163,184,0.8)' } }, y: { grid: { display: false }, ticks: { color: 'rgba(241, 245, 249, 0.9)' } } } }
             });
         }
 
@@ -893,16 +859,58 @@
             const monthlyTotals = []; const monthlySelesai = [];
             for (let month = 0; month < 12; month++) {
                 const mData = serviceData.filter(d => d.tanggal.getMonth() === month && d.tanggal.getFullYear() === currentYear);
-                monthlyTotals.push(mData.length);
-                monthlySelesai.push(mData.filter(d => d.status === 'Selesai').length);
+                monthlyTotals.push(mData.length); monthlySelesai.push(mData.filter(d => d.status === 'Selesai').length);
             }
-            monthlyChart.data.datasets[0].data = monthlyTotals;
-            monthlyChart.data.datasets[1].data = monthlySelesai;
+            monthlyChart.data.datasets[0].data = monthlyTotals; monthlyChart.data.datasets[1].data = monthlySelesai;
             monthlyChart.update('none');
 
             const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
             statusChart.data.datasets[0].data = [monthData.filter(d => d.status === 'Selesai').length, monthData.filter(d => d.status === 'Proses').length, monthData.filter(d => d.status === 'Antrian').length];
             statusChart.update('none');
+        }
+
+        // PIC Performance Logic
+        function updatePICPerformance(monthData) {
+            const picStats = {};
+
+            monthData.forEach(d => {
+                if (!picStats[d.pic]) picStats[d.pic] = { total: 0, selesai: 0 };
+                picStats[d.pic].total++;
+                if (d.status === 'Selesai') picStats[d.pic].selesai++;
+            });
+
+            const sortedPICs = Object.keys(picStats)
+                .map(name => ({ name, ...picStats[name], percent: picStats[name].total > 0 ? Math.round((picStats[name].selesai / picStats[name].total) * 100) : 0 }))
+                .sort((a, b) => b.selesai - a.selesai);
+
+            // Render Ranking List
+            const listContainer = document.getElementById('picRankingList');
+            if (sortedPICs.length === 0) {
+                listContainer.innerHTML = '<div class="text-center py-8 text-[var(--fg-muted)]">Tidak ada data</div>';
+            } else {
+                listContainer.innerHTML = sortedPICs.map((pic, index) => `
+                    <div class="pic-rank-item flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="rank-badge ${index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other'}">${index + 1}</div>
+                            <div>
+                                <p class="font-medium text-sm">${pic.name}</p>
+                                <p class="text-xs text-[var(--fg-muted)]">${pic.total} Total Layanan</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-[var(--accent-green)]">${pic.selesai}</p>
+                            <p class="text-xs text-[var(--fg-muted)]">${pic.percent}%</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Update Chart (Top 7 only for readability)
+            const top7 = sortedPICs.slice(0, 7);
+            picChart.data.labels = top7.map(p => p.name);
+            picChart.data.datasets[0].data = top7.map(p => p.total);
+            picChart.data.datasets[1].data = top7.map(p => p.selesai);
+            picChart.update('none');
         }
 
         // Table & Pagination
@@ -929,18 +937,13 @@
             const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
             document.getElementById('currentPageDisplay').textContent = currentPage;
             document.getElementById('totalPagesDisplay').textContent = totalPages;
-            let html = `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            </button>`;
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(totalPages, startPage + 4);
+            let html = `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>`;
+            let startPage = Math.max(1, currentPage - 2); let endPage = Math.min(totalPages, startPage + 4);
             if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
             if (startPage > 1) html += `<button class="pagination-btn" onclick="goToPage(1)">1</button>${startPage > 2 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}`;
             for (let i = startPage; i <= endPage; i++) html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
             if (endPage < totalPages) html += `${endPage < totalPages - 1 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}<button class="pagination-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
-            html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-            </button>`;
+            html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>`;
             container.innerHTML = html;
         }
 
