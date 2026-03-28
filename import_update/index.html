@@ -132,87 +132,14 @@
         .logo-container {
             width: 70px;
             height: 70px;
-            position: relative;
+            flex-shrink: 0;
         }
 
-        .logo-bg {
+        .logo-container img {
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #c9a227 0%, #8b7355 50%, #1e3a5f 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            box-shadow: 0 4px 20px rgba(201, 162, 39, 0.3);
-        }
-
-        .logo-inner {
-            width: 85%;
-            height: 85%;
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logo-pattern {
-            width: 70%;
-            height: 70%;
-            position: relative;
-        }
-
-        .logo-pattern::before,
-        .logo-pattern::after {
-            content: '';
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: #c9a227;
-            border-radius: 50%;
-        }
-
-        .logo-pattern::before {
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .logo-pattern::after {
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .logo-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-        }
-
-        .logo-center::before,
-        .logo-center::after {
-            content: '';
-            position: absolute;
-            background: #c9a227;
-        }
-
-        .logo-center::before {
-            width: 100%;
-            height: 4px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .logo-center::after {
-            width: 4px;
-            height: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
         }
 
         .data-table {
@@ -365,6 +292,10 @@
             .data-table th, .data-table td {
                 padding: 10px 8px;
             }
+            .logo-container {
+                width: 55px;
+                height: 55px;
+            }
         }
 
         .scrollbar-thin::-webkit-scrollbar {
@@ -385,32 +316,6 @@
         .scrollbar-thin::-webkit-scrollbar-thumb:hover {
             background: rgba(201, 162, 39, 0.5);
         }
-
-        .tooltip {
-            position: relative;
-        }
-
-        .tooltip::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 6px 12px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.2s;
-        }
-
-        .tooltip:hover::after {
-            opacity: 1;
-            bottom: calc(100% + 8px);
-        }
     </style>
 </head>
 <body class="antialiased">
@@ -423,13 +328,7 @@
             <div class="flex items-center justify-between py-4">
                 <div class="flex items-center gap-4">
                     <div class="logo-container">
-                        <div class="logo-bg">
-                            <div class="logo-inner">
-                                <div class="logo-pattern">
-                                    <div class="logo-center"></div>
-                                </div>
-                            </div>
-                        </div>
+                        <img src="https://z-cdn-media.chatglm.cn/files/f121637d-356c-44ac-85c0-ce7a6c54316a.png?auth_key=1874660924-926771f0e13e45bdb07821dd3609eb47-0-9f238907776db83b3cde9bd612810285" alt="Logo BKPSDM Bangkalan">
                     </div>
                     <div>
                         <h1 class="font-display font-bold text-lg sm:text-xl text-white">BKPSDM Bangkalan</h1>
@@ -442,8 +341,7 @@
                         <span class="text-xs font-medium text-green-400">Live Data</span>
                     </div>
                     <select id="yearSelect" class="bg-[var(--card)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--accent)]">
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
+                        <option value="2026" selected>2026</option>
                     </select>
                 </div>
             </div>
@@ -644,7 +542,7 @@
 
     <script>
         // ===== CONFIGURATION =====
-        const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDoVbNFVhZKiygXm4xySnEK40_Arrp7bixwgEevhqaO4p3f2lm_-piuSkekYOrJVErhfmvcXJ6iFZ5/pub?output=csv';
+        const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDoVbNFVhZKiygXm4xySnEK40_Arrp7bixwgEevhqaO4p3f2lm_-piuSkekYOrJVErhfmvcXJ6iFZ5/pub?gid=0&single=true&output=csv';
         
         // Data categories
         const DATA_CATEGORIES = ['AK', 'CPNS/PNS', 'R_KELUARGA', 'DATA_PRIBADI', 'DIKLAT', 'JABATAN', 'PENDIDIKAN'];
@@ -665,7 +563,7 @@
 
         // ===== SAMPLE DATA (Replace with Google Sheets data) =====
         const sampleData = {
-            '2025': {
+            '2026': {
                 'Januari': [
                     { OPD: 'Dinas Pendidikan', AK: 245, CPNS_PNS: 89, R_KELUARGA: 156, DATA_PRIBADI: 245, DIKLAT: 78, JABATAN: 45, PENDIDIKAN: 34 },
                     { OPD: 'Dinas Kesehatan', AK: 312, CPNS_PNS: 124, R_KELUARGA: 198, DATA_PRIBADI: 312, DIKLAT: 95, JABATAN: 67, PENDIDIKAN: 45 },
@@ -704,7 +602,7 @@
         };
 
         // ===== STATE =====
-        let currentYear = '2025';
+        let currentYear = '2026';
         let currentMonth = 'Januari';
         let allData = {};
         let opdChart = null;
@@ -722,7 +620,7 @@
             allData = sampleData;
             
             // If you have a Google Sheets URL, uncomment and use this:
-            // fetchGoogleSheetsData();
+             fetchGoogleSheetsData();
         }
 
         async function fetchGoogleSheetsData() {
