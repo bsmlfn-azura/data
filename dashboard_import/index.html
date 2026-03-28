@@ -43,14 +43,6 @@
         .chart-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; position: relative; }
         .chart-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-gold), transparent); }
 
-        .pic-rank-item { display: flex; align-items: center; padding: 12px; border-radius: 12px; transition: background 0.3s; }
-        .pic-rank-item:hover { background: rgba(212, 168, 70, 0.05); }
-        .rank-badge { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; margin-right: 12px; flex-shrink: 0; }
-        .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3); }
-        .rank-2 { background: linear-gradient(135deg, #C0C0C0, #A8A8A8); color: #000; }
-        .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #FFF; }
-        .rank-other { background: var(--bg-secondary); border: 1px solid var(--border); color: var(--fg-muted); }
-
         .data-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
         .data-table th { background: rgba(212, 168, 70, 0.1); color: var(--accent-gold); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding: 16px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
         .data-table td { padding: 14px 16px; border-bottom: 1px solid rgba(30, 58, 95, 0.5); color: var(--fg-secondary); white-space: nowrap; }
@@ -74,12 +66,10 @@
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .animate-in { animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; }
         .animate-pulse { animation: pulse 2s infinite; }
-        .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; }
 
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-secondary); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
 
         .btn-primary { background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-light) 100%); color: var(--bg-primary); font-weight: 700; padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; transition: all 0.3s; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(212, 168, 70, 0.4); }
@@ -118,16 +108,15 @@
                         </div>
                         <div>
                             <h1 class="font-display text-xl lg:text-2xl font-bold text-white">BKPSDM BANGKALAN</h1>
-                            <p class="text-sm lg:text-base text-[var(--fg-muted)]">Dashboard Statistik Pelayanan Realtime</p>
+                            <p class="text-sm lg:text-base text-[var(--fg-muted)]">Dashboard Statistik Pelayanan</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <!-- Connection Status -->
                         <div id="statusBar" class="hidden lg:flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border)]">
                             <div id="statusDot" class="status-dot loading"></div>
                             <div class="text-xs">
                                 <p id="statusText" class="font-semibold text-[var(--fg-primary)]">Menghubungkan...</p>
-                                <p id="statusTime" class="text-[var(--fg-muted)]">Sinkronisasi otomatis aktif</p>
+                                <p id="statusTime" class="text-[var(--fg-muted)]">Sinkronisasi otomatis</p>
                             </div>
                         </div>
                         <button onclick="openSettings()" class="btn-secondary text-sm flex items-center gap-2">
@@ -148,19 +137,23 @@
                     <div class="icon-container bg-gradient-to-br from-[var(--accent-gold)] to-yellow-400 mx-auto mb-6 w-20 h-20">
                         <svg class="w-10 h-10 text-[var(--bg-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                     </div>
-                    <h3 class="font-display text-2xl font-bold mb-2">Hubungkan ke Database Spreadsheet</h3>
-                    <p class="text-[var(--fg-secondary)] mb-6 max-w-md mx-auto">Masukkan URL Google Spreadsheet.</p>
+                    <h3 class="font-display text-2xl font-bold mb-2">Hubungkan Database</h3>
+                    <p class="text-[var(--fg-secondary)] mb-6 max-w-md mx-auto">Masukkan URL Spreadsheet.</p>
                     <div class="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
-                        <input type="text" id="initialUrlInput" class="input-form flex-1 pl-4" placeholder="Paste URL Google Spreadsheet...">
+                        <input type="text" id="initialUrlInput" class="input-form flex-1 pl-4" placeholder="Paste URL di sini...">
                         <button onclick="saveInitialUrl()" class="btn-primary whitespace-nowrap">Hubungkan</button>
                     </div>
-                    <div class="mt-6 text-xs text-[var(--fg-muted)] bg-[var(--bg-secondary)] p-4 rounded-lg max-w-md mx-auto text-left border border-[var(--border)]">
-                        <p class="font-bold mb-2 text-[var(--accent-gold)]">Panduan Cepat:</p>
-                        <ol class="list-decimal list-inside space-y-1 text-[var(--fg-secondary)]">
-                            <li><strong> Cara Paling Mudah (Direkomendasikan):</strong><br>
-                            Klik <strong>File > Bagikan > Publikasikan ke web</strong>. Pilih format <strong>CSV</strong>. Salin URL yang muncul.</li>
-                            <li class="mt-2"><strong>Atau pakai Link Share:</strong><br>
-                            Atur Share ke "Anyone with the link". Gunakan link tersebut.</li>
+                    
+                    <!-- INSTRUKSI PENTING -->
+                    <div class="mt-6 text-left text-xs bg-[var(--bg-secondary)] border border-[var(--accent-orange)] p-4 rounded-lg max-w-lg mx-auto">
+                        <p class="font-bold text-[var(--accent-orange)] mb-2">Panduan Solusi "Gagal Sinkron":</p>
+                        <p class="mb-2 text-[var(--fg-secondary)]">Jika tombol "Share" sudah "Public" tapi tetap error, gunakan cara ini:</p>
+                        <ol class="list-decimal list-inside space-y-1 text-[var(--fg-muted)]">
+                            <li>Buka Spreadsheet Anda.</li>
+                            <li>Klik menu <strong>File > Bagikan > Publikasikan ke web (Publish to web)</strong>.</li>
+                            <li>Klik tombol <strong>"Publikasikan" (Publish)</strong>.</li>
+                            <li>Salin URL yang muncul (biasanya formatnya <code>/e/2PACX...</code>).</li>
+                            <li>Tempel URL tersebut di kolom input atas.</li>
                         </ol>
                     </div>
                 </div>
@@ -177,7 +170,7 @@
                         </div>
                         <button onclick="forceSync()" class="btn-secondary text-xs flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            Sync Sekarang
+                            Sync
                         </button>
                     </div>
                 </section>
@@ -264,7 +257,6 @@
                         <div class="flex flex-wrap items-center gap-3">
                             <select id="filterYear" class="filter-select"><option value="all">Semua Tahun</option></select>
                             <select id="filterMonth" class="filter-select"><option value="all">Semua Bulan</option><option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option><option value="3">Apr</option><option value="4">Mei</option><option value="5">Jun</option><option value="6">Jul</option><option value="7">Agu</option><option value="8">Sep</option><option value="9">Okt</option><option value="10">Nov</option><option value="11">Des</option></select>
-                            <select id="filterDay" class="filter-select"><option value="all">Semua Tanggal</option></select>
                             <button id="resetFilter" class="btn-secondary text-sm">Reset</button>
                         </div>
                     </div>
@@ -278,473 +270,190 @@
     <!-- Settings Modal -->
     <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden items-center justify-center p-4">
         <div class="bg-[var(--bg-card)] p-6 rounded-xl border border-[var(--border)] w-full max-w-lg">
-            <h3 class="font-display text-xl font-bold mb-4">Pengaturan Koneksi</h3>
+            <h3 class="font-display text-xl font-bold mb-4">Pengaturan</h3>
             <label class="block text-sm text-[var(--fg-muted)] mb-2">URL Google Spreadsheet</label>
-            <input type="text" id="settingsUrlInput" class="input-form w-full mb-2" placeholder="URL Spreadsheet...">
-            <p class="text-xs text-[var(--fg-muted)] mb-4">Gunakan link dari menu <strong>File > Publish to web</strong> (Format CSV) untuk hasil terbaik.</p>
+            <input type="text" id="settingsUrlInput" class="input-form w-full mb-2" placeholder="URL...">
+            <p class="text-xs text-[var(--fg-muted)] mb-4">Rekomendasi: Gunakan link dari <strong>File > Publish to web</strong>.</p>
             
-            <div class="bg-[var(--bg-secondary)] rounded-lg p-3 mb-4 text-xs">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-[var(--fg-muted)]">Status Koneksi:</span>
-                    <span id="debugStatus" class="font-semibold">-</span>
-                </div>
-                <div class="text-[var(--fg-muted)]">
-                    <p>Respons:</p>
-                    <pre id="debugResponse" class="whitespace-pre-wrap break-all bg-[var(--bg-primary)] p-2 rounded mt-1 max-h-20 overflow-auto text-red-400"></pre>
-                </div>
+            <div class="bg-[var(--bg-secondary)] rounded-lg p-3 mb-4 text-xs font-mono">
+                 <div class="flex justify-between"><span>Status:</span><span id="debugStatus" class="text-yellow-400">-</span></div>
+                 <div class="mt-2 text-[var(--fg-muted)] whitespace-pre-wrap overflow-auto max-h-24" id="debugLog">Menunggu aksi...</div>
             </div>
 
             <div class="flex gap-3">
-                <button onclick="testConnection()" class="btn-secondary flex-1">Test Koneksi</button>
-                <button onclick="saveSettings()" class="btn-primary flex-1">Simpan & Reload</button>
+                <button onclick="testConnection()" class="btn-secondary flex-1">Test</button>
+                <button onclick="saveSettings()" class="btn-primary flex-1">Simpan</button>
             </div>
             <button onclick="closeSettings()" class="w-full mt-3 text-center text-xs text-[var(--fg-muted)] hover:text-white">Tutup</button>
         </div>
     </div>
 
     <script>
-        // State & Config
-        const STORAGE_KEY_URL = 'bkpsdm_db_url_v4';
-        const SYNC_INTERVAL = 60000; 
-        let serviceData = [];
-        let filteredData = [];
-        let selectedMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let monthlyChart, statusChart, picChart;
-        let currentPage = 1;
-        const rowsPerPage = 20;
-        let syncTimer = null;
-        let filterYear = currentYear.toString();
-        let filterMonth = selectedMonth.toString();
-        let filterDay = 'all';
-        const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        // Config
+        const STORAGE_KEY = 'bkpsdm_url_v5';
+        // PROXY to bypass CORS: https://allorigins.win/raw?url=ENCODED_URL
+        const PROXY = 'https://api.allorigins.win/raw?url=';
+        const SYNC_INTERVAL = 60000;
+        
+        // State
+        let serviceData = [], filteredData = [], syncTimer;
+        let selectedMonth = new Date().getMonth(), currentYear = new Date().getFullYear();
+        let currentPage = 1, rowsPerPage = 20;
+        let filterYear = currentYear.toString(), filterMonth = selectedMonth.toString();
+        const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
         // DOM
-        const setupScreen = document.getElementById('setupScreen');
-        const dashboardContent = document.getElementById('dashboardContent');
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
-        const statusTime = document.getElementById('statusTime');
-
+        const $ = id => document.getElementById(id);
+        
         // Init
         function init() {
-            initCharts();
-            initFilters();
-            setupEventListeners();
-            
-            const savedUrl = localStorage.getItem(STORAGE_KEY_URL);
-            if (savedUrl) {
-                showDashboard();
-                startAutoSync(savedUrl);
-            } else {
-                showSetup();
-            }
+            initCharts(); initFilters(); setupEvents();
+            const url = localStorage.getItem(STORAGE_KEY);
+            if(url) { $('dashboardContent').classList.remove('hidden'); $('setupScreen').classList.add('hidden'); $('statusBar').classList.remove('hidden'); renderMonthSelector(); updateYearDisplay(); startSync(url); }
+            else { $('setupScreen').classList.remove('hidden'); }
         }
 
-        function showSetup() {
-            setupScreen.classList.remove('hidden');
-            dashboardContent.classList.add('hidden');
-            document.getElementById('statusBar').classList.add('hidden');
-        }
-
-        function showDashboard() {
-            setupScreen.classList.add('hidden');
-            dashboardContent.classList.remove('hidden');
-            document.getElementById('statusBar').classList.remove('hidden');
-            renderMonthSelector();
-            updateYearDisplay();
+        function setupEvents() {
+            $('searchInput').oninput = handleSearch;
+            $('filterYear').onchange = $('filterMonth').onchange = () => { filterYear=$('filterYear').value; filterMonth=$('filterMonth').value; currentPage=1; applyFilters(); };
+            $('resetFilter').onclick = () => { $('filterYear').value='all'; $('filterMonth').value='all'; $('searchInput').value=''; $('filterYear').onchange(); };
         }
 
         // ==========================================
-        // ROBUST SYNC LOGIC
+        // SYNC ENGINE (FIXED WITH PROXY)
         // ==========================================
-        function startAutoSync(url) {
-            if (syncTimer) clearInterval(syncTimer);
-            syncData(url); 
-            syncTimer = setInterval(() => syncData(url), SYNC_INTERVAL);
-        }
+        function startSync(url) { clearInterval(syncTimer); syncData(url); syncTimer = setInterval(() => syncData(url), SYNC_INTERVAL); }
 
         async function syncData(url) {
-            setStatus('loading', 'Menyinkronkan...');
+            setStatus('loading', 'Sync...');
             
-            // 1. Extract IDs
-            let sheetId = null;
-            let gid = '0';
-            let isPublished = false;
+            // 1. Parse ID
+            let id = null, gid='0', isPub = false;
+            if(url.includes('/d/e/')) { id = url.match(/\/d\/e\/([a-zA-Z0-9-_]+)/)?.[1]; isPub = true; }
+            else id = url.match(/\/d\/([a-zA-Z0-9-_]{25,})/)?.[1];
+            gid = url.match(/[#&]gid=(\d+)/)?.[1] || '0';
 
-            // Check for Published URL (Format: /d/e/2PACX...)
-            const pubMatch = url.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
-            if (pubMatch) {
-                isPublished = true;
-                sheetId = pubMatch[1];
-            } else {
-                // Check for Standard URL (Format: /d/ID/)
-                const stdMatch = url.match(/\/d\/([a-zA-Z0-9-_]{25,})/);
-                if (stdMatch) sheetId = stdMatch[1];
-            }
-
-            // Check for GID
-            const gidMatch = url.match(/[#&]gid=(\d+)/);
-            if (gidMatch) gid = gidMatch[1];
-
-            if (!sheetId) {
-                setStatus('error', 'Format URL Salah');
-                return;
-            }
+            if(!id) { setStatus('error', 'URL Salah'); return; }
 
             // 2. Construct Target URL
-            let targetUrl;
-            if (isPublished) {
-                // URL for Published to Web: direct CSV export
-                targetUrl = `https://docs.google.com/spreadsheets/d/e/${sheetId}/pub?gid=${gid}&output=csv`;
-            } else {
-                // URL for Standard Share: use GVIZ (Visualisation API)
-                const query = encodeURIComponent("SELECT *");
-                targetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&tq=${query}`;
-            }
+            // We FORCE using the proxy to avoid CORS issues 100%
+            let target;
+            if(isPub) target = `https://docs.google.com/spreadsheets/d/e/${id}/pub?gid=${gid}&output=csv`;
+            else target = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
 
+            // 3. Fetch via Proxy
             try {
-                const response = await fetch(targetUrl);
-                const text = await response.text();
-
-                // 3. Validation: Check if response is HTML
-                if (text.trim().startsWith('<') || text.includes('<!DOCTYPE') || text.includes('<html')) {
-                    throw new Error('RESPON_HTML');
-                }
-
-                // 4. Parse
-                const workbook = XLSX.read(text, { type: 'string' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(sheet);
-
-                if (jsonData.length === 0) throw new Error('DATA_KOSONG');
-
-                processExcelData(jsonData);
+                const proxyUrl = PROXY + encodeURIComponent(target);
+                logDebug('Fetching via Proxy...');
+                const resp = await fetch(proxyUrl);
+                const text = await resp.text();
                 
-                const time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                setStatus('connected', 'Terhubung', `Last sync: ${time}`);
-                
-            } catch (err) {
-                console.error(err);
-                handleSyncError(err, url);
+                // 4. Validate
+                if(text.startsWith('<') || text.includes('<!DOCTYPE')) throw new Error(' Respons HTML (Login/Auth)');
+                if(text.length < 10) throw new Error('Data kosong');
+
+                // 5. Parse
+                const wb = XLSX.read(text, {type:'string'});
+                const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                processData(json);
+                setStatus('connected', 'Terhubung', `Last: ${new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`);
+                logDebug('Success: ' + json.length + ' rows');
+            } catch(e) {
+                console.error(e);
+                setStatus('error', 'Gagal');
+                logDebug('Error: ' + e.message);
+                showNotification('Gagal mengambil data. Cek Panduan di halaman setup.', 'error');
             }
         }
 
-        function handleSyncError(err, url) {
-            let msg = 'Gagal memuat data.';
-            let detail = err.message;
-            
-            if (detail === 'RESPON_HTML') {
-                msg = 'Ditolak (HTML). ';
-                if (url.includes('/e/')) {
-                    msg += 'Link Publish mungkin sudah di-revoke atau salah.';
-                } else {
-                    msg += 'Sheet belum "Publish to Web". Gunakan File > Share > Publish to web.';
-                }
-            } else if (detail === 'DATA_KOSONG') {
-                msg = 'Data kosong atau format tidak sesuai.';
-            }
-            
-            setStatus('error', 'Gagal Sinkron', msg);
-            showNotification(msg, 'error');
+        function setStatus(t, txt, time='') {
+            $('statusDot').className = `status-dot ${t}`;
+            $('statusText').textContent = txt;
+            $('statusTime').textContent = time;
         }
+        function logDebug(msg) { if($('debugLog')) $('debugLog').textContent = msg; }
 
-        function forceSync() {
-            const url = localStorage.getItem(STORAGE_KEY_URL);
-            if (url) syncData(url);
-        }
-
-        function setStatus(type, text, time = '') {
-            statusDot.className = `status-dot ${type}`;
-            statusText.textContent = text;
-            statusTime.textContent = time;
-        }
-
-        // Data Processing
-        function processExcelData(jsonData) {
-            if(!jsonData || jsonData.length === 0) return;
-            
-            serviceData = jsonData.map((row, index) => {
-                const cleanRow = {};
-                Object.keys(row).forEach(key => { cleanRow[key.toLowerCase().trim()] = row[key]; });
-
-                const tanggal = cleanRow['tanggal'] || cleanRow['date'] || cleanRow['tgl'] || new Date();
-                let parsedDate = new Date(tanggal);
-                if (typeof tanggal === 'number') parsedDate = new Date((tanggal - 25569) * 86400 * 1000);
-
-                return {
-                    id: index + 1,
-                    tanggal: parsedDate,
-                    tanggalStr: formatDate(parsedDate),
-                    pemohon: cleanRow['nama pemohon'] || cleanRow['pemohon'] || cleanRow['nama'] || '-',
-                    unitKerja: cleanRow['unit kerja'] || cleanRow['unit'] || cleanRow['opd'] || '-',
-                    jenis: cleanRow['jenis pelayanan'] || cleanRow['jenis'] || cleanRow['layanan'] || '-',
-                    pic: cleanRow['pic'] || cleanRow['petugas'] || cleanRow['staff'] || '-',
-                    status: normalizeStatus(cleanRow['status'] || 'Proses')
-                };
-            });
-
-            serviceData.sort((a, b) => b.tanggal - a.tanggal);
-            filteredData = [...serviceData];
-            updateYearFilter();
-            applyFiltersAndRender();
-            updateDashboard();
-        }
-
-        function normalizeStatus(status) {
-            const s = (status || '').toString().toLowerCase();
-            if (s.includes('selesai') || s.includes('done')) return 'Selesai';
-            if (s.includes('proses') || s.includes('process')) return 'Proses';
-            return 'Antrian';
+        function processData(json) {
+            serviceData = json.map((r,i) => {
+                const c = {}; Object.keys(r).forEach(k => c[k.toLowerCase().trim()] = r[k]);
+                const t = c['tanggal']||c['date']||c['tgl']||new Date();
+                let d = new Date(t);
+                if(typeof t==='number') d = new Date((t-25569)*86400*1000);
+                return { id:i+1, tanggal:d, tanggalStr: d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}), 
+                         pemohon:c['nama pemohon']||c['pemohon']||c['nama']||'-', unit:c['unit kerja']||c['unit']||'-', 
+                         jenis:c['jenis pelayanan']||c['jenis']||'-', pic:c['pic']||c['petugas']||'-', 
+                         status: (s=>s.includes('selesai')||s.includes('done')?'Selesai':s.includes('proses')?'Proses':'Antrian')((c['status']||'proses').toString().toLowerCase()) };
+            }).sort((a,b)=>b.tanggal-a.tanggal);
+            filteredData=[...serviceData];
+            updateYearFilter(); applyFilters(); updateDash();
         }
 
         // Settings
-        function openSettings() {
-            document.getElementById('settingsUrlInput').value = localStorage.getItem(STORAGE_KEY_URL) || '';
-            document.getElementById('settingsModal').classList.remove('hidden');
-            document.getElementById('settingsModal').classList.add('flex');
-            document.getElementById('debugStatus').textContent = '-';
-            document.getElementById('debugResponse').textContent = 'Klik "Test Koneksi" untuk mencoba.';
-        }
-        function closeSettings() {
-            document.getElementById('settingsModal').classList.add('hidden');
-        }
-        function saveSettings() {
-            const url = document.getElementById('settingsUrlInput').value.trim();
-            if (url) {
-                localStorage.setItem(STORAGE_KEY_URL, url);
-                closeSettings();
-                location.reload();
-            }
-        }
-        function saveInitialUrl() {
-            const url = document.getElementById('initialUrlInput').value.trim();
-            if (url) {
-                localStorage.setItem(STORAGE_KEY_URL, url);
-                location.reload();
-            }
-        }
+        function openSettings() { $('settingsModal').classList.remove('hidden'); $('settingsModal').classList.add('flex'); $('settingsUrlInput').value=localStorage.getItem(STORAGE_KEY)||''; logDebug('Ready'); }
+        function closeSettings() { $('settingsModal').classList.add('hidden'); }
+        function saveSettings() { localStorage.setItem(STORAGE_KEY, $('settingsUrlInput').value.trim()); closeSettings(); location.reload(); }
+        function saveInitialUrl() { localStorage.setItem(STORAGE_KEY, $('initialUrlInput').value.trim()); location.reload(); }
+        function testConnection() { syncData($('settingsUrlInput').value.trim()); }
 
-        async function testConnection() {
-            const url = document.getElementById('settingsUrlInput').value.trim();
-            if(!url) return;
+        // Dashboard
+        function updateDash() {
+            const mD = serviceData.filter(d=>d.tanggal.getMonth()===selectedMonth && d.tanggal.getFullYear()===currentYear);
+            const tD = serviceData.filter(d=>d.tanggal.toDateString()===new Date().toDateString());
+            const yD = serviceData.filter(d=>d.tanggal.getFullYear()===currentYear);
+            $('dailyCount').textContent = tD.length; $('monthlyCount').textContent = mD.length; $('yearlyCount').textContent = yD.length;
+            $('avgCount').textContent = Math.round(mD.length/(new Date(currentYear,selectedMonth+1,0).getDate()||1));
             
-            const statusEl = document.getElementById('debugStatus');
-            const respEl = document.getElementById('debugResponse');
-            statusEl.textContent = 'Menguji...';
-            statusEl.className = 'font-semibold text-yellow-400';
-            respEl.textContent = '';
-
-            // Reuse logic from syncData but with UI feedback
-            let sheetId = null;
-            let gid = '0';
-            let isPublished = false;
-            const pubMatch = url.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
-            if (pubMatch) { isPublished = true; sheetId = pubMatch[1]; } 
-            else {
-                const stdMatch = url.match(/\/d\/([a-zA-Z0-9-_]{25,})/);
-                if (stdMatch) sheetId = stdMatch[1];
-            }
-            const gidMatch = url.match(/[#&]gid=(\d+)/);
-            if (gidMatch) gid = gidMatch[1];
-
-            if (!sheetId) {
-                statusEl.textContent = 'Format URL Salah';
-                statusEl.className = 'font-semibold text-red-400';
-                return;
-            }
-
-            let targetUrl = isPublished 
-                ? `https://docs.google.com/spreadsheets/d/e/${sheetId}/pub?gid=${gid}&output=csv`
-                : `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&tq=${encodeURIComponent("SELECT *")}`;
-
-            try {
-                const resp = await fetch(targetUrl);
-                const text = await resp.text();
-                
-                // Show raw snippet
-                const snippet = text.substring(0, 150) + (text.length > 150 ? '...' : '');
-                
-                if (text.trim().startsWith('<')) {
-                    statusEl.textContent = 'GAGAL (Respons HTML)';
-                    statusEl.className = 'font-semibold text-red-400';
-                    respEl.textContent = "Google mengembalikan halaman web (bukan data).\n\nSolusi: Pastikan file sudah 'Publish to Web' (File > Share > Publish to web).";
-                } else {
-                    statusEl.textContent = 'SUKSES';
-                    statusEl.className = 'font-semibold text-green-400';
-                    respEl.textContent = snippet;
-                    respEl.className = 'whitespace-pre-wrap break-all bg-[var(--bg-primary)] p-2 rounded mt-1 max-h-20 overflow-auto text-green-300';
-                }
-            } catch(e) {
-                statusEl.textContent = 'ERROR JARINGAN';
-                statusEl.className = 'font-semibold text-red-400';
-                respEl.textContent = e.message;
-            }
+            const s=mD.filter(d=>d.status==='Selesai').length, p=mD.filter(d=>d.status==='Proses').length, a=mD.filter(d=>d.status==='Antrian').length, t=mD.length||1;
+            $('selesaiCount').textContent=s; $('prosesCount').textContent=p; $('antrianCount').textContent=a;
+            $('selesaiProgress').style.width= Math.round(s/t*100)+'%'; $('prosesProgress').style.width=Math.round(p/t*100)+'%'; $('antrianProgress').style.width=Math.round(a/t*100)+'%';
+            $('monthlyProgress').style.width=Math.min(Math.round(mD.length/500*100),100)+'%'; $('monthlyPercent').textContent=Math.min(Math.round(mD.length/500*100),100);
+            $('currentMonthName').textContent=MONTHS[selectedMonth];
+            updateCharts(); updatePIC(mD);
         }
-
-        // Dashboard Logic
-        function updateDashboard() {
-            const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
-            const today = new Date();
-            const todayData = serviceData.filter(d => d.tanggal.toDateString() === today.toDateString());
-            const yearData = serviceData.filter(d => d.tanggal.getFullYear() === currentYear);
-
-            animateNumber('dailyCount', todayData.length);
-            animateNumber('monthlyCount', monthData.length);
-            animateNumber('yearlyCount', yearData.length);
-            
-            const daysInMonth = new Date(currentYear, selectedMonth + 1, 0).getDate();
-            animateNumber('avgCount', Math.round(monthData.length / (daysInMonth || 1)));
-
-            const selesai = monthData.filter(d => d.status === 'Selesai').length;
-            const proses = monthData.filter(d => d.status === 'Proses').length;
-            const antrian = monthData.filter(d => d.status === 'Antrian').length;
-            const total = monthData.length || 1;
-
-            animateNumber('selesaiCount', selesai);
-            animateNumber('prosesCount', proses);
-            animateNumber('antrianCount', antrian);
-
-            document.getElementById('selesaiProgress').style.width = Math.round((selesai / total) * 100) + '%';
-            document.getElementById('prosesProgress').style.width = Math.round((proses / total) * 100) + '%';
-            document.getElementById('antrianProgress').style.width = Math.round((antrian / total) * 100) + '%';
-            document.getElementById('monthlyProgress').style.width = Math.min(Math.round((monthData.length / 500) * 100), 100) + '%';
-            document.getElementById('monthlyPercent').textContent = Math.min(Math.round((monthData.length / 500) * 100), 100);
-            
-            document.getElementById('currentMonthName').textContent = MONTHS[selectedMonth];
-            updateCharts();
-            updatePICPerformance(monthData);
-        }
+        function updateYearDisplay(){ $('currentYear').textContent=currentYear; $('yearDisplay').textContent=currentYear; }
+        function updateYearFilter(){ const y=new Set(serviceData.map(d=>d.tanggal.getFullYear())); if(!y.size)y.add(currentYear); $('filterYear').innerHTML='<option value="all">Semua</option>'+[...y].sort((a,b)=>b-a).map(v=>`<option value="${v}">${v}</option>`).join(''); }
         
-        function updateYearDisplay() { document.getElementById('currentYear').textContent = currentYear; document.getElementById('yearDisplay').textContent = currentYear; }
-
         // Charts
         function initCharts() {
-            const ctx1 = document.getElementById('monthlyChart').getContext('2d');
-            const ctx2 = document.getElementById('statusChart').getContext('2d');
-            const ctx3 = document.getElementById('picPerformanceChart').getContext('2d');
-            monthlyChart = new Chart(ctx1, { type: 'bar', data: { labels: MONTHS.map(m=>m.slice(0,3)), datasets: [{data: new Array(12).fill(0), backgroundColor: 'rgba(212,168,70,0.8)'}, {data: new Array(12).fill(0), backgroundColor: 'rgba(16,185,129,0.8)'}] }, options: { responsive: true, maintainAspectRatio: false, plugins: {legend: false}, scales: { x: {grid: {color: 'rgba(255,255,255,0.05)'}}, y: {grid: {color: 'rgba(255,255,255,0.05)'}} } } });
-            statusChart = new Chart(ctx2, { type: 'doughnut', data: { labels: ['Selesai', 'Proses', 'Antrian'], datasets: [{data: [0,0,0], backgroundColor: ['rgba(16,185,129,0.9)', 'rgba(59,130,246,0.9)', 'rgba(245,158,11,0.9)']}] }, options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: {position: 'bottom'} } } });
-            picChart = new Chart(ctx3, { type: 'bar', data: { labels: [], datasets: [{data: [], backgroundColor: 'rgba(59,130,246,0.7)'}, {data: [], backgroundColor: 'rgba(16,185,129,0.9)'}] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: {legend: false}, scales: { x: {grid: {color: 'rgba(255,255,255,0.05)'}}, y: {grid: false} } } });
+            const opt = {responsive:true,maintainAspectRatio:false,plugins:{legend:false},scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8'}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8'}}}};
+            $('monthlyChart') && (monthlyChart=new Chart($('monthlyChart'),{type:'bar',data:{labels:MONTHS.map(m=>m.slice(0,3)),datasets:[{data:new Array(12).fill(0),bgColor:'rgba(212,168,70,0.8)'},{data:new Array(12).fill(0),bgColor:'rgba(16,185,129,0.8)'}]},options:opt}));
+            $('statusChart') && (statusChart=new Chart($('statusChart'),{type:'doughnut',data:{labels:['Selesai','Proses','Antrian'],datasets:[{data:[0,0,0],bgColor:['rgba(16,185,129,0.9)','rgba(59,130,246,0.9)','rgba(245,158,11,0.9)'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8'}}}}}));
+            $('picPerformanceChart') && (picChart=new Chart($('picPerformanceChart'),{type:'bar',data:{labels:[],datasets:[{data:[],bgColor:'rgba(59,130,246,0.7)'},{data:[],bgColor:'rgba(16,185,129,0.9)'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:false},scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8'}},y:{grid:false,ticks:{color:'#f1f5f9'}}}}}));
         }
-        function updateCharts() {
-            const totals = [], selesaiArr = [];
-            for (let m = 0; m < 12; m++) {
-                const d = serviceData.filter(x => x.tanggal.getMonth() === m && x.tanggal.getFullYear() === currentYear);
-                totals.push(d.length);
-                selesaiArr.push(d.filter(x => x.status === 'Selesai').length);
-            }
-            monthlyChart.data.datasets[0].data = totals;
-            monthlyChart.data.datasets[1].data = selesaiArr;
-            monthlyChart.update('none');
-            const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
-            statusChart.data.datasets[0].data = [monthData.filter(d=>d.status==='Selesai').length, monthData.filter(d=>d.status==='Proses').length, monthData.filter(d=>d.status==='Antrian').length];
-            statusChart.update('none');
+        function updateCharts(){
+            if(!monthlyChart)return;
+            let t=[],s=[]; for(let m=0;m<12;m++){let d=serviceData.filter(x=>x.tanggal.getMonth()===m && x.tanggal.getFullYear()===currentYear); t.push(d.length); s.push(d.filter(x=>x.status==='Selesai').length); }
+            monthlyChart.data.datasets[0].data=t; monthlyChart.data.datasets[1].data=s; monthlyChart.update('none');
+            const mD=serviceData.filter(d=>d.tanggal.getMonth()===selectedMonth && d.tanggal.getFullYear()===currentYear);
+            statusChart.data.datasets[0].data=[mD.filter(d=>d.status==='Selesai').length,mD.filter(d=>d.status==='Proses').length,mD.filter(d=>d.status==='Antrian').length]; statusChart.update('none');
         }
-        function updatePICPerformance(monthData) {
-            const stats = {};
-            monthData.forEach(d => { if(!stats[d.pic]) stats[d.pic] = {t:0, s:0}; stats[d.pic].t++; if(d.status==='Selesai') stats[d.pic].s++; });
-            const sorted = Object.keys(stats).map(k => ({name:k, ...stats[k]})).sort((a,b)=>b.s-a.s);
-            document.getElementById('picRankingList').innerHTML = sorted.slice(0,10).map((p,i) => `
-                <div class="pic-rank-item">
-                    <div class="rank-badge ${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other'}">${i+1}</div>
-                    <div class="flex-1"><p class="text-sm font-medium">${p.name}</p></div>
-                    <div class="text-right"><p class="font-bold text-[var(--accent-green)]">${p.s}</p><p class="text-xs text-[var(--fg-muted)]">${p.t} total</p></div>
-                </div>
-            `).join('');
-            picChart.data.labels = sorted.slice(0,5).map(p=>p.name);
-            picChart.data.datasets[0].data = sorted.slice(0,5).map(p=>p.t);
-            picChart.data.datasets[1].data = sorted.slice(0,5).map(p=>p.s);
-            picChart.update('none');
+        function updatePIC(mD){
+            const st={}; mD.forEach(d=>{if(!st[d.pic])st[d.pic]={t:0,s:0}; st[d.pic].t++; if(d.status==='Selesai')st[d.pic].s++;});
+            const so=Object.keys(st).map(k=>({n:k,...st[k]})).sort((a,b)=>b.s-a.s);
+            $('picRankingList').innerHTML=so.slice(0,10).map((p,i)=>`<div class="pic-rank-item"><div class="w-8 h-8 rounded flex items-center justify-center mr-3 text-xs font-bold ${i==0?'bg-yellow-500 text-black':i==1?'bg-gray-400 text-black':i==2?'bg-orange-400 text-black':'bg-gray-700'}">${i+1}</div><div class="flex-1 text-sm">${p.n}</div><div class="text-right text-green-400 font-bold">${p.s}</div></div>`).join('');
+            if(picChart){ picChart.data.labels=so.slice(0,5).map(p=>p.n); picChart.data.datasets[0].data=so.slice(0,5).map(p=>p.t); picChart.data.datasets[1].data=so.slice(0,5).map(p=>p.s); picChart.update('none'); }
         }
 
-        // Filters & Table
-        function initFilters() { filterMonthSelect.value = selectedMonth.toString(); updateDayFilter(); }
-        function updateYearFilter() {
-            const years = new Set(serviceData.map(d => d.tanggal.getFullYear()));
-            if(years.size===0) years.add(currentYear);
-            filterYearSelect.innerHTML = '<option value="all">Semua</option>' + [...years].sort((a,b)=>b-a).map(y => `<option value="${y}">${y}</option>`).join('');
+        // Filter & Table
+        function initFilters(){ $('filterMonth').value=selectedMonth; }
+        function applyFilters(){ 
+            filteredData=serviceData.filter(d=>(filterYear==='all'||d.tanggal.getFullYear().toString()===filterYear)&&(filterMonth==='all'||d.tanggal.getMonth().toString()===filterMonth));
+            renderTable(); renderPag(); $('totalDataCount').textContent=filteredData.length; 
         }
-        function updateDayFilter() { filterDaySelect.innerHTML = '<option value="all">Semua</option>' + Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join(''); }
-        
-        function setupEventListeners() {
-            searchInput.addEventListener('input', handleSearch);
-            filterYearSelect.addEventListener('change', handleFilterChange);
-            filterMonthSelect.addEventListener('change', handleFilterChange);
-            filterDaySelect.addEventListener('change', handleFilterChange);
-            resetFilterBtn.addEventListener('click', resetFilters);
+        function handleSearch(e){ applyFilters(); const q=e.target.value.toLowerCase(); if(q) filteredData=filteredData.filter(d=>d.pemohon.toLowerCase().includes(q)||d.jenis.toLowerCase().includes(q)||d.pic.toLowerCase().includes(q)); renderTable(); renderPag(); }
+        function renderTable(){
+            const s=(currentPage-1)*rowsPerPage, rows=filteredData.slice(s,s+rowsPerPage);
+            $('dataTableBody').innerHTML=rows.length?rows.map((r,i)=>`<tr><td>${s+i+1}</td><td>${r.tanggalStr}</td><td>${r.pemohon}</td><td>${r.unitKerja}</td><td>${r.jenis}</td><td class="text-yellow-400">${r.pic}</td><td><span class="badge badge-${r.status.toLowerCase()}">${r.status}</span></td></tr>`).join(''):'<tr><td colspan="7" class="text-center py-8 text-gray-500">Tidak ada data</td></tr>';
         }
+        function renderMonthSelector(){ $('monthSelector').innerHTML=MONTHS.map((m,i)=>`<button onclick="setM(${i})" class="month-btn ${i===selectedMonth?'active':''}">${m.slice(0,3)}</button>`).join(''); }
+        function setM(m){ selectedMonth=m; renderMonthSelector(); updateDash(); }
+        function renderPag(){
+            const t=Math.ceil(filteredData.length/rowsPerPage)||1; $('currentPageDisplay').textContent=currentPage; $('totalPagesDisplay').textContent=t;
+            $('paginationContainer').innerHTML=`<button class="pagination-btn" onclick="go(${currentPage-1})" ${currentPage===1?'disabled':''}>Prev</button>` + Array.from({length:t},(_,i)=>`<button onclick="go(${i+1})" class="pagination-btn ${i+1===currentPage?'active':''}">${i+1}</button>`).join('') + `<button class="pagination-btn" onclick="go(${currentPage+1})" ${currentPage===t?'disabled':''}>Next</button>`;
+        }
+        function go(p){ const t=Math.ceil(filteredData.length/rowsPerPage)||1; if(p<1||p>t)return; currentPage=p; renderTable(); renderPag(); }
+        function showNotification(m,t){ const n=document.createElement('div'); n.className=`fixed top-4 right-4 px-4 py-2 rounded z-50 ${t==='error'?'bg-red-500':'bg-green-500'} text-white text-sm`; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),4000); }
 
-        function handleFilterChange() {
-            filterYear = filterYearSelect.value;
-            filterMonth = filterMonthSelect.value;
-            filterDay = filterDaySelect.value;
-            currentPage = 1;
-            applyFiltersAndRender();
-        }
-        
-        function resetFilters() { filterYearSelect.value='all'; filterMonthSelect.value='all'; filterDaySelect.value='all'; searchInput.value=''; handleFilterChange(); }
-
-        function applyFiltersAndRender() {
-            filteredData = serviceData.filter(d => {
-                const y = filterYear==='all' || d.tanggal.getFullYear().toString()===filterYear;
-                const m = filterMonth==='all' || d.tanggal.getMonth().toString()===filterMonth;
-                const day = filterDay==='all' || d.tanggal.getDate().toString()===filterDay;
-                return y && m && day;
-            });
-            renderTable(); renderPagination();
-            document.getElementById('totalDataCount').textContent = filteredData.length.toLocaleString('id-ID');
-        }
-
-        function handleSearch(e) {
-            const q = e.target.value.toLowerCase();
-            handleFilterChange(); 
-            if(q) filteredData = filteredData.filter(d => d.pemohon.toLowerCase().includes(q) || d.jenis.toLowerCase().includes(q) || d.pic.toLowerCase().includes(q));
-            renderTable(); renderPagination();
-        }
-
-        function renderTable() {
-            const start = (currentPage-1)*rowsPerPage;
-            const rows = filteredData.slice(start, start+rowsPerPage);
-            document.getElementById('dataTableBody').innerHTML = rows.length ? rows.map((r,i) => `
-                <tr><td class="font-medium">${start+i+1}</td><td>${r.tanggalStr}</td><td>${r.pemohon}</td><td>${r.unitKerja}</td><td>${r.jenis}</td><td class="text-[var(--accent-gold)]">${r.pic}</td><td><span class="badge badge-${r.status.toLowerCase()}">${r.status}</span></td></tr>
-            `).join('') : '<tr><td colspan="7" class="text-center py-8">Tidak ada data</td></tr>';
-        }
-
-        function renderMonthSelector() {
-            document.getElementById('monthSelector').innerHTML = MONTHS.map((m,i) => `<button class="month-btn ${i===selectedMonth?'active':''}" onclick="setMonth(${i})">${m.slice(0,3)}</button>`).join('');
-        }
-        function setMonth(m) { selectedMonth=m; renderMonthSelector(); updateDashboard(); }
-
-        function renderPagination() {
-            const total = Math.ceil(filteredData.length/rowsPerPage) || 1;
-            document.getElementById('currentPageDisplay').textContent = currentPage;
-            document.getElementById('totalPagesDisplay').textContent = total;
-            let html = `<button class="pagination-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>Prev</button>`;
-            for(let i=1; i<=total; i++) html += `<button class="pagination-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
-            html += `<button class="pagination-btn" onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>Next</button>`;
-            document.getElementById('paginationContainer').innerHTML = html;
-        }
-        function goPage(p) { const t=Math.ceil(filteredData.length/rowsPerPage); if(p<1||p>t) return; currentPage=p; renderTable(); renderPagination(); }
-
-        // Utils
-        function animateNumber(id, target) {
-            const el = document.getElementById(id); 
-            const start = parseInt(el.textContent)||0; 
-            const dur=800; const st=performance.now();
-            function up(t) { const p=Math.min((t-st)/dur,1); el.textContent=Math.round(start+(target-start)*p).toLocaleString('id-ID'); if(p<1) requestAnimationFrame(up); }
-            requestAnimationFrame(up);
-        }
-        function formatDate(d) { return d.toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'}); }
-        function showNotification(msg, type) {
-            const n = document.createElement('div');
-            n.className = `fixed top-4 right-4 px-6 py-3 rounded-lg z-[200] animate-in ${type === 'success' ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-red)]'}`;
-            n.style.color = 'white'; n.innerHTML = `<div class="flex items-center gap-2"><span class="font-medium">${msg}</span></div>`;
-            document.body.appendChild(n);
-            setTimeout(() => { n.style.opacity = '0'; n.style.transform = 'translateY(-10px)'; n.style.transition = 'all 0.3s'; setTimeout(() => n.remove(), 300); }, 5000);
-        }
-
-        // Start
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
