@@ -6,7 +6,6 @@
     <title>Dashboard Statistik Pelayanan - BKPSDM Bangkalan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Library XLSX tetap digunakan untuk parsing CSV yang robust -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -143,7 +142,7 @@
         <!-- Main Content -->
         <main class="px-6 lg:px-12 py-8 max-w-7xl mx-auto">
             
-            <!-- Setup Screen (Shows if no URL saved) -->
+            <!-- Setup Screen -->
             <section id="setupScreen" class="mb-8 animate-in hidden">
                 <div class="chart-container p-8 text-center">
                     <div class="icon-container bg-gradient-to-br from-[var(--accent-gold)] to-yellow-400 mx-auto mb-6 w-20 h-20">
@@ -155,7 +154,16 @@
                         <input type="text" id="initialUrlInput" class="input-form flex-1 pl-4" placeholder="Paste URL Google Spreadsheet di sini...">
                         <button onclick="saveInitialUrl()" class="btn-primary whitespace-nowrap">Hubungkan</button>
                     </div>
-                    <p class="text-xs text-[var(--fg-muted)] mt-4">Penting: Pastikan akses spreadsheet diatur ke <strong>"Anyone with the link can view"</strong> (Bagikan > Umum).</p>
+                    <div class="mt-6 text-xs text-[var(--fg-muted)] bg-[var(--bg-secondary)] p-4 rounded-lg max-w-md mx-auto text-left">
+                        <p class="font-bold mb-2 text-[var(--fg-primary)]">Panduan Pengaturan (Wajib):</p>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Buka Spreadsheet Anda.</li>
+                            <li>Klik tombol <strong>"Share" (Bagikan)</strong> di kanan atas.</li>
+                            <li>Ubah "General Access" menjadi <strong>"Anyone with the link" (Siapa saja yang memiliki link)</strong>.</li>
+                            <li>Pastikan Role-nya <strong>"Viewer" (Pembaca)</strong>.</li>
+                            <li>Salin URL dari address bar (bukan link publish).</li>
+                        </ol>
+                    </div>
                 </div>
             </section>
 
@@ -284,8 +292,8 @@
 
     <script>
         // State & Config
-        const STORAGE_KEY_URL = 'bkpsdm_db_url_v2'; // V2 key to reset old settings
-        const SYNC_INTERVAL = 60000; // 60 seconds
+        const STORAGE_KEY_URL = 'bkpsdm_db_url_v3';
+        const SYNC_INTERVAL = 60000; 
         let serviceData = [];
         let filteredData = [];
         let selectedMonth = new Date().getMonth();
@@ -336,50 +344,61 @@
         }
 
         // ==========================================
-        // FIX: ROBUST SYNC USING GVIZ
+        // IMPROVED SYNC LOGIC
         // ==========================================
         function startAutoSync(url) {
             if (syncTimer) clearInterval(syncTimer);
-            syncData(url); // Immediate first sync
+            syncData(url); 
             syncTimer = setInterval(() => syncData(url), SYNC_INTERVAL);
         }
 
         async function syncData(url) {
             setStatus('loading', 'Menyinkronkan...');
             
-            // 1. Extract Sheet ID
+            // 1. Extract Sheet ID (Improved Regex)
             let sheetId = null;
-            let gid = '0'; // Default to first sheet
-            const idPatterns = [/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/, /\/d\/([a-zA-Z0-9-_]+)/, /id=([a-zA-Z0-9-_]+)/];
-            for (const pattern of idPatterns) {
-                const match = url.match(pattern);
-                if (match) { sheetId = match[1]; break; }
-            }
-
-            // 2. Extract GID (Specific Tab)
+            let gid = '0';
+            
+            // Match Standard URL: /d/SHEET_ID/
+            const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]{25,})/); 
+            // Match GID
             const gidMatch = url.match(/[#&]gid=(\d+)/);
+
+            if (idMatch) sheetId = idMatch[1];
             if (gidMatch) gid = gidMatch[1];
 
             if (!sheetId) {
                 setStatus('error', 'Format URL Salah');
+                showNotification('Format URL tidak dikenali. Gunakan URL Standar Google Sheets.', 'error');
                 return;
             }
 
             try {
-                // 3. Use Google Visualization API (gviz) - CORS Friendly
-                // This endpoint returns CSV data and is generally allowed for public sheets
+                // 2. Construct GVIZ URL (Most reliable for public sheets)
+                // We use a simple SELECT * query
                 const query = encodeURIComponent("SELECT *");
                 const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}&tq=${query}`;
                 
                 const response = await fetch(gvizUrl);
-                if (!response.ok) throw new Error('Network response was not ok');
                 
-                const csvText = await response.text();
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
 
-                // 4. Parse CSV using XLSX library (it handles CSV strings too)
-                const workbook = XLSX.read(csvText, { type: 'string' });
+                const text = await response.text();
+
+                // 3. CHECK IF RESPONSE IS VALID DATA
+                // Google sometimes returns an HTML login page or "Moved Temporarily" if permissions fail
+                if (text.startsWith('<') || text.startsWith('<!') || text.length < 10) {
+                    throw new Error('Respons Bukan Data (HTML Login/Error)');
+                }
+
+                // 4. Parse CSV
+                const workbook = XLSX.read(text, { type: 'string' });
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+                if (jsonData.length === 0) throw new Error('Data Kosong');
 
                 processExcelData(jsonData);
                 
@@ -388,9 +407,16 @@
                 
             } catch (err) {
                 console.error(err);
-                setStatus('error', 'Gagal Sinkron');
-                // Show specific error hint in UI
-                showNotification('Pastikan Spreadsheet sudah Public (Anyone with the link)', 'error');
+                // Detailed Error Message
+                let msg = 'Gagal memuat data.';
+                if (err.message.includes('HTML')) {
+                    msg = 'Akses Ditolak. Pastikan Spreadsheet sudah "Anyone with the link".';
+                } else if (err.message.includes('Network')) {
+                    msg = 'Gagal koneksi internet.';
+                }
+                
+                setStatus('error', 'Gagal Sinkron', err.message);
+                showNotification(msg, 'error');
             }
         }
 
@@ -405,7 +431,7 @@
             statusTime.textContent = time;
         }
 
-        // Data Processing (Same as before)
+        // Data Processing
         function processExcelData(jsonData) {
             if(!jsonData || jsonData.length === 0) return;
             
@@ -443,7 +469,7 @@
             return 'Antrian';
         }
 
-        // Settings (Same as before)
+        // Settings
         function openSettings() {
             document.getElementById('settingsUrlInput').value = localStorage.getItem(STORAGE_KEY_URL) || '';
             document.getElementById('settingsModal').classList.remove('hidden');
@@ -468,7 +494,7 @@
             }
         }
 
-        // Dashboard Logic (Same as before)
+        // Dashboard Logic
         function updateDashboard() {
             const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
             const today = new Date();
@@ -504,7 +530,7 @@
         
         function updateYearDisplay() { document.getElementById('currentYear').textContent = currentYear; document.getElementById('yearDisplay').textContent = currentYear; }
 
-        // Charts (Same)
+        // Charts
         function initCharts() {
             const ctx1 = document.getElementById('monthlyChart').getContext('2d');
             const ctx2 = document.getElementById('statusChart').getContext('2d');
@@ -544,7 +570,7 @@
             picChart.update('none');
         }
 
-        // Filters & Table (Same)
+        // Filters & Table
         function initFilters() { filterMonthSelect.value = selectedMonth.toString(); updateDayFilter(); }
         function updateYearFilter() {
             const years = new Set(serviceData.map(d => d.tanggal.getFullYear()));
