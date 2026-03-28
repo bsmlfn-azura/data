@@ -5,23 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Peremajaan Data - BKPSDM Bangkalan</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: {
-                        primary: '#8B0000',
-                        secondary: '#1a1a2e',
-                        accent: '#D4AF37',
-                        surface: '#16213e',
-                        card: '#0f172a',
-                        muted: '#94a3b8'
-                    },
                     fontFamily: {
-                        display: ['Playfair Display', 'serif'],
-                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                        display: ['Space Grotesk', 'sans-serif'],
+                        body: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#1e3a5f',
+                        secondary: '#c9a227',
+                        accent: '#e63946',
+                        surface: '#f8fafc',
+                        card: '#ffffff',
+                        muted: '#64748b',
+                        dark: '#0f172a',
                     }
                 }
             }
@@ -29,14 +30,14 @@
     </script>
     <style>
         :root {
-            --bg: #0a0a0f;
-            --fg: #f8fafc;
+            --bg: #0a1628;
+            --fg: #f1f5f9;
             --muted: #64748b;
-            --accent: #D4AF37;
-            --primary: #8B0000;
-            --card: #0f172a;
-            --border: #1e293b;
-            --glow: rgba(212, 175, 55, 0.15);
+            --accent: #c9a227;
+            --accent-red: #e63946;
+            --card: rgba(30, 58, 95, 0.6);
+            --border: rgba(201, 162, 39, 0.2);
+            --glass: rgba(255, 255, 255, 0.05);
         }
 
         * {
@@ -51,30 +52,56 @@
             overflow-x: hidden;
         }
 
-        .bg-pattern {
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(201, 162, 39, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(230, 57, 70, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse 100% 100% at 50% 0%, rgba(30, 58, 95, 0.8) 0%, transparent 60%),
+                linear-gradient(180deg, #0a1628 0%, #0f1d32 50%, #0a1628 100%);
+        }
+
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
             background-image: 
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 0, 0, 0.15), transparent),
-                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(212, 175, 55, 0.08), transparent),
-                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+                linear-gradient(rgba(201, 162, 39, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(201, 162, 39, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black, transparent);
         }
 
-        .logo-glow {
-            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
-        }
-
-        .card-hover {
+        .glass-card {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.1);
+        .glass-card:hover {
+            border-color: rgba(201, 162, 39, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
         }
 
         .stat-card {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(22, 33, 62, 0.9));
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, rgba(30, 58, 95, 0.8) 0%, rgba(15, 29, 50, 0.9) 100%);
+            border: 1px solid rgba(201, 162, 39, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-red));
         }
 
         .highlight-card {
@@ -82,54 +109,171 @@
             overflow: hidden;
         }
 
-        .highlight-card::before {
+        .highlight-card.best::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent), var(--primary), var(--accent));
+            height: 4px;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
         }
 
-        .highlight-worst::before {
-            background: linear-gradient(90deg, #ef4444, #dc2626, #ef4444);
+        .highlight-card.worst::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-red), #dc2626);
         }
 
-        .table-container {
-            scrollbar-width: thin;
-            scrollbar-color: var(--accent) var(--card);
+        .logo-container {
+            width: 70px;
+            height: 70px;
+            position: relative;
         }
 
-        .table-container::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        .logo-bg {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #c9a227 0%, #8b7355 50%, #1e3a5f 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(201, 162, 39, 0.3);
         }
 
-        .table-container::-webkit-scrollbar-track {
-            background: var(--card);
-            border-radius: 3px;
+        .logo-inner {
+            width: 85%;
+            height: 85%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .table-container::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 3px;
+        .logo-pattern {
+            width: 70%;
+            height: 70%;
+            position: relative;
         }
 
-        .animate-fade-up {
-            animation: fadeUp 0.6s ease-out forwards;
+        .logo-pattern::before,
+        .logo-pattern::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #c9a227;
+            border-radius: 50%;
+        }
+
+        .logo-pattern::before {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .logo-pattern::after {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .logo-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+        }
+
+        .logo-center::before,
+        .logo-center::after {
+            content: '';
+            position: absolute;
+            background: #c9a227;
+        }
+
+        .logo-center::before {
+            width: 100%;
+            height: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .logo-center::after {
+            width: 4px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .data-table th {
+            background: rgba(201, 162, 39, 0.15);
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(201, 162, 39, 0.1);
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .data-table tbody tr {
+            transition: all 0.2s;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(201, 162, 39, 0.05);
+        }
+
+        .data-table tbody tr:hover td {
+            color: var(--accent);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(201, 162, 39, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .animate-in {
+            animation: fadeSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             opacity: 0;
         }
 
-        .animate-scale-in {
-            animation: scaleIn 0.5s ease-out forwards;
-            opacity: 0;
-        }
-
-        @keyframes fadeUp {
+        @keyframes fadeSlideIn {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -137,70 +281,66 @@
             }
         }
 
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+        .stagger-4 { animation-delay: 0.4s; }
+        .stagger-5 { animation-delay: 0.5s; }
+
+        .month-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--muted);
         }
 
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
-            50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); }
+        .month-btn:hover {
+            background: rgba(201, 162, 39, 0.1);
+            color: var(--fg);
         }
 
-        .pulse-glow {
-            animation: pulse-glow 3s ease-in-out infinite;
+        .month-btn.active {
+            background: linear-gradient(135deg, var(--accent), #b8941f);
+            color: var(--bg);
+            border-color: var(--accent);
+            box-shadow: 0 4px 15px rgba(201, 162, 39, 0.3);
         }
 
-        .loading-skeleton {
-            background: linear-gradient(90deg, var(--card) 25%, rgba(255,255,255,0.05) 50%, var(--card) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
 
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        .badge-up {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
         }
 
-        .btn-filter {
-            transition: all 0.3s ease;
+        .badge-down {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
         }
 
-        .btn-filter:hover {
-            background: linear-gradient(135deg, var(--primary), #b91c1c);
-            transform: translateY(-2px);
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
         }
 
-        .btn-filter.active {
-            background: linear-gradient(135deg, var(--primary), #b91c1c);
-            box-shadow: 0 4px 20px rgba(139, 0, 0, 0.4);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        .data-row {
-            transition: all 0.2s ease;
-        }
-
-        .data-row:hover {
-            background: rgba(212, 175, 55, 0.05);
-        }
-
-        .number-animate {
-            display: inline-block;
-            transition: transform 0.3s ease;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
         }
 
         .chart-container {
@@ -208,653 +348,492 @@
             height: 300px;
         }
 
-        @media (max-width: 768px) {
-            .chart-container {
-                height: 250px;
+        @media (prefers-reduced-motion: reduce) {
+            .animate-in {
+                animation: none;
+                opacity: 1;
             }
+            .pulse-dot {
+                animation: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .data-table {
+                font-size: 0.8rem;
+            }
+            .data-table th, .data-table td {
+                padding: 10px 8px;
+            }
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: rgba(201, 162, 39, 0.1);
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: rgba(201, 162, 39, 0.3);
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: rgba(201, 162, 39, 0.5);
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s;
+        }
+
+        .tooltip:hover::after {
+            opacity: 1;
+            bottom: calc(100% + 8px);
         }
     </style>
 </head>
-<body class="bg-pattern">
+<body class="antialiased">
+    <div class="bg-mesh"></div>
+    <div class="grid-overlay"></div>
+
     <!-- Header -->
-    <header class="sticky top-0 z-50 bg-gradient-to-r from-secondary/95 via-primary/95 to-secondary/95 backdrop-blur-md border-b border-white/5">
-        <div class="max-w-7xl mx-auto px-4 py-4">
-            <div class="flex items-center justify-between gap-4">
+    <header class="sticky top-0 z-50 backdrop-blur-xl bg-[rgba(10,22,40,0.8)] border-b border-[rgba(201,162,39,0.15)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between py-4">
                 <div class="flex items-center gap-4">
-                    <img src="https://z-cdn-media.chatglm.cn/files/31f53b87-ac2d-42f6-bc5a-52738ea1fa35.png?auth_key=1874618426-b692ba3ed5ef44d6983f7c2f0b704dfc-0-89f29cd0c1398025546f2a1f678b2edb" 
-                         alt="Logo BKPSDM Bangkalan" 
-                         class="w-14 h-14 md:w-16 md:h-16 object-contain logo-glow">
+                    <div class="logo-container">
+                        <div class="logo-bg">
+                            <div class="logo-inner">
+                                <div class="logo-pattern">
+                                    <div class="logo-center"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div>
-                        <h1 class="font-display text-xl md:text-2xl lg:text-3xl font-bold text-white tracking-wide">
-                            BKPSDM Bangkalan
-                        </h1>
-                        <p class="text-accent text-xs md:text-sm font-medium tracking-wider">
-                            Dashboard Statistik Peremajaan Data
-                        </p>
+                        <h1 class="font-display font-bold text-lg sm:text-xl text-white">BKPSDM Bangkalan</h1>
+                        <p class="text-xs sm:text-sm text-[var(--muted)]">Badan Kepegawaian dan Pengembangan Sumber Daya Manusia</p>
                     </div>
                 </div>
-                <div class="hidden md:flex items-center gap-3 text-sm text-muted">
-                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    <span id="currentYear" class="font-semibold text-white"></span>
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)]">
+                        <div class="pulse-dot"></div>
+                        <span class="text-xs font-medium text-green-400">Live Data</span>
+                    </div>
+                    <select id="yearSelect" class="bg-[var(--card)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--accent)]">
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-6 md:py-8">
-        <!-- Filter Section -->
-        <section class="mb-8 animate-fade-up" style="animation-delay: 0.1s">
-            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-                <div>
-                    <h2 class="text-2xl md:text-3xl font-bold text-white mb-1">Rekap Peremajaan Data</h2>
-                    <p class="text-muted text-sm">Pantau progres update data ASN di setiap OPD</p>
-                </div>
-                <div class="flex items-center gap-2 bg-card/50 rounded-xl p-1.5 border border-white/5">
-                    <label for="monthFilter" class="text-sm text-muted ml-2">Bulan:</label>
-                    <select id="monthFilter" class="bg-surface text-white px-4 py-2 rounded-lg border border-white/10 focus:outline-none focus:border-accent text-sm font-medium cursor-pointer">
-                        <option value="all">Semua Bulan</option>
-                    </select>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Title -->
+        <div class="mb-8 animate-in">
+            <h2 class="font-display text-2xl sm:text-3xl font-bold text-white mb-2">Dashboard Peremajaan Data</h2>
+            <p class="text-[var(--muted)]">Statistik pemutakhiran data kepegawaian perangkat daerah Kabupaten Bangkalan</p>
+        </div>
+
+        <!-- Month Selector -->
+        <div class="mb-6 animate-in stagger-1">
+            <div class="glass-card rounded-xl p-2 overflow-x-auto scrollbar-thin">
+                <div class="flex gap-1 min-w-max" id="monthSelector">
+                    <!-- Months will be rendered here -->
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- Stats Cards -->
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-fade-up" style="animation-delay: 0.2s">
-            <div class="stat-card rounded-2xl p-5 card-hover">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="stat-card rounded-xl p-5 animate-in stagger-1">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="p-2 rounded-lg bg-[rgba(201,162,39,0.15)]">
+                        <svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
                     </div>
-                    <span class="text-muted text-sm">Total OPD</span>
+                    <span class="badge badge-up" id="opdChange">+2</span>
                 </div>
-                <p class="text-3xl md:text-4xl font-bold text-white" id="totalOPD">-</p>
+                <p class="text-[var(--muted)] text-xs mb-1">Total OPD</p>
+                <p class="font-display text-2xl font-bold text-white" id="totalOPD">0</p>
             </div>
-            <div class="stat-card rounded-2xl p-5 card-hover">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+
+            <div class="stat-card rounded-xl p-5 animate-in stagger-2">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="p-2 rounded-lg bg-[rgba(230,57,70,0.15)]">
+                        <svg class="w-5 h-5 text-[var(--accent-red)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </div>
-                    <span class="text-muted text-sm">Total Data</span>
                 </div>
-                <p class="text-3xl md:text-4xl font-bold text-white" id="totalData">-</p>
+                <p class="text-[var(--muted)] text-xs mb-1">Total Data Diperbarui</p>
+                <p class="font-display text-2xl font-bold text-white" id="totalData">0</p>
             </div>
-            <div class="stat-card rounded-2xl p-5 card-hover">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+
+            <div class="stat-card rounded-xl p-5 animate-in stagger-3">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="p-2 rounded-lg bg-[rgba(34,197,94,0.15)]">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>
                     </div>
-                    <span class="text-muted text-sm">Rata-rata/OPD</span>
                 </div>
-                <p class="text-3xl md:text-4xl font-bold text-white" id="avgData">-</p>
+                <p class="text-[var(--muted)] text-xs mb-1">Rata-rata per OPD</p>
+                <p class="font-display text-2xl font-bold text-white" id="avgData">0</p>
             </div>
-            <div class="stat-card rounded-2xl p-5 card-hover">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+
+            <div class="stat-card rounded-xl p-5 animate-in stagger-4">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="p-2 rounded-lg bg-[rgba(59,130,246,0.15)]">
                         <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <span class="text-muted text-sm">Total ASN</span>
                 </div>
-                <p class="text-3xl md:text-4xl font-bold text-white" id="totalASN">-</p>
+                <p class="text-[var(--muted)] text-xs mb-1">Pembaruan Terakhir</p>
+                <p class="font-display text-lg font-bold text-white" id="lastUpdate">-</p>
             </div>
-        </section>
+        </div>
 
-        <!-- Highlight Cards -->
-        <section class="grid md:grid-cols-2 gap-6 mb-8">
-            <!-- OPD Highlights -->
-            <div class="animate-fade-up" style="animation-delay: 0.3s">
-                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+        <!-- Highlights Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <!-- OPD Terbanyak -->
+            <div class="highlight-card best glass-card rounded-xl p-5 animate-in stagger-2">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                     </svg>
-                    Peringkat OPD
-                </h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="highlight-card stat-card rounded-2xl p-5 card-hover pulse-glow">
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                                </svg>
-                            </div>
-                            <span class="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Terbanyak</span>
-                        </div>
-                        <p class="text-white font-bold text-lg mb-1 truncate" id="topOPDName">-</p>
-                        <p class="text-2xl font-bold text-emerald-400" id="topOPDValue">-</p>
-                        <span class="text-xs text-muted">data diperbarui</span>
-                    </div>
-                    <div class="highlight-card highlight-worst stat-card rounded-2xl p-5 card-hover">
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                </svg>
-                            </div>
-                            <span class="text-xs text-red-400 font-semibold uppercase tracking-wider">Terendah</span>
-                        </div>
-                        <p class="text-white font-bold text-lg mb-1 truncate" id="lowOPDName">-</p>
-                        <p class="text-2xl font-bold text-red-400" id="lowOPDValue">-</p>
-                        <span class="text-xs text-muted">data diperbarui</span>
-                    </div>
+                    <span class="text-xs font-semibold text-green-400 uppercase tracking-wide">OPD Terbanyak Update</span>
                 </div>
+                <p class="font-display text-lg font-bold text-white mb-1" id="topOPDName">-</p>
+                <p class="text-sm text-[var(--muted)]"><span id="topOPDValue">0</span> data diperbarui</p>
             </div>
 
-            <!-- Data Type Highlights -->
-            <div class="animate-fade-up" style="animation-delay: 0.4s">
-                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            <!-- OPD Terendah -->
+            <div class="highlight-card worst glass-card rounded-xl p-5 animate-in stagger-3">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
-                    Jenis Data Terupdate
-                </h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="stat-card rounded-2xl p-5 card-hover border-t-2 border-t-emerald-500">
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                                </svg>
-                            </div>
-                            <span class="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Terbanyak</span>
-                        </div>
-                        <p class="text-white font-bold text-lg mb-1" id="topTypeName">-</p>
-                        <p class="text-2xl font-bold text-emerald-400" id="topTypeValue">-</p>
-                        <span class="text-xs text-muted">entri data</span>
-                    </div>
-                    <div class="stat-card rounded-2xl p-5 card-hover border-t-2 border-t-amber-500">
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
-                                </svg>
-                            </div>
-                            <span class="text-xs text-amber-400 font-semibold uppercase tracking-wider">Terendah</span>
-                        </div>
-                        <p class="text-white font-bold text-lg mb-1" id="lowTypeName">-</p>
-                        <p class="text-2xl font-bold text-amber-400" id="lowTypeValue">-</p>
-                        <span class="text-xs text-muted">entri data</span>
-                    </div>
+                    <span class="text-xs font-semibold text-red-400 uppercase tracking-wide">OPD Terendah Update</span>
                 </div>
+                <p class="font-display text-lg font-bold text-white mb-1" id="bottomOPDName">-</p>
+                <p class="text-sm text-[var(--muted)]"><span id="bottomOPDValue">0</span> data diperbarui</p>
             </div>
-        </section>
 
-        <!-- Chart Section -->
-        <section class="grid lg:grid-cols-2 gap-6 mb-8">
-            <div class="stat-card rounded-2xl p-6 animate-fade-up" style="animation-delay: 0.5s">
-                <h3 class="text-lg font-semibold text-white mb-4">Distribusi Data per Jenis</h3>
-                <div class="chart-container">
-                    <canvas id="dataTypeChart"></canvas>
+            <!-- Jenis Data Terbanyak -->
+            <div class="highlight-card best glass-card rounded-xl p-5 animate-in stagger-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    <span class="text-xs font-semibold text-green-400 uppercase tracking-wide">Jenis Data Terbanyak</span>
                 </div>
+                <p class="font-display text-lg font-bold text-white mb-1" id="topTypeName">-</p>
+                <p class="text-sm text-[var(--muted)]"><span id="topTypeValue">0</span> pembaruan</p>
             </div>
-            <div class="stat-card rounded-2xl p-6 animate-fade-up" style="animation-delay: 0.6s">
-                <h3 class="text-lg font-semibold text-white mb-4">Top 10 OPD dengan Data Terbanyak</h3>
+
+            <!-- Jenis Data Terendah -->
+            <div class="highlight-card worst glass-card rounded-xl p-5 animate-in stagger-5">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
+                    </svg>
+                    <span class="text-xs font-semibold text-red-400 uppercase tracking-wide">Jenis Data Terendah</span>
+                </div>
+                <p class="font-display text-lg font-bold text-white mb-1" id="bottomTypeName">-</p>
+                <p class="text-sm text-[var(--muted)]"><span id="bottomTypeValue">0</span> pembaruan</p>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- OPD Chart -->
+            <div class="glass-card rounded-xl p-6 animate-in stagger-3">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="font-display font-semibold text-lg text-white">Distribusi Data per OPD</h3>
+                    <span class="text-xs text-[var(--muted)]" id="chartMonthLabel">-</span>
+                </div>
                 <div class="chart-container">
                     <canvas id="opdChart"></canvas>
                 </div>
             </div>
-        </section>
+
+            <!-- Data Type Chart -->
+            <div class="glass-card rounded-xl p-6 animate-in stagger-4">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="font-display font-semibold text-lg text-white">Perbandingan Jenis Data</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="typeChart"></canvas>
+                </div>
+            </div>
+        </div>
 
         <!-- Data Table -->
-        <section class="stat-card rounded-2xl overflow-hidden animate-fade-up" style="animation-delay: 0.7s">
-            <div class="p-6 border-b border-white/5">
-                <div class="flex flex-wrap items-center justify-between gap-4">
-                    <h3 class="text-lg font-semibold text-white">Detail Data per OPD</h3>
-                    <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Cari OPD..." 
-                               class="bg-surface text-white px-4 py-2 pl-10 rounded-lg border border-white/10 focus:outline-none focus:border-accent text-sm w-full md:w-64">
-                        <svg class="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
+        <div class="glass-card rounded-xl overflow-hidden animate-in stagger-5">
+            <div class="p-6 border-b border-[var(--border)]">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h3 class="font-display font-semibold text-lg text-white">Detail Data per OPD</h3>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <input type="text" id="searchInput" placeholder="Cari OPD..." class="bg-[var(--glass)] border border-[var(--border)] rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)] w-full sm:w-64">
+                            <svg class="w-4 h-4 text-[var(--muted)] absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="table-container overflow-x-auto max-h-[500px] overflow-y-auto">
-                <table class="w-full">
-                    <thead class="bg-secondary/50 sticky top-0">
+            <div class="overflow-x-auto scrollbar-thin">
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-accent uppercase tracking-wider">No</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-accent uppercase tracking-wider">Nama OPD</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">AK</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">CPNS/PNS</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">R. Keluarga</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">Data Pribadi</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">Diklat</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">Jabatan</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">Pendidikan</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-accent uppercase tracking-wider">Total</th>
+                            <th class="sticky left-0 bg-[rgba(201,162,39,0.2)] z-10">No</th>
+                            <th class="sticky left-12 bg-[rgba(201,162,39,0.2)] z-10 min-w-[200px]">Nama OPD</th>
+                            <th>AK</th>
+                            <th>CPNS/PNS</th>
+                            <th>R. Keluarga</th>
+                            <th>Data Pribadi</th>
+                            <th>Diklat</th>
+                            <th>Jabatan</th>
+                            <th>Pendidikan</th>
+                            <th>Total</th>
                         </tr>
                     </thead>
-                    <tbody id="dataTableBody" class="divide-y divide-white/5">
-                        <!-- Data will be populated here -->
+                    <tbody id="dataTableBody">
+                        <!-- Data will be rendered here -->
                     </tbody>
                 </table>
             </div>
-        </section>
+        </div>
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-white/5 mt-12">
-        <div class="max-w-7xl mx-auto px-4 py-6 text-center">
-            <p class="text-muted text-sm">
-                Dashboard Statistik Peremajaan Data ASN &copy; <span id="footerYear"></span> - 
-                <span class="text-accent">BKPSDM Kabupaten Bangkalan</span>
-            </p>
+    <footer class="border-t border-[var(--border)] mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-[var(--muted)]">Dashboard Peremajaan Data BKPSDM Bangkalan 2025</p>
+                <p class="text-xs text-[var(--muted)]">Data bersumber dari Google Spreadsheet</p>
+            </div>
         </div>
     </footer>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-secondary/90 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div class="text-center">
-            <div class="w-16 h-16 border-4 border-accent/30 border-t-accent rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="text-white font-medium">Memuat data dari spreadsheet...</p>
-        </div>
-    </div>
-
     <script>
         // ===== CONFIGURATION =====
-        // GANTI DENGAN URL GOOGLE SHEET ANDA (CSV format)
-        const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTDoVbNFVhZKiygXm4xySnEK40_Arrp7bixwgEevhqaO4p3f2lm_-piuSkekYOrJVErhfmvcXJ6iFZ5/pub?gid=0&single=true&output=csv';
+        const SPREADSHEET_URL = 'YOUR_GOOGLE_SHEETS_CSV_URL_HERE';
         
-        // Contoh data untuk demo jika tidak ada koneksi spreadsheet
-        const DEMO_DATA = [
-            { bulan: 'Januari', opd: 'Dinas Pendidikan', ak: 245, cpns: 180, keluarga: 220, pribadi: 245, diklat: 150, jabatan: 200, pendidikan: 190 },
-            { bulan: 'Januari', opd: 'Dinas Kesehatan', ak: 189, cpns: 156, keluarga: 175, pribadi: 189, diklat: 120, jabatan: 165, pendidikan: 145 },
-            { bulan: 'Januari', opd: 'Dinas PUPR', ak: 134, cpns: 98, keluarga: 120, pribadi: 134, diklat: 85, jabatan: 110, pendidikan: 95 },
-            { bulan: 'Januari', opd: 'Dinas Perhubungan', ak: 78, cpns: 65, keluarga: 72, pribadi: 78, diklat: 45, jabatan: 68, pendidikan: 58 },
-            { bulan: 'Januari', opd: 'Badan Keuangan', ak: 56, cpns: 45, keluarga: 52, pribadi: 56, diklat: 38, jabatan: 48, pendidikan: 42 },
-            { bulan: 'Januari', opd: 'Badan Kesbangpol', ak: 34, cpns: 28, keluarga: 32, pribadi: 34, diklat: 22, jabatan: 30, pendidikan: 26 },
-            { bulan: 'Februari', opd: 'Dinas Pendidikan', ak: 260, cpns: 195, keluarga: 235, pribadi: 260, diklat: 165, jabatan: 215, pendidikan: 205 },
-            { bulan: 'Februari', opd: 'Dinas Kesehatan', ak: 200, cpns: 170, keluarga: 190, pribadi: 200, diklat: 135, jabatan: 180, pendidikan: 160 },
-            { bulan: 'Februari', opd: 'Dinas PUPR', ak: 145, cpns: 110, keluarga: 135, pribadi: 145, diklat: 95, jabatan: 125, pendidikan: 108 },
-            { bulan: 'Februari', opd: 'Dinas Perhubungan', ak: 85, cpns: 72, keluarga: 80, pribadi: 85, diklat: 52, jabatan: 75, pendidikan: 65 },
-            { bulan: 'Februari', opd: 'Sekretariat Daerah', ak: 112, cpns: 95, keluarga: 105, pribadi: 112, diklat: 78, jabatan: 98, pendidikan: 88 },
-            { bulan: 'Februari', opd: 'Inspektorat', ak: 45, cpns: 38, keluarga: 42, pribadi: 45, diklat: 30, jabatan: 40, pendidikan: 35 },
-            { bulan: 'Maret', opd: 'Dinas Pendidikan', ak: 275, cpns: 210, keluarga: 250, pribadi: 275, diklat: 180, jabatan: 230, pendidikan: 220 },
-            { bulan: 'Maret', opd: 'Dinas Kesehatan', ak: 215, cpns: 185, keluarga: 205, pribadi: 215, diklat: 150, jabatan: 195, pendidikan: 175 },
-            { bulan: 'Maret', opd: 'Dinas PUPR', ak: 158, cpns: 125, keluarga: 148, pribadi: 158, diklat: 108, jabatan: 138, pendidikan: 122 },
-            { bulan: 'Maret', opd: 'Dinas Perumahan', ak: 68, cpns: 55, keluarga: 62, pribadi: 68, diklat: 42, jabatan: 58, pendidikan: 50 },
-            { bulan: 'Maret', opd: 'Badan Penanggulangan Bencana', ak: 52, cpns: 42, keluarga: 48, pribadi: 52, diklat: 35, jabatan: 45, pendidikan: 40 },
-            { bulan: 'Maret', opd: 'Badan Perpustakaan', ak: 28, cpns: 22, keluarga: 25, pribadi: 28, diklat: 18, jabatan: 24, pendidikan: 21 }
+        // Data categories
+        const DATA_CATEGORIES = ['AK', 'CPNS/PNS', 'R_KELUARGA', 'DATA_PRIBADI', 'DIKLAT', 'JABATAN', 'PENDIDIKAN'];
+        const CATEGORY_LABELS = {
+            'AK': 'Angka Kredit',
+            'CPNS/PNS': 'CPNS/PNS',
+            'R_KELUARGA': 'Riwayat Keluarga',
+            'DATA_PRIBADI': 'Data Pribadi',
+            'DIKLAT': 'Diklat',
+            'JABATAN': 'Jabatan',
+            'PENDIDIKAN': 'Pendidikan'
+        };
+
+        const MONTHS = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
         ];
 
-        // ===== GLOBAL VARIABLES =====
-        let rawData = [];
-        let filteredData = [];
-        let currentMonth = 'all';
-        let dataTypeChart = null;
+        // ===== SAMPLE DATA (Replace with Google Sheets data) =====
+        const sampleData = {
+            '2025': {
+                'Januari': [
+                    { OPD: 'Dinas Pendidikan', AK: 245, CPNS_PNS: 89, R_KELUARGA: 156, DATA_PRIBADI: 245, DIKLAT: 78, JABATAN: 45, PENDIDIKAN: 34 },
+                    { OPD: 'Dinas Kesehatan', AK: 312, CPNS_PNS: 124, R_KELUARGA: 198, DATA_PRIBADI: 312, DIKLAT: 95, JABATAN: 67, PENDIDIKAN: 45 },
+                    { OPD: 'Dinas PUPR', AK: 178, CPNS_PNS: 56, R_KELUARGA: 89, DATA_PRIBADI: 178, DIKLAT: 45, JABATAN: 34, PENDIDIKAN: 23 },
+                    { OPD: 'Dinas Perumahan', AK: 134, CPNS_PNS: 45, R_KELUARGA: 67, DATA_PRIBADI: 134, DIKLAT: 34, JABATAN: 23, PENDIDIKAN: 18 },
+                    { OPD: 'Dinas Sosial', AK: 98, CPNS_PNS: 34, R_KELUARGA: 56, DATA_PRIBADI: 98, DIKLAT: 23, JABATAN: 15, PENDIDIKAN: 12 },
+                    { OPD: 'Dinas Tenaga Kerja', AK: 156, CPNS_PNS: 67, R_KELUARGA: 89, DATA_PRIBADI: 156, DIKLAT: 45, JABATAN: 28, PENDIDIKAN: 19 },
+                    { OPD: 'Dinas Perdagangan', AK: 89, CPNS_PNS: 28, R_KELUARGA: 45, DATA_PRIBADI: 89, DIKLAT: 19, JABATAN: 12, PENDIDIKAN: 8 },
+                    { OPD: 'Dinas Perikanan', AK: 167, CPNS_PNS: 56, R_KELUARGA: 78, DATA_PRIBADI: 167, DIKLAT: 56, JABATAN: 34, PENDIDIKAN: 23 },
+                    { OPD: 'Dinas Pertanian', AK: 234, CPNS_PNS: 78, R_KELUARGA: 123, DATA_PRIBADI: 234, DIKLAT: 67, JABATAN: 45, PENDIDIKAN: 34 },
+                    { OPD: 'Dinas Lingkungan Hidup', AK: 145, CPNS_PNS: 45, R_KELUARGA: 67, DATA_PRIBADI: 145, DIKLAT: 34, JABATAN: 23, PENDIDIKAN: 15 },
+                    { OPD: 'Badan Pendapatan Daerah', AK: 189, CPNS_PNS: 67, R_KELUARGA: 98, DATA_PRIBADI: 189, DIKLAT: 56, JABATAN: 34, PENDIDIKAN: 23 },
+                    { OPD: 'Badan Kesatuan Bangsa', AK: 78, CPNS_PNS: 23, R_KELUARGA: 34, DATA_PRIBADI: 78, DIKLAT: 12, JABATAN: 8, PENDIDIKAN: 6 },
+                    { OPD: 'Sekretariat Daerah', AK: 267, CPNS_PNS: 89, R_KELUARGA: 145, DATA_PRIBADI: 267, DIKLAT: 78, JABATAN: 56, PENDIDIKAN: 38 },
+                    { OPD: 'Inspektorat', AK: 112, CPNS_PNS: 34, R_KELUARGA: 56, DATA_PRIBADI: 112, DIKLAT: 23, JABATAN: 15, PENDIDIKAN: 11 },
+                    { OPD: 'Badan Perencanaan Pembangunan', AK: 145, CPNS_PNS: 45, R_KELUARGA: 78, DATA_PRIBADI: 145, DIKLAT: 34, JABATAN: 23, PENDIDIKAN: 15 }
+                ],
+                'Februari': [
+                    { OPD: 'Dinas Pendidikan', AK: 267, CPNS_PNS: 98, R_KELUARGA: 167, DATA_PRIBADI: 267, DIKLAT: 89, JABATAN: 52, PENDIDIKAN: 38 },
+                    { OPD: 'Dinas Kesehatan', AK: 334, CPNS_PNS: 134, R_KELUARGA: 212, DATA_PRIBADI: 334, DIKLAT: 102, JABATAN: 72, PENDIDIKAN: 48 },
+                    { OPD: 'Dinas PUPR', AK: 189, CPNS_PNS: 62, R_KELUARGA: 98, DATA_PRIBADI: 189, DIKLAT: 52, JABATAN: 38, PENDIDIKAN: 26 },
+                    { OPD: 'Dinas Perumahan', AK: 145, CPNS_PNS: 48, R_KELUARGA: 72, DATA_PRIBADI: 145, DIKLAT: 38, JABATAN: 26, PENDIDIKAN: 20 },
+                    { OPD: 'Dinas Sosial', AK: 108, CPNS_PNS: 38, R_KELUARGA: 62, DATA_PRIBADI: 108, DIKLAT: 26, JABATAN: 18, PENDIDIKAN: 14 },
+                    { OPD: 'Dinas Tenaga Kerja', AK: 167, CPNS_PNS: 72, R_KELUARGA: 98, DATA_PRIBADI: 167, DIKLAT: 52, JABATAN: 32, PENDIDIKAN: 22 },
+                    { OPD: 'Dinas Perdagangan', AK: 98, CPNS_PNS: 32, R_KELUARGA: 52, DATA_PRIBADI: 98, DIKLAT: 22, JABATAN: 14, PENDIDIKAN: 10 },
+                    { OPD: 'Dinas Perikanan', AK: 178, CPNS_PNS: 62, R_KELUARGA: 86, DATA_PRIBADI: 178, DIKLAT: 62, JABATAN: 38, PENDIDIKAN: 26 },
+                    { OPD: 'Dinas Pertanian', AK: 256, CPNS_PNS: 86, R_KELUARGA: 134, DATA_PRIBADI: 256, DIKLAT: 72, JABATAN: 52, PENDIDIKAN: 38 },
+                    { OPD: 'Dinas Lingkungan Hidup', AK: 156, CPNS_PNS: 52, R_KELUARGA: 72, DATA_PRIBADI: 156, DIKLAT: 38, JABATAN: 26, PENDIDIKAN: 18 },
+                    { OPD: 'Badan Pendapatan Daerah', AK: 198, CPNS_PNS: 72, R_KELUARGA: 108, DATA_PRIBADI: 198, DIKLAT: 62, JABATAN: 38, PENDIDIKAN: 26 },
+                    { OPD: 'Badan Kesatuan Bangsa', AK: 86, CPNS_PNS: 26, R_KELUARGA: 38, DATA_PRIBADI: 86, DIKLAT: 14, JABATAN: 10, PENDIDIKAN: 8 },
+                    { OPD: 'Sekretariat Daerah', AK: 289, CPNS_PNS: 98, R_KELUARGA: 156, DATA_PRIBADI: 289, DIKLAT: 86, JABATAN: 62, PENDIDIKAN: 42 },
+                    { OPD: 'Inspektorat', AK: 124, CPNS_PNS: 38, R_KELUARGA: 62, DATA_PRIBADI: 124, DIKLAT: 26, JABATAN: 18, PENDIDIKAN: 14 },
+                    { OPD: 'Badan Perencanaan Pembangunan', AK: 156, CPNS_PNS: 52, R_KELUARGA: 86, DATA_PRIBADI: 156, DIKLAT: 38, JABATAN: 26, PENDIDIKAN: 18 }
+                ]
+            }
+        };
+
+        // ===== STATE =====
+        let currentYear = '2025';
+        let currentMonth = 'Januari';
+        let allData = {};
         let opdChart = null;
+        let typeChart = null;
 
-        // ===== INITIALIZATION =====
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set current year
-            const year = new Date().getFullYear();
-            document.getElementById('currentYear').textContent = year;
-            document.getElementById('footerYear').textContent = year;
-
-            // Initialize month filter
-            initMonthFilter();
-
-            // Load data
-            loadData();
-
-            // Event listeners
-            document.getElementById('monthFilter').addEventListener('change', handleMonthChange);
-            document.getElementById('searchInput').addEventListener('input', handleSearch);
+        // ===== INITIALIZE =====
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeData();
+            renderMonthSelector();
+            updateDashboard();
         });
 
-        // ===== FUNCTIONS =====
-        function initMonthFilter() {
-            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
-                           'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            const select = document.getElementById('monthFilter');
+        function initializeData() {
+            // Load from sample data or fetch from Google Sheets
+            allData = sampleData;
             
-            months.forEach(month => {
-                const option = document.createElement('option');
-                option.value = month;
-                option.textContent = month;
-                select.appendChild(option);
-            });
+            // If you have a Google Sheets URL, uncomment and use this:
+            // fetchGoogleSheetsData();
         }
 
-        async function loadData() {
-            showLoading(true);
-            
+        async function fetchGoogleSheetsData() {
             try {
-                // Try to fetch from Google Spreadsheet
-                // Note: For production, replace DEMO_DATA with actual fetch
-                 const response = await fetch(SPREADSHEET_URL);
-                 const csvText = await response.text();
-                 rawData = parseCSV(csvText);
-                
-                // Using demo data for now
-                //await new Promise(resolve => setTimeout(resolve, 1000));
-                //rawData = DEMO_DATA;
-                
-                // Process data
-                processAndDisplayData();
-                
+                const response = await fetch(SPREADSHEET_URL);
+                const csvText = await response.text();
+                allData = parseCSV(csvText);
+                updateDashboard();
             } catch (error) {
-                console.error('Error loading data:', error);
-                // Fallback to demo data
-                //rawData = DEMO_DATA;
-                processAndDisplayData();
+                console.error('Error fetching data:', error);
+                // Fall back to sample data
+                allData = sampleData;
             }
-            
-            showLoading(false);
         }
 
         function parseCSV(csvText) {
+            // Parse CSV and convert to our data structure
             const lines = csvText.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-            const data = [];
+            const headers = lines[0].split(',');
+            const data = {};
             
             for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
                 const values = lines[i].split(',');
-                const row = {};
-                
-                headers.forEach((header, index) => {
-                    row[header] = values[index] ? values[index].trim() : '';
-                });
-                
-                // Map CSV columns to our format
-                data.push({
-                    bulan: row.bulan || '',
-                    opd: row.opd || row.nama_opd || '',
-                    ak: parseInt(row.ak) || 0,
-                    cpns: parseInt(row.cpns || row['cpns/pns']) || 0,
-                    keluarga: parseInt(row.keluarga || row.r_keluarga) || 0,
-                    pribadi: parseInt(row.pribadi || row.data_pribadi) || 0,
-                    diklat: parseInt(row.diklat) || 0,
-                    jabatan: parseInt(row.jabatan) || 0,
-                    pendidikan: parseInt(row.pendidikan) || 0
-                });
+                if (values.length >= headers.length) {
+                    const year = values[0];
+                    const month = values[1];
+                    
+                    if (!data[year]) data[year] = {};
+                    if (!data[year][month]) data[year][month] = [];
+                    
+                    data[year][month].push({
+                        OPD: values[2],
+                        AK: parseInt(values[3]) || 0,
+                        CPNS_PNS: parseInt(values[4]) || 0,
+                        R_KELUARGA: parseInt(values[5]) || 0,
+                        DATA_PRIBADI: parseInt(values[6]) || 0,
+                        DIKLAT: parseInt(values[7]) || 0,
+                        JABATAN: parseInt(values[8]) || 0,
+                        PENDIDIKAN: parseInt(values[9]) || 0
+                    });
+                }
             }
             
             return data;
         }
 
-        function processAndDisplayData() {
-            // Apply month filter
-            filterData();
+        function renderMonthSelector() {
+            const container = document.getElementById('monthSelector');
+            container.innerHTML = '';
             
-            // Update all displays
-            updateStats();
-            updateHighlights();
-            updateTable();
-            updateCharts();
-        }
-
-        function filterData() {
-            if (currentMonth === 'all') {
-                // Aggregate by OPD across all months
-                const opdMap = new Map();
-                
-                rawData.forEach(row => {
-                    if (!opdMap.has(row.opd)) {
-                        opdMap.set(row.opd, {
-                            opd: row.opd,
-                            ak: 0, cpns: 0, keluarga: 0, pribadi: 0, 
-                            diklat: 0, jabatan: 0, pendidikan: 0
-                        });
-                    }
-                    const agg = opdMap.get(row.opd);
-                    agg.ak += row.ak;
-                    agg.cpns += row.cpns;
-                    agg.keluarga += row.keluarga;
-                    agg.pribadi += row.pribadi;
-                    agg.diklat += row.diklat;
-                    agg.jabatan += row.jabatan;
-                    agg.pendidikan += row.pendidikan;
-                });
-                
-                filteredData = Array.from(opdMap.values());
-            } else {
-                filteredData = rawData.filter(row => row.bulan === currentMonth);
-            }
-        }
-
-        function updateStats() {
-            const totalOPD = filteredData.length;
-            const totals = filteredData.reduce((acc, row) => {
-                acc.ak += row.ak;
-                acc.cpns += row.cpns;
-                acc.keluarga += row.keluarga;
-                acc.pribadi += row.pribadi;
-                acc.diklat += row.diklat;
-                acc.jabatan += row.jabatan;
-                acc.pendidikan += row.pendidikan;
-                return acc;
-            }, { ak: 0, cpns: 0, keluarga: 0, pribadi: 0, diklat: 0, jabatan: 0, pendidikan: 0 });
-            
-            const totalData = totals.ak + totals.cpns + totals.keluarga + totals.pribadi + 
-                             totals.diklat + totals.jabatan + totals.pendidikan;
-            const avgData = totalOPD > 0 ? Math.round(totalData / totalOPD) : 0;
-            const totalASN = totals.cpns;
-            
-            animateNumber('totalOPD', totalOPD);
-            animateNumber('totalData', totalData);
-            animateNumber('avgData', avgData);
-            animateNumber('totalASN', totalASN);
-        }
-
-        function updateHighlights() {
-            if (filteredData.length === 0) return;
-            
-            // Sort by total for OPD ranking
-            const sortedByTotal = [...filteredData].sort((a, b) => {
-                const totalA = a.ak + a.cpns + a.keluarga + a.pribadi + a.diklat + a.jabatan + a.pendidikan;
-                const totalB = b.ak + b.cpns + b.keluarga + b.pribadi + b.diklat + b.jabatan + b.pendidikan;
-                return totalB - totalA;
-            });
-            
-            // Top OPD
-            const topOPD = sortedByTotal[0];
-            const topTotal = topOPD.ak + topOPD.cpns + topOPD.keluarga + topOPD.pribadi + 
-                            topOPD.diklat + topOPD.jabatan + topOPD.pendidikan;
-            document.getElementById('topOPDName').textContent = topOPD.opd;
-            animateNumber('topOPDValue', topTotal);
-            
-            // Lowest OPD
-            const lowOPD = sortedByTotal[sortedByTotal.length - 1];
-            const lowTotal = lowOPD.ak + lowOPD.cpns + lowOPD.keluarga + lowOPD.pribadi + 
-                            lowOPD.diklat + lowOPD.jabatan + lowOPD.pendidikan;
-            document.getElementById('lowOPDName').textContent = lowOPD.opd;
-            animateNumber('lowOPDValue', lowTotal);
-            
-            // Data type totals
-            const typeTotals = {
-                'AK': filteredData.reduce((sum, r) => sum + r.ak, 0),
-                'CPNS/PNS': filteredData.reduce((sum, r) => sum + r.cpns, 0),
-                'R. Keluarga': filteredData.reduce((sum, r) => sum + r.keluarga, 0),
-                'Data Pribadi': filteredData.reduce((sum, r) => sum + r.pribadi, 0),
-                'Diklat': filteredData.reduce((sum, r) => sum + r.diklat, 0),
-                'Jabatan': filteredData.reduce((sum, r) => sum + r.jabatan, 0),
-                'Pendidikan': filteredData.reduce((sum, r) => sum + r.pendidikan, 0)
-            };
-            
-            const sortedTypes = Object.entries(typeTotals).sort((a, b) => b[1] - a[1]);
-            
-            document.getElementById('topTypeName').textContent = sortedTypes[0][0];
-            animateNumber('topTypeValue', sortedTypes[0][1]);
-            
-            document.getElementById('lowTypeName').textContent = sortedTypes[sortedTypes.length - 1][0];
-            animateNumber('lowTypeValue', sortedTypes[sortedTypes.length - 1][1]);
-        }
-
-        function updateTable() {
-            const tbody = document.getElementById('dataTableBody');
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            const displayData = filteredData.filter(row => 
-                row.opd.toLowerCase().includes(searchTerm)
-            ).sort((a, b) => {
-                const totalA = a.ak + a.cpns + a.keluarga + a.pribadi + a.diklat + a.jabatan + a.pendidikan;
-                const totalB = b.ak + b.cpns + b.keluarga + b.pribadi + b.diklat + b.jabatan + b.pendidikan;
-                return totalB - totalA;
-            });
-            
-            tbody.innerHTML = displayData.map((row, index) => {
-                const total = row.ak + row.cpns + row.keluarga + row.pribadi + row.diklat + row.jabatan + row.pendidikan;
-                return `
-                    <tr class="data-row">
-                        <td class="px-4 py-3 text-sm text-muted">${index + 1}</td>
-                        <td class="px-4 py-3 text-sm font-medium text-white">${row.opd}</td>
-                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.ak)}</td>
-                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.cpns)}</td>
-                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.keluarga)}</td>
-                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.pribadi)}</td>
-                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.diklat)}</td>
-                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.jabatan)}</td>
-                        <td class="px-4 py-3 text-sm text-center text-muted">${formatNumber(row.pendidikan)}</td>
-                        <td class="px-4 py-3 text-sm text-center font-bold text-accent">${formatNumber(total)}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function updateCharts() {
-            // Data Type Chart
-            const typeCtx = document.getElementById('dataTypeChart').getContext('2d');
-            
-            const typeTotals = {
-                'AK': filteredData.reduce((sum, r) => sum + r.ak, 0),
-                'CPNS/PNS': filteredData.reduce((sum, r) => sum + r.cpns, 0),
-                'R. Keluarga': filteredData.reduce((sum, r) => sum + r.keluarga, 0),
-                'Data Pribadi': filteredData.reduce((sum, r) => sum + r.pribadi, 0),
-                'Diklat': filteredData.reduce((sum, r) => sum + r.diklat, 0),
-                'Jabatan': filteredData.reduce((sum, r) => sum + r.jabatan, 0),
-                'Pendidikan': filteredData.reduce((sum, r) => sum + r.pendidikan, 0)
-            };
-            
-            if (dataTypeChart) dataTypeChart.destroy();
-            
-            dataTypeChart = new Chart(typeCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(typeTotals),
-                    datasets: [{
-                        data: Object.values(typeTotals),
-                        backgroundColor: [
-                            '#8B0000',
-                            '#D4AF37',
-                            '#059669',
-                            '#3B82F6',
-                            '#8B5CF6',
-                            '#EC4899',
-                            '#F59E0B'
-                        ],
-                        borderColor: '#0a0a0f',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                color: '#94a3b8',
-                                font: { family: 'Plus Jakarta Sans', size: 11 },
-                                padding: 15
-                            }
-                        }
-                    },
-                    cutout: '60%'
-                }
-            });
-            
-            // OPD Chart
-            const opdCtx = document.getElementById('opdChart').getContext('2d');
-            
-            const sortedOPD = [...filteredData].sort((a, b) => {
-                const totalA = a.ak + a.cpns + a.keluarga + a.pribadi + a.diklat + a.jabatan + a.pendidikan;
-                const totalB = b.ak + b.cpns + b.keluarga + b.pribadi + b.diklat + b.jabatan + b.pendidikan;
-                return totalB - totalA;
-            }).slice(0, 10);
-            
-            if (opdChart) opdChart.destroy();
-            
-            opdChart = new Chart(opdCtx, {
-                type: 'bar',
-                data: {
-                    labels: sortedOPD.map(r => r.opd.length > 20 ? r.opd.substring(0, 20) + '...' : r.opd),
-                    datasets: [{
-                        label: 'Total Data',
-                        data: sortedOPD.map(r => r.ak + r.cpns + r.keluarga + r.pribadi + r.diklat + r.jabatan + r.pendidikan),
-                        backgroundColor: (context) => {
-                            const chart = context.chart;
-                            const {ctx, chartArea} = chart;
-                            if (!chartArea) return '#8B0000';
-                            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                            gradient.addColorStop(0, '#8B0000');
-                            gradient.addColorStop(1, '#D4AF37');
-                            return gradient;
-                        },
-                        borderRadius: 6,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#64748b', font: { size: 10 } }
-                        },
-                        y: {
-                            grid: { display: false },
-                            ticks: { color: '#94a3b8', font: { size: 10 } }
-                        }
-                    }
-                }
+            MONTHS.forEach((month, index) => {
+                const btn = document.createElement('button');
+                btn.className = `month-btn ${month === currentMonth ? 'active' : ''}`;
+                btn.textContent = month.substring(0, 3);
+                btn.onclick = () => selectMonth(month);
+                container.appendChild(btn);
             });
         }
 
-        function handleMonthChange(e) {
-            currentMonth = e.target.value;
-            processAndDisplayData();
+        function selectMonth(month) {
+            currentMonth = month;
+            renderMonthSelector();
+            updateDashboard();
         }
 
-        function handleSearch(e) {
-            updateTable();
+        function updateDashboard() {
+            const yearData = allData[currentYear];
+            if (!yearData) return;
+            
+            const monthData = yearData[currentMonth] || [];
+            
+            updateSummaryStats(monthData);
+            updateHighlights(monthData);
+            updateCharts(monthData);
+            updateTable(monthData);
+            
+            document.getElementById('chartMonthLabel').textContent = currentMonth + ' ' + currentYear;
+            document.getElementById('lastUpdate').textContent = `${currentMonth.substring(0, 3)} ${currentYear}`;
         }
 
-        function showLoading(show) {
-            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        function calculateTotal(item) {
+            return item.AK + item.CPNS_PNS + item.R_KELUARGA + item.DATA_PRIBADI + item.DIKLAT + item.JABATAN + item.PENDIDIKAN;
         }
 
-        function animateNumber(elementId, target) {
+        function updateSummaryStats(data) {
+            const totalOPD = data.length;
+            let grandTotal = 0;
+            
+            data.forEach(item => {
+                grandTotal += calculateTotal(item);
+            });
+            
+            const avgPerOPD = totalOPD > 0 ? Math.round(grandTotal / totalOPD) : 0;
+            
+            animateValue('totalOPD', totalOPD);
+            animateValue('totalData', grandTotal);
+            animateValue('avgData', avgPerOPD);
+        }
+
+        function animateValue(elementId, targetValue) {
             const element = document.getElementById(elementId);
-            const start = parseInt(element.textContent.replace(/\D/g, '')) || 0;
-            const duration = 1000;
+            const startValue = parseInt(element.textContent) || 0;
+            const duration = 500;
             const startTime = performance.now();
             
             function update(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                
-                // Easing function
-                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-                const current = Math.round(start + (target - start) * easeOutQuart);
-                
-                element.textContent = formatNumber(current);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const currentValue = Math.round(startValue + (targetValue - startValue) * easeProgress);
+                element.textContent = currentValue.toLocaleString('id-ID');
                 
                 if (progress < 1) {
                     requestAnimationFrame(update);
@@ -864,9 +843,229 @@
             requestAnimationFrame(update);
         }
 
-        function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        function updateHighlights(data) {
+            if (data.length === 0) return;
+            
+            // Sort by total for OPD rankings
+            const sortedOPD = [...data].sort((a, b) => calculateTotal(b) - calculateTotal(a));
+            
+            const topOPD = sortedOPD[0];
+            const bottomOPD = sortedOPD[sortedOPD.length - 1];
+            
+            document.getElementById('topOPDName').textContent = topOPD.OPD;
+            document.getElementById('topOPDValue').textContent = calculateTotal(topOPD).toLocaleString('id-ID');
+            
+            document.getElementById('bottomOPDName').textContent = bottomOPD.OPD;
+            document.getElementById('bottomOPDValue').textContent = calculateTotal(bottomOPD).toLocaleString('id-ID');
+            
+            // Calculate type totals
+            const typeTotals = {};
+            DATA_CATEGORIES.forEach(cat => {
+                typeTotals[cat] = data.reduce((sum, item) => {
+                    const key = cat.replace('/', '_');
+                    return sum + (item[key] || item[cat] || 0);
+                }, 0);
+            });
+            
+            const sortedTypes = Object.entries(typeTotals).sort((a, b) => b[1] - a[1]);
+            
+            document.getElementById('topTypeName').textContent = CATEGORY_LABELS[sortedTypes[0][0]] || sortedTypes[0][0];
+            document.getElementById('topTypeValue').textContent = sortedTypes[0][1].toLocaleString('id-ID');
+            
+            document.getElementById('bottomTypeName').textContent = CATEGORY_LABELS[sortedTypes[sortedTypes.length - 1][0]] || sortedTypes[sortedTypes.length - 1][0];
+            document.getElementById('bottomTypeValue').textContent = sortedTypes[sortedTypes.length - 1][1].toLocaleString('id-ID');
         }
+
+        function updateCharts(data) {
+            if (data.length === 0) return;
+            
+            // OPD Bar Chart
+            const opdCtx = document.getElementById('opdChart').getContext('2d');
+            
+            if (opdChart) {
+                opdChart.destroy();
+            }
+            
+            const sortedData = [...data].sort((a, b) => calculateTotal(b) - calculateTotal(a)).slice(0, 10);
+            
+            opdChart = new Chart(opdCtx, {
+                type: 'bar',
+                data: {
+                    labels: sortedData.map(d => d.OPD.length > 20 ? d.OPD.substring(0, 17) + '...' : d.OPD),
+                    datasets: [{
+                        label: 'Total Data',
+                        data: sortedData.map(d => calculateTotal(d)),
+                        backgroundColor: 'rgba(201, 162, 39, 0.6)',
+                        borderColor: 'rgba(201, 162, 39, 1)',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(10, 22, 40, 0.9)',
+                            titleColor: '#c9a227',
+                            bodyColor: '#f1f5f9',
+                            borderColor: 'rgba(201, 162, 39, 0.3)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(201, 162, 39, 0.1)'
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#f1f5f9',
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Type Doughnut Chart
+            const typeCtx = document.getElementById('typeChart').getContext('2d');
+            
+            if (typeChart) {
+                typeChart.destroy();
+            }
+            
+            const typeTotals = DATA_CATEGORIES.map(cat => {
+                return data.reduce((sum, item) => {
+                    const key = cat.replace('/', '_');
+                    return sum + (item[key] || item[cat] || 0);
+                }, 0);
+            });
+            
+            const colors = [
+                '#c9a227',
+                '#e63946',
+                '#22c55e',
+                '#3b82f6',
+                '#f59e0b',
+                '#8b5cf6',
+                '#06b6d4'
+            ];
+            
+            typeChart = new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: DATA_CATEGORIES.map(cat => CATEGORY_LABELS[cat] || cat),
+                    datasets: [{
+                        data: typeTotals,
+                        backgroundColor: colors,
+                        borderColor: '#0a1628',
+                        borderWidth: 3,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#f1f5f9',
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(10, 22, 40, 0.9)',
+                            titleColor: '#c9a227',
+                            bodyColor: '#f1f5f9',
+                            borderColor: 'rgba(201, 162, 39, 0.3)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTable(data) {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            
+            const sortedData = [...data].sort((a, b) => calculateTotal(b) - calculateTotal(a));
+            const maxTotal = sortedData.length > 0 ? calculateTotal(sortedData[0]) : 1;
+            
+            sortedData.forEach((item, index) => {
+                const total = calculateTotal(item);
+                const percentage = (total / maxTotal * 100).toFixed(1);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="sticky left-0 bg-[rgba(10,22,40,0.95)] font-medium">${index + 1}</td>
+                    <td class="sticky left-12 bg-[rgba(10,22,40,0.95)] font-medium text-[var(--accent)]">${item.OPD}</td>
+                    <td>${item.AK.toLocaleString('id-ID')}</td>
+                    <td>${item.CPNS_PNS.toLocaleString('id-ID')}</td>
+                    <td>${item.R_KELUARGA.toLocaleString('id-ID')}</td>
+                    <td>${item.DATA_PRIBADI.toLocaleString('id-ID')}</td>
+                    <td>${item.DIKLAT.toLocaleString('id-ID')}</td>
+                    <td>${item.JABATAN.toLocaleString('id-ID')}</td>
+                    <td>${item.PENDIDIKAN.toLocaleString('id-ID')}</td>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <span class="font-semibold text-white">${total.toLocaleString('id-ID')}</span>
+                            <div class="progress-bar w-20 hidden sm:block">
+                                <div class="progress-fill bg-gradient-to-r from-[var(--accent)] to-[var(--accent-red)]" style="width: ${percentage}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#dataTableBody tr');
+            
+            rows.forEach(row => {
+                const opdName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                if (opdName.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+
+        // Year selector
+        document.getElementById('yearSelect').addEventListener('change', (e) => {
+            currentYear = e.target.value;
+            updateDashboard();
+        });
     </script>
 </body>
 </html>
