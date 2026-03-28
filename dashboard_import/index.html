@@ -903,3 +903,97 @@
                 data: {
                     labels: ['Selesai', 'Proses', 'Antrian'],
                     datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(16, 185, 129, 0.9)', 'rgba(59, 130, 246, 0.9)', 'rgba(245, 158, 11, 0.9)
+                '], borderWidth: 2, hoverOffset: 10 }]
+},
+options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: 'rgba(148,163,184,0.8)', padding: 20, usePointStyle: true } } } }
+});
+}
+
+function updateCharts() {
+const monthlyTotals = []; const monthlySelesai = [];
+for (let month = 0; month < 12; month++) {
+const mData = serviceData.filter(d => d.tanggal.getMonth() === month && d.tanggal.getFullYear() === currentYear);
+monthlyTotals.push(mData.length);
+monthlySelesai.push(mData.filter(d => d.status === 'Selesai').length);
+}
+monthlyChart.data.datasets[0].data = monthlyTotals;
+monthlyChart.data.datasets[1].data = monthlySelesai;
+monthlyChart.update('none');
+
+const monthData = serviceData.filter(d => d.tanggal.getMonth() === selectedMonth && d.tanggal.getFullYear() === currentYear);
+statusChart.data.datasets[0].data = [monthData.filter(d => d.status === 'Selesai').length, monthData.filter(d => d.status === 'Proses').length, monthData.filter(d => d.status === 'Antrian').length];
+statusChart.update('none');
+}
+
+// Table & Pagination
+function renderTable() {
+const tbody = document.getElementById('dataTableBody');
+if (!filteredData.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8">Tidak ada data</td></tr>'; return; }
+const start = (currentPage - 1) * rowsPerPage;
+const pageData = filteredData.slice(start, start + rowsPerPage);
+tbody.innerHTML = pageData.map((row, i) => `
+<tr class="animate-slide" style="animation-delay: ${i * 0.03}s">
+<td class="font-medium text-[var(--fg-primary)]">${start + i + 1}</td>
+<td>${row.tanggalStr}</td>
+<td class="text-[var(--fg-primary)]">${row.pemohon}</td>
+<td>${row.unitKerja}</td>
+<td>${row.jenis}</td>
+<td class="text-[var(--accent-gold)]">${row.pic}</td>
+<td><span class="badge badge-${row.status.toLowerCase()}"><span class="w-2 h-2 rounded-full bg-current"></span>${row.status}</span></td>
+</tr>
+`).join('');
+}
+
+function renderPagination() {
+const container = document.getElementById('paginationContainer');
+const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
+document.getElementById('currentPageDisplay').textContent = currentPage;
+document.getElementById('totalPagesDisplay').textContent = totalPages;
+let html = `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+</button>`;
+let startPage = Math.max(1, currentPage - 2);
+let endPage = Math.min(totalPages, startPage + 4);
+if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+if (startPage > 1) html += `<button class="pagination-btn" onclick="goToPage(1)">1</button>${startPage > 2 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}`;
+for (let i = startPage; i <= endPage; i++) html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+if (endPage < totalPages) html += `${endPage < totalPages - 1 ? '<span class="px-2 text-[var(--fg-muted)]">...</span>' : ''}<button class="pagination-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+</button>`;
+container.innerHTML = html;
+}
+
+function goToPage(page) {
+const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
+if (page < 1 || page > totalPages) return;
+currentPage = page;
+renderTable(); renderPagination();
+document.querySelector('.chart-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function handleSearch(e) {
+const query = e.target.value.toLowerCase();
+let base = serviceData.filter(d => (filterYear === 'all' || d.tanggal.getFullYear().toString() === filterYear) && (filterMonth === 'all' || d.tanggal.getMonth().toString() === filterMonth) && (filterDay === 'all' || d.tanggal.getDate().toString() === filterDay));
+filteredData = query ? base.filter(d => d.pemohon.toLowerCase().includes(query) || d.jenis.toLowerCase().includes(query) || d.status.toLowerCase().includes(query) || d.unitKerja.toLowerCase().includes(query) || d.pic.toLowerCase().includes(query)) : base;
+currentPage = 1; renderTable(); renderPagination(); updateDataCounts();
+}
+
+// Utils
+function animateNumber(id, target) {
+const el = document.getElementById(id); const start = parseInt(el.textContent) || 0; const dur = 1000; const sTime = performance.now();
+function upd(t) { const p = Math.min((t - sTime) / dur, 1); el.textContent = Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3))).toLocaleString('id-ID'); if (p < 1) requestAnimationFrame(upd); }
+requestAnimationFrame(upd);
+}
+function formatDate(d) { return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }); }
+function showNotification(msg, type) {
+const n = document.createElement('div');
+n.className = `fixed top-4 right-4 px-6 py-3 rounded-lg z-50 animate-in ${type === 'success' ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-red)]'}`;
+n.style.color = 'white'; n.innerHTML = `<div class="flex items-center gap-2"><span class="font-medium">${msg}</span></div>`;
+document.body.appendChild(n);
+setTimeout(() => { n.style.opacity = '0'; n.style.transform = 'translateY(-10px)'; n.style.transition = 'all 0.3s'; setTimeout(() => n.remove(), 300); }, 3000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script></body>
+</html>
