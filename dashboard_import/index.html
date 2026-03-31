@@ -3,458 +3,427 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Statistik Pelayanan - BKPSDM Bangkalan</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <title>Login System - GAS Backend</title>
     <style>
         :root {
-            --bg-primary: #0a1628; --bg-secondary: #0f2137; --bg-card: #142a45;
-            --fg-primary: #f1f5f9; --fg-secondary: #94a3b8; --fg-muted: #64748b;
-            --accent-gold: #d4a846; --accent-gold-light: #f0c654;
-            --accent-blue: #3b82f6; --accent-cyan: #06b6d4;
-            --accent-green: #10b981; --accent-orange: #f59e0b; --accent-red: #ef4444;
-            --border: #1e3a5f;
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #1f2937;
+            --error-color: #ef4444;
+            --success-color: #10b981;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-primary); color: var(--fg-primary); min-height: 100vh; overflow-x: hidden; }
-        .font-display { font-family: 'Space Grotesk', sans-serif; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Container Utama */
+        .container {
+            width: 100%;
+            max-width: 400px;
+            perspective: 1000px;
+        }
+
+        /* Kartu Login & Dashboard */
+        .card {
+            background: var(--glass-bg);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Styling Form */
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Dashboard Styles */
+        .dashboard-view {
+            display: none; /* Hidden by default */
+            text-align: center;
+        }
+
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: #e0e7ff;
+            color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1rem;
+            font-weight: bold;
+        }
+
+        .user-info h2 {
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .user-info p {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .toast {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease forwards;
+            min-width: 250px;
+            border-left: 4px solid transparent;
+        }
+
+        .toast.success { border-left-color: var(--success-color); }
+        .toast.error { border-left-color: var(--error-color); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        /* Loader */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 3px solid #ffffff;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
         
-        .bg-pattern { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; background: radial-gradient(ellipse 80% 50% at 20% -20%, rgba(212, 168, 70, 0.08) 0%, transparent 50%), radial-gradient(ellipse 60% 40% at 80% 100%, rgba(59, 130, 246, 0.06) 0%, transparent 50%), linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%); }
-        .grid-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(212, 168, 70, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(212, 168, 70, 0.03) 1px, transparent 1px); background-size: 60px 60px; }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
         
-        .header { background: linear-gradient(180deg, var(--bg-card) 0%, transparent 100%); border-bottom: 1px solid var(--border); position: relative; z-index: 10; }
-        .header::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-gold), transparent); }
-
-        .stat-card { background: linear-gradient(135deg, var(--bg-card) 0%, rgba(20, 42, 69, 0.8) 100%); border: 1px solid var(--border); border-radius: 16px; position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light)); opacity: 0; transition: opacity 0.3s; }
-        .stat-card:hover { transform: translateY(-4px); border-color: rgba(212, 168, 70, 0.3); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
-        .stat-card:hover::before { opacity: 1; }
-        .stat-card.status-selesai::before { background: linear-gradient(90deg, var(--accent-green), #34d399); }
-        .stat-card.status-proses::before { background: linear-gradient(90deg, var(--accent-blue), #60a5fa); }
-        .stat-card.status-antrian::before { background: linear-gradient(90deg, var(--accent-orange), #fbbf24); }
-
-        .icon-container { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; position: relative; }
-        .icon-container::after { content: ''; position: absolute; inset: -2px; border-radius: 16px; background: inherit; opacity: 0.3; filter: blur(8px); }
-
-        .chart-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; position: relative; }
-        .chart-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent-gold), transparent); }
-
-        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; }
-        .data-table th { background: rgba(212, 168, 70, 0.1); color: var(--accent-gold); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding: 16px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
-        .data-table td { padding: 14px 16px; border-bottom: 1px solid rgba(30, 58, 95, 0.5); color: var(--fg-secondary); white-space: nowrap; }
-        .data-table tr:hover td { background: rgba(212, 168, 70, 0.03); color: var(--fg-primary); }
-
-        .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-        .badge-selesai { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
-        .badge-proses { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
-        .badge-antrian { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); }
-
-        .filter-select, .input-form { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 10px 36px 10px 14px; color: var(--fg-primary); font-size: 0.875rem; cursor: pointer; transition: all 0.3s; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; }
-        .filter-select:hover, .input-form:hover { border-color: var(--accent-gold); }
-        .filter-select:focus, .input-form:focus { outline: none; border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(212, 168, 70, 0.1); }
-
-        .pagination-btn { min-width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--fg-secondary); font-size: 0.875rem; cursor: pointer; transition: all 0.3s; }
-        .pagination-btn:hover:not(:disabled) { border-color: var(--accent-gold); color: var(--accent-gold); }
-        .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .pagination-btn.active { background: var(--accent-gold); border-color: var(--accent-gold); color: var(--bg-primary); font-weight: 600; }
-
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .animate-in { animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; opacity: 0; }
-        .animate-pulse { animation: pulse 2s infinite; }
-
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-        .btn-primary { background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-light) 100%); color: var(--bg-primary); font-weight: 700; padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer; transition: all 0.3s; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(212, 168, 70, 0.4); }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        
-        .btn-secondary { background: var(--bg-secondary); color: var(--fg-primary); font-weight: 600; padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border); cursor: pointer; transition: all 0.3s; }
-        .btn-secondary:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
-
-        .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        .month-btn { padding: 8px 16px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--fg-secondary); cursor: pointer; transition: all 0.3s; font-size: 0.875rem; }
-        .month-btn:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
-        .month-btn.active { background: var(--accent-gold); border-color: var(--accent-gold); color: var(--bg-primary); font-weight: 600; }
-
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .status-dot.connected { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
-        .status-dot.error { background: var(--accent-red); box-shadow: 0 0 8px var(--accent-red); }
-        .status-dot.loading { background: var(--accent-orange); animation: pulse 1s infinite; }
-
-        @media (max-width: 768px) { .stat-card { padding: 20px; } .header-content { flex-direction: column; gap: 16px; text-align: center; } }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
-    <div class="bg-pattern"></div>
-    <div class="grid-overlay"></div>
 
-    <div class="relative z-10 min-h-screen">
-        <!-- Header -->
-        <header class="header py-4 px-6 lg:px-12">
-            <div class="max-w-7xl mx-auto">
-                <div class="header-content flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 lg:w-20 lg:h-20 bg-white rounded-full p-1 flex items-center justify-center shadow-lg" style="box-shadow: 0 4px 20px rgba(212, 168, 70, 0.3);">
-                            <img src="https://z-cdn-media.chatglm.cn/files/26c3c8d1-efd8-4254-802a-5a59c4719227.png?auth_key=1874665779-8c0f667d2e3849baa102aac999963a10-0-b0dc042951db9c11eb9524c07f40350f" alt="Logo" class="w-full h-full object-contain">
-                        </div>
-                        <div>
-                            <h1 class="font-display text-xl lg:text-2xl font-bold text-white">BKPSDM BANGKALAN</h1>
-                            <p class="text-sm lg:text-base text-[var(--fg-muted)]">Dashboard Statistik Pelayanan</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div id="statusBar" class="hidden lg:flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border)]">
-                            <div id="statusDot" class="status-dot loading"></div>
-                            <div class="text-xs">
-                                <p id="statusText" class="font-semibold text-[var(--fg-primary)]">Menghubungkan...</p>
-                                <p id="statusTime" class="text-[var(--fg-muted)]">Sinkronisasi otomatis</p>
-                            </div>
-                        </div>
-                        <button onclick="openSettings()" class="btn-secondary text-sm flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            Pengaturan
-                        </button>
-                    </div>
+    <!-- Notification Area -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="container">
+        <!-- LOGIN CARD -->
+        <div class="card" id="loginCard">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 style="color: var(--primary-color); font-size: 1.8rem;">Selamat Datang</h1>
+                <p style="color: #6b7280;">Silakan masuk ke akun Anda</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Masukkan username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Kata Sandi</label>
+                    <input type="password" id="password" placeholder="Masukkan kata sandi" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn" id="loginBtn">
+                    <span class="btn-text">Masuk</span>
+                    <span class="spinner hidden"></span>
+                </button>
+            </form>
+            
+            <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: #9ca3af;">
+                <p>Gunakan: <strong>admin</strong> / <strong>123</strong></p>
+            </div>
+        </div>
+
+        <!-- DASHBOARD CARD -->
+        <div class="card dashboard-view" id="dashboardCard">
+            <div class="dashboard-header">
+                <div class="avatar" id="userAvatar">A</div>
+                <div class="user-info">
+                    <h2 id="displayUsername">Admin User</h2>
+                    <p id="displayRole">Administrator</p>
                 </div>
             </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="px-6 lg:px-12 py-8 max-w-7xl mx-auto">
             
-            <!-- Setup Screen -->
-            <section id="setupScreen" class="mb-8 animate-in hidden">
-                <div class="chart-container p-8 text-center">
-                    <div class="icon-container bg-gradient-to-br from-[var(--accent-gold)] to-yellow-400 mx-auto mb-6 w-20 h-20">
-                        <svg class="w-10 h-10 text-[var(--bg-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                    </div>
-                    <h3 class="font-display text-2xl font-bold mb-2">Hubungkan Database</h3>
-                    <p class="text-[var(--fg-secondary)] mb-6 max-w-md mx-auto">Masukkan URL Spreadsheet.</p>
-                    <div class="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
-                        <input type="text" id="initialUrlInput" class="input-form flex-1 pl-4" placeholder="Paste URL di sini...">
-                        <button onclick="saveInitialUrl()" class="btn-primary whitespace-nowrap">Hubungkan</button>
-                    </div>
-                    
-                    <!-- INSTRUKSI PENTING -->
-                    <div class="mt-6 text-left text-xs bg-[var(--bg-secondary)] border border-[var(--accent-orange)] p-4 rounded-lg max-w-lg mx-auto">
-                        <p class="font-bold text-[var(--accent-orange)] mb-2">Panduan Solusi "Gagal Sinkron":</p>
-                        <p class="mb-2 text-[var(--fg-secondary)]">Jika tombol "Share" sudah "Public" tapi tetap error, gunakan cara ini:</p>
-                        <ol class="list-decimal list-inside space-y-1 text-[var(--fg-muted)]">
-                            <li>Buka Spreadsheet Anda.</li>
-                            <li>Klik menu <strong>File > Bagikan > Publikasikan ke web (Publish to web)</strong>.</li>
-                            <li>Klik tombol <strong>"Publikasikan" (Publish)</strong>.</li>
-                            <li>Salin URL yang muncul (biasanya formatnya <code>/e/2PACX...</code>).</li>
-                            <li>Tempel URL tersebut di kolom input atas.</li>
-                        </ol>
-                    </div>
+            <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; text-align: left; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #4b5563;">Status Sistem</h3>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #6b7280;">
+                    <span>Database:</span>
+                    <span style="color: var(--success-color);">Terhubung (Google Sheets)</span>
                 </div>
-            </section>
-
-            <!-- Dashboard Content -->
-            <div id="dashboardContent">
-                <!-- Month Selector -->
-                <section class="mb-8 animate-in delay-1">
-                    <div class="flex flex-wrap items-center justify-between gap-2">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-sm text-[var(--fg-muted)] mr-2">Filter Bulan:</span>
-                            <div class="flex flex-wrap gap-2" id="monthSelector"></div>
-                        </div>
-                        <button onclick="forceSync()" class="btn-secondary text-xs flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            Sync
-                        </button>
-                    </div>
-                </section>
-
-                <!-- Stats Cards -->
-                <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="stat-card p-6 animate-in delay-2">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="icon-container bg-gradient-to-br from-[var(--accent-cyan)] to-cyan-400"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-                            <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Hari Ini</span>
-                        </div>
-                        <div class="stat-number text-4xl font-display font-bold mb-1" id="dailyCount">0</div>
-                        <p class="text-sm text-[var(--fg-secondary)]">Pelayanan Hari Ini</p>
-                    </div>
-
-                    <div class="stat-card p-6 animate-in delay-3">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="icon-container bg-gradient-to-br from-[var(--accent-blue)] to-blue-400"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
-                            <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Bulan Ini</span>
-                        </div>
-                        <div class="stat-number text-4xl font-display font-bold mb-1" id="monthlyCount">0</div>
-                        <p class="text-sm text-[var(--fg-secondary)]">Pelayanan Bulan <span id="currentMonthName">-</span></p>
-                        <div class="mt-4"><div class="progress-bar"><div class="progress-fill bg-gradient-to-r from-[var(--accent-blue)] to-blue-400" id="monthlyProgress" style="width: 0%"></div></div><p class="text-xs text-[var(--fg-muted)] mt-2"><span id="monthlyPercent">0</span>% target</p></div>
-                    </div>
-
-                    <div class="stat-card p-6 animate-in delay-4">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="icon-container bg-gradient-to-br from-[var(--accent-gold)] to-yellow-400"><svg class="w-6 h-6 text-[var(--bg-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
-                            <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Tahun Ini</span>
-                        </div>
-                        <div class="stat-number text-4xl font-display font-bold mb-1" id="yearlyCount">0</div>
-                        <p class="text-sm text-[var(--fg-secondary)]">Total Tahun <span id="yearDisplay">2025</span></p>
-                    </div>
-
-                    <div class="stat-card p-6 animate-in delay-5">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="icon-container bg-gradient-to-br from-purple-500 to-purple-400"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
-                            <span class="text-xs text-[var(--fg-muted)] uppercase tracking-wider">Rata-rata</span>
-                        </div>
-                        <div class="stat-number text-4xl font-display font-bold mb-1" id="avgCount">0</div>
-                        <p class="text-sm text-[var(--fg-secondary)]">Pelayanan per Hari</p>
-                    </div>
-                </section>
-
-                <!-- Status & PIC Sections -->
-                <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                     <div class="stat-card status-selesai p-6 animate-in delay-2">
-                        <div class="flex items-center gap-3 mb-2"><div class="w-10 h-10 rounded-lg bg-[var(--accent-green)] bg-opacity-20 flex items-center justify-center"><svg class="w-5 h-5 text-[var(--accent-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><p class="text-xs text-[var(--fg-muted)]">Selesai</p><p class="text-2xl font-display font-bold text-[var(--accent-green)]" id="selesaiCount">0</p></div></div>
-                        <div class="progress-bar"><div class="progress-fill bg-[var(--accent-green)]" id="selesaiProgress" style="width: 0%"></div></div>
-                    </div>
-                    <div class="stat-card status-proses p-6 animate-in delay-3">
-                        <div class="flex items-center gap-3 mb-2"><div class="w-10 h-10 rounded-lg bg-[var(--accent-blue)] bg-opacity-20 flex items-center justify-center"><svg class="w-5 h-5 text-[var(--accent-blue)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div><div><p class="text-xs text-[var(--fg-muted)]">Proses</p><p class="text-2xl font-display font-bold text-[var(--accent-blue)]" id="prosesCount">0</p></div></div>
-                        <div class="progress-bar"><div class="progress-fill bg-[var(--accent-blue)]" id="prosesProgress" style="width: 0%"></div></div>
-                    </div>
-                    <div class="stat-card status-antrian p-6 animate-in delay-4">
-                        <div class="flex items-center gap-3 mb-2"><div class="w-10 h-10 rounded-lg bg-[var(--accent-orange)] bg-opacity-20 flex items-center justify-center"><svg class="w-5 h-5 text-[var(--accent-orange)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div><div><p class="text-xs text-[var(--fg-muted)]">Antrian</p><p class="text-2xl font-display font-bold text-[var(--accent-orange)]" id="antrianCount">0</p></div></div>
-                        <div class="progress-bar"><div class="progress-fill bg-[var(--accent-orange)]" id="antrianProgress" style="width: 0%"></div></div>
-                    </div>
-                </section>
-
-                <!-- Charts & Table -->
-                <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-in delay-5">
-                    <div class="lg:col-span-1 chart-container p-6">
-                        <h3 class="font-display text-lg font-bold mb-4">Peringkat PIC</h3>
-                        <div id="picRankingList" class="space-y-2 max-h-72 overflow-y-auto pr-2"></div>
-                    </div>
-                    <div class="lg:col-span-2 chart-container p-6">
-                        <h3 class="font-display text-lg font-bold mb-4">Statistik Kinerja</h3>
-                        <div class="h-64"><canvas id="picPerformanceChart"></canvas></div>
-                    </div>
-                </section>
-
-                <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div class="chart-container p-6 animate-in delay-3"><h3 class="font-display text-lg font-bold mb-4">Trend Bulanan</h3><div class="h-64"><canvas id="monthlyChart"></canvas></div></div>
-                    <div class="chart-container p-6 animate-in delay-4"><h3 class="font-display text-lg font-bold mb-4">Distribusi Status</h3><div class="h-64"><canvas id="statusChart"></canvas></div></div>
-                </section>
-
-                <section class="chart-container overflow-hidden animate-in delay-5">
-                    <div class="p-6 border-b border-[var(--border)]">
-                        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-4">
-                            <div><h3 class="font-display text-lg font-bold">Data Pelayanan</h3><p class="text-sm text-[var(--fg-muted)]">Total <span id="totalDataCount">0</span> data</p></div>
-                            <div class="relative"><input type="text" id="searchInput" placeholder="Cari..." class="input-form w-64"><svg class="w-4 h-4 text-[var(--fg-muted)] absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-3">
-                            <select id="filterYear" class="filter-select"><option value="all">Semua Tahun</option></select>
-                            <select id="filterMonth" class="filter-select"><option value="all">Semua Bulan</option><option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option><option value="3">Apr</option><option value="4">Mei</option><option value="5">Jun</option><option value="6">Jul</option><option value="7">Agu</option><option value="8">Sep</option><option value="9">Okt</option><option value="10">Nov</option><option value="11">Des</option></select>
-                            <button id="resetFilter" class="btn-secondary text-sm">Reset</button>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>No</th><th>Tanggal</th><th>Pemohon</th><th>Unit Kerja</th><th>Jenis</th><th>PIC</th><th>Status</th></tr></thead><tbody id="dataTableBody"></tbody></table></div>
-                    <div class="p-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-4"><div class="text-sm text-[var(--fg-muted)]">Halaman <span id="currentPageDisplay">1</span> dari <span id="totalPagesDisplay">1</span></div><div class="flex items-center gap-2" id="paginationContainer"></div></div>
-                </section>
-            </div>
-        </main>
-    </div>
-
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden items-center justify-center p-4">
-        <div class="bg-[var(--bg-card)] p-6 rounded-xl border border-[var(--border)] w-full max-w-lg">
-            <h3 class="font-display text-xl font-bold mb-4">Pengaturan</h3>
-            <label class="block text-sm text-[var(--fg-muted)] mb-2">URL Google Spreadsheet</label>
-            <input type="text" id="settingsUrlInput" class="input-form w-full mb-2" placeholder="URL...">
-            <p class="text-xs text-[var(--fg-muted)] mb-4">Rekomendasi: Gunakan link dari <strong>File > Publish to web</strong>.</p>
-            
-            <div class="bg-[var(--bg-secondary)] rounded-lg p-3 mb-4 text-xs font-mono">
-                 <div class="flex justify-between"><span>Status:</span><span id="debugStatus" class="text-yellow-400">-</span></div>
-                 <div class="mt-2 text-[var(--fg-muted)] whitespace-pre-wrap overflow-auto max-h-24" id="debugLog">Menunggu aksi...</div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #6b7280; margin-top: 5px;">
+                    <span>Server:</span>
+                    <span style="color: var(--success-color);">Online</span>
+                </div>
             </div>
 
-            <div class="flex gap-3">
-                <button onclick="testConnection()" class="btn-secondary flex-1">Test</button>
-                <button onclick="saveSettings()" class="btn-primary flex-1">Simpan</button>
-            </div>
-            <button onclick="closeSettings()" class="w-full mt-3 text-center text-xs text-[var(--fg-muted)] hover:text-white">Tutup</button>
+            <button class="btn" style="background-color: #ef4444;" id="logoutBtn">
+                Keluar
+            </button>
         </div>
     </div>
 
     <script>
-        // Config
-        const STORAGE_KEY = 'bkpsdm_url_v5';
-        // PROXY to bypass CORS: https://allorigins.win/raw?url=ENCODED_URL
-        const PROXY = 'https://api.allorigins.win/raw?url=';
-        const SYNC_INTERVAL = 60000;
-        
-        // State
-        let serviceData = [], filteredData = [], syncTimer;
-        let selectedMonth = new Date().getMonth(), currentYear = new Date().getFullYear();
-        let currentPage = 1, rowsPerPage = 20;
-        let filterYear = currentYear.toString(), filterMonth = selectedMonth.toString();
-        const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        // --- KONFIGURASI URL ---
+        // GANTI URL INI DENGAN URL DEPLOYMENT APPS SCRIPT ANDA (Bagian akhir harus /exec)
+        // Contoh: 'https://script.google.com/macros/s/XXXXXX/exec'
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTrqWS_I5sIyuICEhLZyTg_h2UrPBf3LQShnIgxJLtGK337itC0rg0ev6si2PlWGRd/exec'; 
 
-        // DOM
-        const $ = id => document.getElementById(id);
+        // --- DOM ELEMENTS ---
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const btnText = document.querySelector('.btn-text');
+        const spinner = document.querySelector('.spinner');
         
-        // Init
-        function init() {
-            initCharts(); initFilters(); setupEvents();
-            const url = localStorage.getItem(STORAGE_KEY);
-            if(url) { $('dashboardContent').classList.remove('hidden'); $('setupScreen').classList.add('hidden'); $('statusBar').classList.remove('hidden'); renderMonthSelector(); updateYearDisplay(); startSync(url); }
-            else { $('setupScreen').classList.remove('hidden'); }
+        const loginCard = document.getElementById('loginCard');
+        const dashboardCard = document.getElementById('dashboardCard');
+        
+        const displayUsername = document.getElementById('displayUsername');
+        const displayRole = document.getElementById('displayRole');
+        const userAvatar = document.getElementById('userAvatar');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // --- EVENT LISTENERS ---
+        
+        // Cek apakah ada user yang tersimpan di session (opsional sederhana)
+        if(localStorage.getItem('isLoggedIn') === 'true') {
+            showDashboard(JSON.parse(localStorage.getItem('userData')));
         }
 
-        function setupEvents() {
-            $('searchInput').oninput = handleSearch;
-            $('filterYear').onchange = $('filterMonth').onchange = () => { filterYear=$('filterYear').value; filterMonth=$('filterMonth').value; currentPage=1; applyFilters(); };
-            $('resetFilter').onclick = () => { $('filterYear').value='all'; $('filterMonth').value='all'; $('searchInput').value=''; $('filterYear').onchange(); };
-        }
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
 
-        // ==========================================
-        // SYNC ENGINE (FIXED WITH PROXY)
-        // ==========================================
-        function startSync(url) { clearInterval(syncTimer); syncData(url); syncTimer = setInterval(() => syncData(url), SYNC_INTERVAL); }
+            if (!username || !password) {
+                showToast('Mohon isi semua kolom', 'error');
+                return;
+            }
 
-        async function syncData(url) {
-            setStatus('loading', 'Sync...');
-            
-            // 1. Parse ID
-            let id = null, gid='0', isPub = false;
-            if(url.includes('/d/e/')) { id = url.match(/\/d\/e\/([a-zA-Z0-9-_]+)/)?.[1]; isPub = true; }
-            else id = url.match(/\/d\/([a-zA-Z0-9-_]{25,})/)?.[1];
-            gid = url.match(/[#&]gid=(\d+)/)?.[1] || '0';
+            // Jika URL belum diganti, beri peringatan (untuk demo)
+            if (SCRIPT_URL.includes('XXXXX')) {
+                showToast('URL Script belum dikonfigurasi. Lihat source code.', 'error');
+                // Simulasi login sukses untuk demo tampilan jika user tidak mengubah URL
+                if(username === 'admin' && password === '123') {
+                     showToast('Demo Mode: Login Berhasil!', 'success');
+                     showDashboard({ user: 'admin', role: 'admin' });
+                }
+                return;
+            }
 
-            if(!id) { setStatus('error', 'URL Salah'); return; }
+            setLoading(true);
 
-            // 2. Construct Target URL
-            // We FORCE using the proxy to avoid CORS issues 100%
-            let target;
-            if(isPub) target = `https://docs.google.com/spreadsheets/d/e/${id}/pub?gid=${gid}&output=csv`;
-            else target = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`;
-
-            // 3. Fetch via Proxy
             try {
-                const proxyUrl = PROXY + encodeURIComponent(target);
-                logDebug('Fetching via Proxy...');
-                const resp = await fetch(proxyUrl);
-                const text = await resp.text();
-                
-                // 4. Validate
-                if(text.startsWith('<') || text.includes('<!DOCTYPE')) throw new Error(' Respons HTML (Login/Auth)');
-                if(text.length < 10) throw new Error('Data kosong');
+                // Kirim data ke Google Apps Script
+                const payload = {
+                    action: "login",
+                    username: username,
+                    password: password
+                };
 
-                // 5. Parse
-                const wb = XLSX.read(text, {type:'string'});
-                const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                processData(json);
-                setStatus('connected', 'Terhubung', `Last: ${new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`);
-                logDebug('Success: ' + json.length + ' rows');
-            } catch(e) {
-                console.error(e);
-                setStatus('error', 'Gagal');
-                logDebug('Error: ' + e.message);
-                showNotification('Gagal mengambil data. Cek Panduan di halaman setup.', 'error');
+                // Menggunakan mode no-cors kadang diperlukan tergantung setup GAS, 
+                // tapi untuk mendapat response JSON kita perlu CORS yang benar di GAS.
+                // Di sini kita mencoba fetch standar.
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                    // Jika mengalami masalah CORS, tambahkan mode: 'no-cors' 
+                    // tapi Anda tidak akan bisa membaca respons JSON-nya.
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showToast(result.message, 'success');
+                    // Simpan sesi sederhana
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userData', JSON.stringify(result));
+                    showDashboard(result);
+                } else {
+                    showToast(result.message, 'error');
+                    shakeCard(loginCard);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Gagal menghubungi server. Cek console.', 'error');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userData');
+            switchView(loginCard, dashboardCard);
+            document.getElementById('password').value = ''; // Reset password
+            showToast('Anda telah keluar.', 'success');
+        });
+
+        // --- FUNGSI UI ---
+
+        function showDashboard(data) {
+            displayUsername.textContent = data.user;
+            displayRole.textContent = data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : 'User';
+            userAvatar.textContent = data.user.charAt(0).toUpperCase();
+            
+            switchView(dashboardCard, loginCard);
+        }
+
+        function switchView(showEl, hideEl) {
+            hideEl.style.display = 'none';
+            showEl.style.display = 'block';
+            showEl.classList.add('fade-in');
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                loginBtn.disabled = true;
+                btnText.classList.add('hidden');
+                spinner.classList.remove('hidden');
+            } else {
+                loginBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                spinner.classList.add('hidden');
             }
         }
 
-        function setStatus(t, txt, time='') {
-            $('statusDot').className = `status-dot ${t}`;
-            $('statusText').textContent = txt;
-            $('statusTime').textContent = time;
-        }
-        function logDebug(msg) { if($('debugLog')) $('debugLog').textContent = msg; }
-
-        function processData(json) {
-            serviceData = json.map((r,i) => {
-                const c = {}; Object.keys(r).forEach(k => c[k.toLowerCase().trim()] = r[k]);
-                const t = c['tanggal']||c['date']||c['tgl']||new Date();
-                let d = new Date(t);
-                if(typeof t==='number') d = new Date((t-25569)*86400*1000);
-                return { id:i+1, tanggal:d, tanggalStr: d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}), 
-                         pemohon:c['nama pemohon']||c['pemohon']||c['nama']||'-', unit:c['unit kerja']||c['unit']||'-', 
-                         jenis:c['jenis pelayanan']||c['jenis']||'-', pic:c['pic']||c['petugas']||'-', 
-                         status: (s=>s.includes('selesai')||s.includes('done')?'Selesai':s.includes('proses')?'Proses':'Antrian')((c['status']||'proses').toString().toLowerCase()) };
-            }).sort((a,b)=>b.tanggal-a.tanggal);
-            filteredData=[...serviceData];
-            updateYearFilter(); applyFilters(); updateDash();
-        }
-
-        // Settings
-        function openSettings() { $('settingsModal').classList.remove('hidden'); $('settingsModal').classList.add('flex'); $('settingsUrlInput').value=localStorage.getItem(STORAGE_KEY)||''; logDebug('Ready'); }
-        function closeSettings() { $('settingsModal').classList.add('hidden'); }
-        function saveSettings() { localStorage.setItem(STORAGE_KEY, $('settingsUrlInput').value.trim()); closeSettings(); location.reload(); }
-        function saveInitialUrl() { localStorage.setItem(STORAGE_KEY, $('initialUrlInput').value.trim()); location.reload(); }
-        function testConnection() { syncData($('settingsUrlInput').value.trim()); }
-
-        // Dashboard
-        function updateDash() {
-            const mD = serviceData.filter(d=>d.tanggal.getMonth()===selectedMonth && d.tanggal.getFullYear()===currentYear);
-            const tD = serviceData.filter(d=>d.tanggal.toDateString()===new Date().toDateString());
-            const yD = serviceData.filter(d=>d.tanggal.getFullYear()===currentYear);
-            $('dailyCount').textContent = tD.length; $('monthlyCount').textContent = mD.length; $('yearlyCount').textContent = yD.length;
-            $('avgCount').textContent = Math.round(mD.length/(new Date(currentYear,selectedMonth+1,0).getDate()||1));
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
             
-            const s=mD.filter(d=>d.status==='Selesai').length, p=mD.filter(d=>d.status==='Proses').length, a=mD.filter(d=>d.status==='Antrian').length, t=mD.length||1;
-            $('selesaiCount').textContent=s; $('prosesCount').textContent=p; $('antrianCount').textContent=a;
-            $('selesaiProgress').style.width= Math.round(s/t*100)+'%'; $('prosesProgress').style.width=Math.round(p/t*100)+'%'; $('antrianProgress').style.width=Math.round(a/t*100)+'%';
-            $('monthlyProgress').style.width=Math.min(Math.round(mD.length/500*100),100)+'%'; $('monthlyPercent').textContent=Math.min(Math.round(mD.length/500*100),100);
-            $('currentMonthName').textContent=MONTHS[selectedMonth];
-            updateCharts(); updatePIC(mD);
-        }
-        function updateYearDisplay(){ $('currentYear').textContent=currentYear; $('yearDisplay').textContent=currentYear; }
-        function updateYearFilter(){ const y=new Set(serviceData.map(d=>d.tanggal.getFullYear())); if(!y.size)y.add(currentYear); $('filterYear').innerHTML='<option value="all">Semua</option>'+[...y].sort((a,b)=>b-a).map(v=>`<option value="${v}">${v}</option>`).join(''); }
-        
-        // Charts
-        function initCharts() {
-            const opt = {responsive:true,maintainAspectRatio:false,plugins:{legend:false},scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8'}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8'}}}};
-            $('monthlyChart') && (monthlyChart=new Chart($('monthlyChart'),{type:'bar',data:{labels:MONTHS.map(m=>m.slice(0,3)),datasets:[{data:new Array(12).fill(0),bgColor:'rgba(212,168,70,0.8)'},{data:new Array(12).fill(0),bgColor:'rgba(16,185,129,0.8)'}]},options:opt}));
-            $('statusChart') && (statusChart=new Chart($('statusChart'),{type:'doughnut',data:{labels:['Selesai','Proses','Antrian'],datasets:[{data:[0,0,0],bgColor:['rgba(16,185,129,0.9)','rgba(59,130,246,0.9)','rgba(245,158,11,0.9)'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#94a3b8'}}}}}));
-            $('picPerformanceChart') && (picChart=new Chart($('picPerformanceChart'),{type:'bar',data:{labels:[],datasets:[{data:[],bgColor:'rgba(59,130,246,0.7)'},{data:[],bgColor:'rgba(16,185,129,0.9)'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:false},scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#94a3b8'}},y:{grid:false,ticks:{color:'#f1f5f9'}}}}}));
-        }
-        function updateCharts(){
-            if(!monthlyChart)return;
-            let t=[],s=[]; for(let m=0;m<12;m++){let d=serviceData.filter(x=>x.tanggal.getMonth()===m && x.tanggal.getFullYear()===currentYear); t.push(d.length); s.push(d.filter(x=>x.status==='Selesai').length); }
-            monthlyChart.data.datasets[0].data=t; monthlyChart.data.datasets[1].data=s; monthlyChart.update('none');
-            const mD=serviceData.filter(d=>d.tanggal.getMonth()===selectedMonth && d.tanggal.getFullYear()===currentYear);
-            statusChart.data.datasets[0].data=[mD.filter(d=>d.status==='Selesai').length,mD.filter(d=>d.status==='Proses').length,mD.filter(d=>d.status==='Antrian').length]; statusChart.update('none');
-        }
-        function updatePIC(mD){
-            const st={}; mD.forEach(d=>{if(!st[d.pic])st[d.pic]={t:0,s:0}; st[d.pic].t++; if(d.status==='Selesai')st[d.pic].s++;});
-            const so=Object.keys(st).map(k=>({n:k,...st[k]})).sort((a,b)=>b.s-a.s);
-            $('picRankingList').innerHTML=so.slice(0,10).map((p,i)=>`<div class="pic-rank-item"><div class="w-8 h-8 rounded flex items-center justify-center mr-3 text-xs font-bold ${i==0?'bg-yellow-500 text-black':i==1?'bg-gray-400 text-black':i==2?'bg-orange-400 text-black':'bg-gray-700'}">${i+1}</div><div class="flex-1 text-sm">${p.n}</div><div class="text-right text-green-400 font-bold">${p.s}</div></div>`).join('');
-            if(picChart){ picChart.data.labels=so.slice(0,5).map(p=>p.n); picChart.data.datasets[0].data=so.slice(0,5).map(p=>p.t); picChart.data.datasets[1].data=so.slice(0,5).map(p=>p.s); picChart.update('none'); }
+            // Icon SVG sederhana
+            const icon = type === 'success' 
+                ? '<svg width="20" height="20" fill="none" stroke="#10b981" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>'
+                : '<svg width="20" height="20" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4m0 4h.01"></path></svg>';
+
+            toast.innerHTML = `${icon}<span>${message}</span>`;
+            
+            container.appendChild(toast);
+
+            // Hapus otomatis setelah 3 detik
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease forwards';
+                toast.addEventListener('animationend', () => {
+                    toast.remove();
+                });
+            }, 3000);
         }
 
-        // Filter & Table
-        function initFilters(){ $('filterMonth').value=selectedMonth; }
-        function applyFilters(){ 
-            filteredData=serviceData.filter(d=>(filterYear==='all'||d.tanggal.getFullYear().toString()===filterYear)&&(filterMonth==='all'||d.tanggal.getMonth().toString()===filterMonth));
-            renderTable(); renderPag(); $('totalDataCount').textContent=filteredData.length; 
+        function shakeCard(element) {
+            element.style.transform = "translateX(10px)";
+            setTimeout(() => { element.style.transform = "translateX(-10px)"; }, 100);
+            setTimeout(() => { element.style.transform = "translateX(5px)"; }, 200);
+            setTimeout(() => { element.style.transform = "translateX(0)"; }, 300);
         }
-        function handleSearch(e){ applyFilters(); const q=e.target.value.toLowerCase(); if(q) filteredData=filteredData.filter(d=>d.pemohon.toLowerCase().includes(q)||d.jenis.toLowerCase().includes(q)||d.pic.toLowerCase().includes(q)); renderTable(); renderPag(); }
-        function renderTable(){
-            const s=(currentPage-1)*rowsPerPage, rows=filteredData.slice(s,s+rowsPerPage);
-            $('dataTableBody').innerHTML=rows.length?rows.map((r,i)=>`<tr><td>${s+i+1}</td><td>${r.tanggalStr}</td><td>${r.pemohon}</td><td>${r.unitKerja}</td><td>${r.jenis}</td><td class="text-yellow-400">${r.pic}</td><td><span class="badge badge-${r.status.toLowerCase()}">${r.status}</span></td></tr>`).join(''):'<tr><td colspan="7" class="text-center py-8 text-gray-500">Tidak ada data</td></tr>';
-        }
-        function renderMonthSelector(){ $('monthSelector').innerHTML=MONTHS.map((m,i)=>`<button onclick="setM(${i})" class="month-btn ${i===selectedMonth?'active':''}">${m.slice(0,3)}</button>`).join(''); }
-        function setM(m){ selectedMonth=m; renderMonthSelector(); updateDash(); }
-        function renderPag(){
-            const t=Math.ceil(filteredData.length/rowsPerPage)||1; $('currentPageDisplay').textContent=currentPage; $('totalPagesDisplay').textContent=t;
-            $('paginationContainer').innerHTML=`<button class="pagination-btn" onclick="go(${currentPage-1})" ${currentPage===1?'disabled':''}>Prev</button>` + Array.from({length:t},(_,i)=>`<button onclick="go(${i+1})" class="pagination-btn ${i+1===currentPage?'active':''}">${i+1}</button>`).join('') + `<button class="pagination-btn" onclick="go(${currentPage+1})" ${currentPage===t?'disabled':''}>Next</button>`;
-        }
-        function go(p){ const t=Math.ceil(filteredData.length/rowsPerPage)||1; if(p<1||p>t)return; currentPage=p; renderTable(); renderPag(); }
-        function showNotification(m,t){ const n=document.createElement('div'); n.className=`fixed top-4 right-4 px-4 py-2 rounded z-50 ${t==='error'?'bg-red-500':'bg-green-500'} text-white text-sm`; n.textContent=m; document.body.appendChild(n); setTimeout(()=>n.remove(),4000); }
-
-        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
