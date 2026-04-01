@@ -3,427 +3,483 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login System - GAS Backend</title>
+    <title>Admin Dashboard - GAS</title>
     <style>
         :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --glass-bg: rgba(255, 255, 255, 0.95);
-            --text-color: #1f2937;
-            --error-color: #ef4444;
-            --success-color: #10b981;
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #94a3b8;
+            --sidebar-active: #ffffff;
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-main: #334155;
+            --danger: #ef4444;
+            --success: #10b981;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
 
-        body {
-            background: var(--bg-gradient);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+        /* --- LOGIN PAGE --- */
+        #login-page {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
-
-        /* Container Utama */
-        .container {
-            width: 100%;
-            max-width: 400px;
-            perspective: 1000px;
-        }
-
-        /* Kartu Login & Dashboard */
-        .card {
-            background: var(--glass-bg);
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Styling Form */
-        .form-group {
-            margin-bottom: 1.5rem;
-            position: relative;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #4b5563;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-            outline: none;
-        }
-
-        input:focus {
-            border-color: var(--primary-color);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .btn:disabled {
-            background-color: #9ca3af;
-            cursor: not-allowed;
-        }
-
-        /* Dashboard Styles */
-        .dashboard-view {
-            display: none; /* Hidden by default */
+        .login-card {
+            background: white; padding: 2.5rem; border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 400px;
             text-align: center;
         }
-
-        .dashboard-header {
-            margin-bottom: 2rem;
-        }
-
-        .avatar {
-            width: 80px;
-            height: 80px;
-            background: #e0e7ff;
-            color: var(--primary-color);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            margin: 0 auto 1rem;
-            font-weight: bold;
-        }
-
-        .user-info h2 {
-            color: var(--text-color);
-            margin-bottom: 0.25rem;
-        }
-
-        .user-info p {
-            color: #6b7280;
-            font-size: 0.9rem;
-        }
-
-        /* Toast Notification */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
-        .toast {
-            background: white;
-            padding: 16px 24px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideIn 0.3s ease forwards;
-            min-width: 250px;
-            border-left: 4px solid transparent;
-        }
-
-        .toast.success { border-left-color: var(--success-color); }
-        .toast.error { border-left-color: var(--error-color); }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes fadeOut {
-            to { opacity: 0; transform: translateY(-10px); }
-        }
-
-        /* Loader */
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 3px solid #ffffff;
-            border-bottom-color: transparent;
-            border-radius: 50%;
-            display: inline-block;
-            box-sizing: border-box;
-            animation: rotation 1s linear infinite;
-        }
-
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .hidden {
-            display: none !important;
-        }
+        .login-card h1 { margin-bottom: 0.5rem; color: #1e293b; }
+        .login-card p { color: #64748b; margin-bottom: 2rem; }
         
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
+        /* --- DASHBOARD LAYOUT --- */
+        #dashboard-layout { display: none; width: 100%; height: 100%; }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Sidebar */
+        .sidebar {
+            width: 250px; background-color: var(--sidebar-bg); color: var(--sidebar-text);
+            display: flex; flex-direction: column; flex-shrink: 0; transition: 0.3s;
         }
+        .sidebar-header { padding: 20px; font-size: 1.25rem; font-weight: bold; color: white; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+        .nav-links { list-style: none; padding: 20px 0; flex-grow: 1; }
+        .nav-item { padding: 12px 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover, .nav-item.active { background-color: var(--primary); color: white; }
+        .user-profile { padding: 20px; border-top: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+        .avatar-sm { width: 32px; height: 32px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+
+        /* Main Content */
+        .main-content { flex-grow: 1; overflow-y: auto; padding: 2rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .page-title { font-size: 1.5rem; font-weight: 600; }
+
+        /* Cards & Tables */
+        .card { background: var(--bg-card); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 1.5rem; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f8fafc; font-weight: 600; color: #64748b; }
+        tr:hover { background-color: #f8fafc; }
+
+        /* Buttons & Inputs */
+        .btn {
+            padding: 10px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn-danger { background-color: var(--danger); color: white; font-size: 0.85rem; padding: 6px 12px; }
+        .btn-danger:hover { background-color: #dc2626; }
+        
+        .form-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 500; }
+
+        /* Modal */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 2rem; border-radius: 8px; width: 400px; animation: slideUp 0.3s ease; }
+        
+        /* Toast */
+        .toast { position: fixed; top: 20px; right: 20px; background: white; padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; transform: translateX(120%); transition: 0.3s; z-index: 3000; border-left: 4px solid var(--primary); }
+        .toast.show { transform: translateX(0); }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.success { border-left-color: var(--success); }
+
+        /* Helpers */
+        .hidden { display: none !important; }
+        .spinner { width: 16px; height: 16px; border: 2px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 2rem; font-weight: bold; color: var(--primary); }
+        .stat-label { color: #64748b; font-size: 0.9rem; }
+
+        @media (max-width: 768px) {
+            .sidebar { position: absolute; left: -250px; height: 100%; z-index: 100; }
+            .sidebar.active { left: 0; }
+            .mobile-toggle { display: block; font-size: 1.5rem; cursor: pointer; margin-right: 1rem; }
+        }
+        @media (min-width: 769px) { .mobile-toggle { display: none; } }
     </style>
 </head>
 <body>
 
-    <!-- Notification Area -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <div class="container">
-        <!-- LOGIN CARD -->
-        <div class="card" id="loginCard">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h1 style="color: var(--primary-color); font-size: 1.8rem;">Selamat Datang</h1>
-                <p style="color: #6b7280;">Silakan masuk ke akun Anda</p>
-            </div>
-
+    <!-- LOGIN PAGE -->
+    <div id="login-page">
+        <div class="login-card">
+            <h1>Sistem Admin</h1>
+            <p>Silakan masuk untuk melanjutkan</p>
             <form id="loginForm">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Masukkan username" required autocomplete="username">
-                </div>
-                <div class="form-group">
-                    <label for="password">Kata Sandi</label>
-                    <input type="password" id="password" placeholder="Masukkan kata sandi" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn" id="loginBtn">
-                    <span class="btn-text">Masuk</span>
-                    <span class="spinner hidden"></span>
+                <input type="text" id="username" class="form-input" placeholder="Username (admin)" required>
+                <input type="password" id="password" class="form-input" placeholder="Password (123)" required>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                    <span>Masuk</span>
+                    <div class="spinner hidden"></div>
                 </button>
             </form>
-            
-            <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: #9ca3af;">
-                <p>Gunakan: <strong>admin</strong> / <strong>123</strong></p>
-            </div>
-        </div>
-
-        <!-- DASHBOARD CARD -->
-        <div class="card dashboard-view" id="dashboardCard">
-            <div class="dashboard-header">
-                <div class="avatar" id="userAvatar">A</div>
-                <div class="user-info">
-                    <h2 id="displayUsername">Admin User</h2>
-                    <p id="displayRole">Administrator</p>
-                </div>
-            </div>
-            
-            <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; text-align: left; margin-bottom: 1.5rem;">
-                <h3 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: #4b5563;">Status Sistem</h3>
-                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #6b7280;">
-                    <span>Database:</span>
-                    <span style="color: var(--success-color);">Terhubung (Google Sheets)</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #6b7280; margin-top: 5px;">
-                    <span>Server:</span>
-                    <span style="color: var(--success-color);">Online</span>
-                </div>
-            </div>
-
-            <button class="btn" style="background-color: #ef4444;" id="logoutBtn">
-                Keluar
-            </button>
         </div>
     </div>
 
+    <!-- DASHBOARD LAYOUT -->
+    <div id="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span>⚡ AdminPanel</span>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" onclick="switchTab('dashboard-home')">
+                    <span>🏠</span> Dashboard
+                </li>
+                <li class="nav-item" onclick="switchTab('user-management')">
+                    <span>👥</span> Manajemen User
+                </li>
+            </ul>
+            <div class="user-profile">
+                <div class="avatar-sm" id="sidebarAvatar">A</div>
+                <div style="flex-grow: 1;">
+                    <div style="color: white; font-size: 0.9rem;" id="sidebarUsername">Admin</div>
+                    <div style="font-size: 0.75rem;" id="sidebarRole">Administrator</div>
+                </div>
+                <button onclick="logout()" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.2rem;" title="Keluar">⏻</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <div style="display: flex; align-items: center;">
+                    <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+                    <h2 class="page-title" id="pageTitle">Dashboard</h2>
+                </div>
+            </div>
+
+            <!-- VIEW: DASHBOARD HOME -->
+            <div id="view-dashboard-home">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsersCount">0</div>
+                        <div class="stat-label">Total User</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: var(--success);">Online</div>
+                        <div class="stat-label">Status Server</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Selamat Datang di Admin Panel</h3>
+                    <p style="color: #64748b; margin-top: 0.5rem;">
+                        Sistem ini terhubung langsung ke Google Spreadsheet sebagai database. 
+                        Gunakan menu "Manajemen User" di sidebar untuk mengelola akun.
+                    </p>
+                </div>
+            </div>
+
+            <!-- VIEW: USER MANAGEMENT -->
+            <div id="view-user-management" class="hidden">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>Daftar User</h3>
+                        <button class="btn btn-primary" onclick="openModal()">+ Tambah User</button>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table id="userTable">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Dibuat Pada</th>
+                                    <th style="text-align: right;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data akan dimuat via JS -->
+                                <tr><td colspan="4" style="text-align: center;">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL ADD USER -->
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 1.5rem;">Tambah User Baru</h3>
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select name="role" class="form-input">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button type="button" class="btn" style="background: #e2e8f0;" onclick="closeModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast">
+        <span id="toastMessage">Pesan notifikasi</span>
+    </div>
+
     <script>
-        // --- KONFIGURASI URL ---
-        // GANTI URL INI DENGAN URL DEPLOYMENT APPS SCRIPT ANDA (Bagian akhir harus /exec)
-        // Contoh: 'https://script.google.com/macros/s/XXXXXX/exec'
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTrqWS_I5sIyuICEhLZyTg_h2UrPBf3LQShnIgxJLtGK337itC0rg0ev6si2PlWGRd/exec'; 
+        // --- CONFIG ---
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTrqWS_I5sIyuICEhLZyTg_h2UrPBf3LQShnIgxJLtGK337itC0rg0ev6si2PlWGRd/exec';
 
-        // --- DOM ELEMENTS ---
+        // --- ELEMENTS ---
+        const loginPage = document.getElementById('login-page');
+        const dashboardLayout = document.getElementById('dashboard-layout');
         const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        const btnText = document.querySelector('.btn-text');
-        const spinner = document.querySelector('.spinner');
+        const sidebar = document.getElementById('sidebar');
+        const modal = document.getElementById('addUserModal');
         
-        const loginCard = document.getElementById('loginCard');
-        const dashboardCard = document.getElementById('dashboardCard');
-        
-        const displayUsername = document.getElementById('displayUsername');
-        const displayRole = document.getElementById('displayRole');
-        const userAvatar = document.getElementById('userAvatar');
-        const logoutBtn = document.getElementById('logoutBtn');
-
-        // --- EVENT LISTENERS ---
-        
-        // Cek apakah ada user yang tersimpan di session (opsional sederhana)
-        if(localStorage.getItem('isLoggedIn') === 'true') {
+        // --- INIT ---
+        if (localStorage.getItem('isLoggedIn') === 'true') {
             showDashboard(JSON.parse(localStorage.getItem('userData')));
         }
 
+        // --- AUTH ---
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-
-            if (!username || !password) {
-                showToast('Mohon isi semua kolom', 'error');
-                return;
-            }
-
-            // Jika URL belum diganti, beri peringatan (untuk demo)
-            if (SCRIPT_URL.includes('XXXXX')) {
-                showToast('URL Script belum dikonfigurasi. Lihat source code.', 'error');
-                // Simulasi login sukses untuk demo tampilan jika user tidak mengubah URL
-                if(username === 'admin' && password === '123') {
-                     showToast('Demo Mode: Login Berhasil!', 'success');
-                     showDashboard({ user: 'admin', role: 'admin' });
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            
+            // Demo Mode Check
+            if(SCRIPT_URL.includes('GANTI')) {
+                if(u==='admin' && p==='123') {
+                    loginSuccess({user: 'admin', role: 'admin'});
+                } else {
+                    showToast('Username/Password salah', 'error');
                 }
                 return;
             }
 
-            setLoading(true);
+            const btn = loginForm.querySelector('button');
+            btn.disabled = true;
+            btn.querySelector('.spinner').classList.remove('hidden');
 
             try {
-                // Kirim data ke Google Apps Script
-                const payload = {
-                    action: "login",
-                    username: username,
-                    password: password
-                };
-
-                // Menggunakan mode no-cors kadang diperlukan tergantung setup GAS, 
-                // tapi untuk mendapat response JSON kita perlu CORS yang benar di GAS.
-                // Di sini kita mencoba fetch standar.
-                const response = await fetch(SCRIPT_URL, {
+                const res = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify(payload)
-                    // Jika mengalami masalah CORS, tambahkan mode: 'no-cors' 
-                    // tapi Anda tidak akan bisa membaca respons JSON-nya.
+                    body: JSON.stringify({ action: 'login', username: u, password: p })
                 });
-
-                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await res.json();
                 
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    showToast(result.message, 'success');
-                    // Simpan sesi sederhana
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('userData', JSON.stringify(result));
-                    showDashboard(result);
-                } else {
-                    showToast(result.message, 'error');
-                    shakeCard(loginCard);
-                }
-
-            } catch (error) {
-                console.error('Error:', error);
-                showToast('Gagal menghubungi server. Cek console.', 'error');
+                if (data.status === 'success') loginSuccess(data);
+                else showToast(data.message, 'error');
+            } catch (err) {
+                showToast('Gagal terhubung ke server', 'error');
             } finally {
-                setLoading(false);
+                btn.disabled = false;
+                btn.querySelector('.spinner').classList.add('hidden');
             }
         });
 
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('userData');
-            switchView(loginCard, dashboardCard);
-            document.getElementById('password').value = ''; // Reset password
-            showToast('Anda telah keluar.', 'success');
-        });
+        function loginSuccess(data) {
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userData', JSON.stringify(data));
+            showDashboard(data);
+            showToast('Login Berhasil!', 'success');
+        }
 
-        // --- FUNGSI UI ---
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            location.reload();
+        }
 
         function showDashboard(data) {
-            displayUsername.textContent = data.user;
-            displayRole.textContent = data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : 'User';
-            userAvatar.textContent = data.user.charAt(0).toUpperCase();
+            loginPage.style.display = 'none';
+            dashboardLayout.style.display = 'flex';
             
-            switchView(dashboardCard, loginCard);
+            // Set Profile
+            document.getElementById('sidebarUsername').textContent = data.user;
+            document.getElementById('sidebarRole').textContent = data.role;
+            document.getElementById('sidebarAvatar').textContent = data.user.charAt(0).toUpperCase();
+
+            // Load Stats
+            loadUsers(); 
         }
 
-        function switchView(showEl, hideEl) {
-            hideEl.style.display = 'none';
-            showEl.style.display = 'block';
-            showEl.classList.add('fade-in');
+        // --- NAVIGATION ---
+        function switchTab(tabId) {
+            // Update Sidebar UI
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Hide all views
+            document.getElementById('view-dashboard-home').classList.add('hidden');
+            document.getElementById('view-user-management').classList.add('hidden');
+
+            // Show target view
+            if (tabId === 'dashboard-home') {
+                document.getElementById('view-dashboard-home').classList.remove('hidden');
+                document.getElementById('pageTitle').textContent = 'Dashboard';
+                loadUsers(); // Refresh stats
+            } else if (tabId === 'user-management') {
+                document.getElementById('view-user-management').classList.remove('hidden');
+                document.getElementById('pageTitle').textContent = 'Manajemen User';
+                loadUsers(); // Load table
+            }
+
+            // Close sidebar on mobile after click
+            if(window.innerWidth <= 768) sidebar.classList.remove('active');
         }
 
-        function setLoading(isLoading) {
-            if (isLoading) {
-                loginBtn.disabled = true;
-                btnText.classList.add('hidden');
-                spinner.classList.remove('hidden');
-            } else {
-                loginBtn.disabled = false;
-                btnText.classList.remove('hidden');
-                spinner.classList.add('hidden');
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+        }
+
+        // --- USER MANAGEMENT LOGIC ---
+        
+        // 1. Get Users
+        async function loadUsers() {
+            if(SCRIPT_URL.includes('GANTI')) {
+                // Demo Data
+                renderTable([{username: 'admin', role: 'admin', date: 'Hari ini', rowIndex: 2}]);
+                document.getElementById('totalUsersCount').textContent = "1";
+                return;
+            }
+
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'getUsers' })
+                });
+                const result = await res.json();
+                if(result.status === 'success') {
+                    renderTable(result.data);
+                    document.getElementById('totalUsersCount').textContent = result.data.length;
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function renderTable(users) {
+            const tbody = document.querySelector('#userTable tbody');
+            tbody.innerHTML = '';
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">Tidak ada data user.</td></tr>';
+                return;
+            }
+
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${u.username}</strong></td>
+                    <td><span style="background: ${u.role==='admin'?'#e0e7ff':'#f1f5f9'}; color: ${u.role==='admin'?'#4338ca':'#64748b'}; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">${u.role}</span></td>
+                    <td style="color: #64748b; font-size: 0.9rem;">${new Date(u.date).toLocaleDateString()}</td>
+                    <td style="text-align: right;">
+                        ${u.username !== 'admin' ? `<button class="btn btn-danger" onclick="deleteUser('${u.username}', ${u.rowIndex})">Hapus</button>` : '<span style="color:#cbd5e1; font-size:0.8rem;">Main Admin</span>'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 2. Add User
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            if(SCRIPT_URL.includes('GANTI')) {
+                showToast('Mode Demo: Tidak bisa menambah user', 'error');
+                return;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            btn.innerText = 'Menyimpan...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'addUser', ...data })
+                });
+                const result = await res.json();
+                
+                if(result.status === 'success') {
+                    showToast(result.message, 'success');
+                    closeModal();
+                    e.target.reset();
+                    loadUsers();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch(err) {
+                showToast('Gagal menambah user', 'error');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // 3. Delete User
+        async function deleteUser(username, rowIndex) {
+            if(!confirm(`Yakin ingin menghapus user "${username}"?`)) return;
+
+            if(SCRIPT_URL.includes('GANTI')) {
+                showToast('Mode Demo', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'deleteUser', rowIndex: rowIndex })
+                });
+                const result = await res.json();
+                
+                if(result.status === 'success') {
+                    showToast('User berhasil dihapus', 'success');
+                    loadUsers();
+                } else {
+                    showToast(result.message, 'error');
+                }
+            } catch(err) {
+                showToast('Gagal menghapus user', 'error');
             }
         }
 
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            // Icon SVG sederhana
-            const icon = type === 'success' 
-                ? '<svg width="20" height="20" fill="none" stroke="#10b981" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>'
-                : '<svg width="20" height="20" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4m0 4h.01"></path></svg>';
-
-            toast.innerHTML = `${icon}<span>${message}</span>`;
-            
-            container.appendChild(toast);
-
-            // Hapus otomatis setelah 3 detik
-            setTimeout(() => {
-                toast.style.animation = 'fadeOut 0.3s ease forwards';
-                toast.addEventListener('animationend', () => {
-                    toast.remove();
-                });
-            }, 3000);
+        // --- UI HELPERS ---
+        function openModal() { modal.classList.add('active'); }
+        function closeModal() { modal.classList.remove('active'); }
+        
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            const tm = document.getElementById('toastMessage');
+            tm.textContent = msg;
+            t.className = `toast show ${type}`;
+            setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        function shakeCard(element) {
-            element.style.transform = "translateX(10px)";
-            setTimeout(() => { element.style.transform = "translateX(-10px)"; }, 100);
-            setTimeout(() => { element.style.transform = "translateX(5px)"; }, 200);
-            setTimeout(() => { element.style.transform = "translateX(0)"; }, 300);
-        }
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
     </script>
 </body>
 </html>
