@@ -275,18 +275,14 @@
         }
 
         // --- AUTH ---
-        loginForm.addEventListener('submit', async (e) => {
+                loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const u = document.getElementById('username').value;
             const p = document.getElementById('password').value;
             
-            // Demo Mode Check
+            // Cek URL Dummy
             if(SCRIPT_URL.includes('GANTI')) {
-                if(u==='admin' && p==='123') {
-                    loginSuccess({user: 'admin', role: 'admin'});
-                } else {
-                    showToast('Username/Password salah', 'error');
-                }
+                showToast('URL Script belum disetting!', 'error');
                 return;
             }
 
@@ -295,16 +291,44 @@
             btn.querySelector('.spinner').classList.remove('hidden');
 
             try {
+                console.log("Mengirim request ke:", SCRIPT_URL); // Cek console browser (F12)
+                
                 const res = await fetch(SCRIPT_URL, {
                     method: 'POST',
+                    // Tambahkan header ini kadang membantu
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8', 
+                    },
                     body: JSON.stringify({ action: 'login', username: u, password: p })
                 });
+
+                console.log("Status Response:", res.status, res.statusText);
+
+                if (!res.ok) {
+                    throw new Error(`Server Error: ${res.status} ${res.statusText}`);
+                }
+
                 const data = await res.json();
+                console.log("Data dari Server:", data);
                 
-                if (data.status === 'success') loginSuccess(data);
-                else showToast(data.message, 'error');
+                if (data.status === 'success') {
+                    loginSuccess(data);
+                } else {
+                    showToast(data.message, 'error');
+                }
+
             } catch (err) {
-                showToast('Gagal terhubung ke server', 'error');
+                console.error("Detail Error:", err);
+                
+                // Pesan error yang lebih spesifik
+                let errorMsg = "Gagal terhubung ke server.";
+                if(err.message.includes('Failed to fetch')) {
+                    errorMsg = "Koneksi ditolak (CORS). Pastikan Anda membuka file via Live Server, bukan file langsung.";
+                } else if (err.message.includes('JSON')) {
+                    errorMsg = "Server mengembalikan data tidak valid. Cek log Apps Script.";
+                }
+                
+                showToast(errorMsg, 'error');
             } finally {
                 btn.disabled = false;
                 btn.querySelector('.spinner').classList.add('hidden');
