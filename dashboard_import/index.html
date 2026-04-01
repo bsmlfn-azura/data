@@ -404,10 +404,11 @@
             sidebar.classList.toggle('active');
         }
 
-        // --- USER MANAGEMENT LOGIC ---
+                // --- USER MANAGEMENT LOGIC ---
         
         // 1. Get Users
         async function loadUsers() {
+            // Cek mode Demo
             if(SCRIPT_URL.includes('GANTI')) {
                 // Demo Data
                 renderTable([{username: 'admin', role: 'admin', date: 'Hari ini', rowIndex: 2}]);
@@ -416,18 +417,33 @@
             }
 
             try {
+                console.log("Meminta data user...");
                 const res = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'getUsers' })
                 });
+
+                // Cek jika response bukan 200 OK
+                if (!res.ok) {
+                    throw new Error(`HTTP Error: ${res.status}`);
+                }
+
                 const result = await res.json();
+                
                 if(result.status === 'success') {
                     renderTable(result.data);
                     document.getElementById('totalUsersCount').textContent = result.data.length;
+                } else {
+                    // Error dari logika script (bukan koneksi)
+                    console.error("Error Script:", result.message);
+                    showToast('Gagal memuat data: ' + result.message, 'error');
                 }
-            } catch(e) { console.error(e); }
+            } catch (err) {
+                console.error("Error Fetching Users:", err);
+                // Ganti pesan ini agar jelas bahwa LOGIN sudah sukses, tapi data gagal dimuat
+                showToast('Login Sukses, tapi gagal memuat data dashboard.', 'error');
+            }
         }
-
         function renderTable(users) {
             const tbody = document.querySelector('#userTable tbody');
             tbody.innerHTML = '';
